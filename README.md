@@ -29,19 +29,19 @@
 
 ## 功能完成清单
 
-1. [X] 普通字段的拷贝
+1. [X] 普通字段的拷贝, e.g: `private String name` -> `private String name`
 
-2. [X] 递归字段的拷贝
+2. [X] 递归字段的拷贝, e.g: `private Source obj` -> `private Target obj`
 
-3. [X] 列表递归字段的拷贝
+3. [X] 列表递归字段的拷贝, e.g: `private List<Source> objs` -> `private List<Target> objs`
 
 4. [X] 批量拷贝
 
 5. [X] 批量拷贝回调动作
 
-6. [X] 无范型向上转型拷贝(如 `Integer` 拷贝为 `Number`)
+6. [X] 无范型向上转型拷贝(如 `Integer` 拷贝为 `Number`), e.g: `private Integer age` -> `private Number age`
 
-7. [X] 有范型的向上转型拷贝(如 `ArrayList<Integer>` 拷贝为 `List<Integer>`, 但是范型必须一致)
+7. [X] 有范型的向上转型拷贝(如 `ArrayList<Integer>` 拷贝为 `List<Integer>`, 但是范型必须一致), e.g: `private ArrayList<Integer>` -> `private List<Integer>`
 
 ## 一些简单的例子
 
@@ -81,15 +81,15 @@ public static class Source {
 @Accessors(chain = true)
 public static class Target {
 
-  private String a;         // ok
+  private String a;         // copied
   private String b;         // null
-  private LocalDateTime c;  // ok
-  private Target d;         // ok
-  private List<Target> e;   // ok
-  private List<String> f;   // ok
-  private List<Integer> g;  // ok
-  private InnerField h;     // ok
-  private Number i;         // ok
+  private LocalDateTime c;  // copied
+  private Target d;         // copied
+  private List<Target> e;   // copied
+  private List<String> f;   // copied
+  private List<Integer> g;  // copied
+  private InnerField h;     // copied
+  private Number i;         // copied
   private List<Number> j;   // null
   private Object z;         // null
 }
@@ -97,18 +97,18 @@ public static class Target {
 
 ```java
 // 单个拷贝
-Source source=new Source();
-Target target=BeanCopier.copy(source,Target.class);
+Source source = new Source();
+Target target = BeanCopier.copy(source, Target.class);
 
 // 列表拷贝
-List<Source> sources=List.of(new Source(),new Source());
-List<Target> targets=BeanCopier.copyList(sources,Target.class);
+List<Source> sources = List.of(new Source(), new Source());
+List<Target> targets = BeanCopier.copyList(sources, Target.class);
 
 // 列表拷贝后回调动作, 可以用来手动实现一些无法拷贝的字段或其他复杂动作
 List<Target> targets=BeanCopier.copyList(
   sources,
   Target.class,
-  (source,target)->{target.setF(target.getA());});
+  (source, target) -> { target.setF(target.getA()); });
 ```
 
 ## 原理
