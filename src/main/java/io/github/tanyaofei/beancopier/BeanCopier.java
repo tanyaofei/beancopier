@@ -27,7 +27,7 @@ public class BeanCopier {
    * 类加载器
    */
   private static final ConverterClassLoader CLASS_LOADER = new ConverterClassLoader(
-      "beancopier", BeanCopier.class.getClassLoader()
+      BeanCopier.class.getClassLoader()
   );
 
   /**
@@ -100,9 +100,9 @@ public class BeanCopier {
       Class<T> targetClass,
       Callback<S, T> callback
   ) {
-    var key = cacheKey(source.getClass(), targetClass);
+    String key = cacheKey(source.getClass(), targetClass);
 
-    var converter = (Converter<S, T>) Optional
+    Converter<S, T> converter = (Converter<S, T>) Optional
         .ofNullable(CONVERTER_CACHES.get(key))
         .orElseGet(() -> cacheAndReturn(
             key, CONVERTER_FACTORY.generateConverter(
@@ -110,7 +110,7 @@ public class BeanCopier {
         );
 
     // init a target, and copy fields from source
-    var target = converter.convert(source);
+    T target = converter.convert(source);
 
     // 执行
     if (callback != null) {

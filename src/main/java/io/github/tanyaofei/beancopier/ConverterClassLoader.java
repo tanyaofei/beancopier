@@ -5,8 +5,8 @@ package io.github.tanyaofei.beancopier;
  */
 public class ConverterClassLoader extends ClassLoader {
 
-  public ConverterClassLoader(String name, ClassLoader parent) {
-    super(name, parent);
+  public ConverterClassLoader(ClassLoader parent) {
+    super(parent);
   }
 
   /**

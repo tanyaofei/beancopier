@@ -29,37 +29,37 @@ public interface MethodConstants {
 
 
   @SneakyThrows
-  private static Method converterConvertMethod() {
+  static Method converterConvertMethod() {
     return Converter.class.getMethod("convert", Object.class);
   }
 
   @SneakyThrows
-  private static Method listStreamMethod() {
+  static Method listStreamMethod() {
     return List.class.getMethod("stream");
   }
 
   @SneakyThrows
-  private static Method streamMapMethod() {
+  static Method streamMapMethod() {
     return Stream.class.getMethod("map", Function.class);
   }
 
   @SneakyThrows
-  private static Method streamCollectMethod() {
+  static Method streamCollectMethod() {
     return Stream.class.getMethod("collect", Collector.class);
   }
 
   @SneakyThrows
-  private static Method collectorsToListMethod() {
+  static Method collectorsToListMethod() {
     return Collectors.class.getMethod("toList");
   }
 
   @SneakyThrows
-  private static Method functionApplyMethod() {
+  static Method functionApplyMethod() {
     return Function.class.getMethod("apply", Object.class);
   }
 
   @SneakyThrows
-  private static Method lambdaMetaFactoryLambdafacotryMethod() {
+  static Method lambdaMetaFactoryLambdafacotryMethod() {
     return LambdaMetafactory.class.getMethod("metafactory",
         Lookup.class,
         String.class,

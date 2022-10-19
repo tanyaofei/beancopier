@@ -1,16 +1,14 @@
 package io.github.tanyaofei.beancopier;
 
-import io.github.tanyaofei.beancopier.exception.CopyException;
-import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
-import io.github.tanyaofei.beancopier.utils.ClassInfo;
-import io.github.tanyaofei.beancopier.utils.MethodConstants;
-import io.github.tanyaofei.beancopier.utils.ReflectUtils;
+import io.github.tanyaofei.beancopier.exception.BeanCopierException;
+import io.github.tanyaofei.beancopier.utils.*;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.*;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.reflect.*;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -64,10 +62,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     }
 
     // 创建类编写器, 自动完成局部变量计数和栈深度计数
-    var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-    var internalName = genConverterInternalName(sType, tType);
+    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+    String internalName = genConverterInternalName(sType, tType);
     // 创建转换器类
-    cw.visit(V11, ACC_PUBLIC | ACC_SYNTHETIC,
+    cw.visit(V1_8, ACC_PUBLIC | ACC_SYNTHETIC,
         internalName,
         ReflectUtils.getClassSignature(
             ClassInfo.of(Object.class),
@@ -84,11 +82,11 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
     // 加载到内存并实例化
     final byte[] code = cw.toByteArray();
-    var clazz = (Class<Converter<S, T>>) classLoader.defineClass(null, code);
+    Class<Converter<S, T>> clazz = (Class<Converter<S, T>>) classLoader.defineClass(null, code);
     try {
       return clazz.getConstructor().newInstance();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new CopyException("Failed to initialize converter", e);
+      throw new BeanCopierException("Failed to initialize converter", e);
     }
   }
 
@@ -120,7 +118,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param cw 类编写器
    */
   private void writeNoArgsConstructor(ClassWriter cw) {
-    var visitor = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, "<init>", "()V", null, null);
+    MethodVisitor visitor = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, "<init>", "()V", null, null);
     visitor.visitCode();
     // this 入栈
     visitor.visitVarInsn(ALOAD, 0);
@@ -150,7 +148,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   private <S, T> void writeConvertBridgeMethod(
       ClassWriter cw, String internalName, Class<S> sType, Class<T> tType
   ) {
-    var visitor = cw.visitMethod(
+    MethodVisitor visitor = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
         CONVERTER_CONVERT.getName(),
         Type.getMethodDescriptor(CONVERTER_CONVERT),
@@ -223,19 +221,19 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // -- end
 
     Label skipIfNull = null;
-    var getters = ReflectUtils.getFieldGetters(sType);
-    for (var setterEntry : ReflectUtils.getFieldSetters(tType).entrySet()) {
-      var fieldName = setterEntry.getKey();
-      var setter = setterEntry.getValue().getT2();
-      var tField = setterEntry.getValue().getT1();
+    Map<String, Tuple<Field, Method>> getters = ReflectUtils.getFieldGetters(sType);
+    for (Map.Entry<String, Tuple<Field, Method>> setterEntry : ReflectUtils.getFieldSetters(tType).entrySet()) {
+      String fieldName = setterEntry.getKey();
+      Method setter = setterEntry.getValue().getT2();
+      Field tField = setterEntry.getValue().getT1();
 
-      var filedGetter = getters.get(fieldName);
+      Tuple<Field, Method> filedGetter = getters.get(fieldName);
       if (filedGetter == null) {
         // target 没有同名字段跳过
         continue;
       }
-      var getter = filedGetter.getT2();
-      var sField = filedGetter.getT1();
+      Method getter = filedGetter.getT2();
+      Field sField = filedGetter.getT1();
 
       if (isRecursionCopy(sType, sField, tType, tField)) {
         // 单个递归
@@ -403,7 +401,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @return 用于跳转的 label
    */
   private Label skipFieldIfNull(MethodVisitor visitor, Method getter) {
-    var label = new Label();
+    Label label = new Label();
     visitor.visitVarInsn(ALOAD, 1);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
     visitor.visitJumpInsn(IFNULL, label);
@@ -443,8 +441,8 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @return 类型是否相等
    */
   private boolean isTypeCompatible(Field sField, Field tField) {
-    var sFieldType = sField.getGenericType();
-    var tFieldType = tField.getGenericType();
+    java.lang.reflect.Type sFieldType = sField.getGenericType();
+    java.lang.reflect.Type tFieldType = tField.getGenericType();
 
     if (sFieldType instanceof Class) {
       // 如果不是范型类型, 直接判断两者的类的继承关系
@@ -454,8 +452,8 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       return true;
     } else if (sFieldType instanceof ParameterizedType && tFieldType instanceof ParameterizedType) {
       // 如果两者均为范型且不完全一致, 那么只有原始类型继承兼容并且范型一致才为兼容
-      var sFieldParameterizedType = (ParameterizedType) sFieldType;
-      var tFieldParameterizedType = (ParameterizedType) tFieldType;
+      ParameterizedType sFieldParameterizedType = (ParameterizedType) sFieldType;
+      ParameterizedType tFieldParameterizedType = (ParameterizedType) tFieldType;
       if (!((Class<?>) tFieldParameterizedType.getRawType())
           .isAssignableFrom((Class<?>) sFieldParameterizedType.getRawType())) {
         // 原始类型不一致, 不兼容

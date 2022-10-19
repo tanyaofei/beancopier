@@ -40,9 +40,9 @@ public class ClassInfo {
       return Type.getDescriptor(type);
     }
 
-    var descriptor = Type.getDescriptor(type);
-    var builder = new StringBuilder(descriptor.substring(0, descriptor.length() - 1)).append("<");
-    for (var g : genericTypes) {
+    String descriptor = Type.getDescriptor(type);
+    StringBuilder builder = new StringBuilder(descriptor.substring(0, descriptor.length() - 1)).append("<");
+    for (Class<?> g : genericTypes) {
       builder.append(Type.getDescriptor(g));
     }
     builder.append(">;");

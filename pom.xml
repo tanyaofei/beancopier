@@ -28,16 +28,15 @@
     </scm>
     <licenses>
         <license>
-            <name>Server Side Public License</name>
-            <url>https://www.mongodb.com/licensing/server-side-public-license</url>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
-            <comments>A not business-friendly OSS license</comments>
         </license>
     </licenses>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
         <asm.version>7.1</asm.version>
         <lombok.version>1.18.20</lombok.version>
         <junit.version>5.7.2</junit.version>

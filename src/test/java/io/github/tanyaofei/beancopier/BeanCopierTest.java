@@ -9,28 +9,29 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author tanyaofei
- *  2021.04.0
  */
 public class BeanCopierTest extends Assertions {
 
   @Test
   public void testCopy() {
-    var source = new Source()
+    Source source = new Source()
         .setA("a")
         .setB(1)
         .setC(LocalDateTime.now())
         .setD(new Source().setA("a"))
-        .setE(List.of(new Source()))
-        .setF(List.of("hello", "world"))
+        .setE(Collections.singletonList(new Source()))
+        .setF(Arrays.asList("hello", "world"))
         .setG(new ArrayList<>())
         .setH(new InnerField().setA("inner field"))
         .setI(1);
 
-    var target = BeanCopier.copy(source, Target.class);
+    Target target = BeanCopier.copy(source, Target.class);
     assertEquals(source.getA(), target.getA());
     assertNull(target.getB());
     assertEquals(source.getC(), target.getC());
@@ -45,9 +46,9 @@ public class BeanCopierTest extends Assertions {
 
   @Test
   public void testUnPublicCopy() {
-    var source = new Source();
+    Source source = new Source();
     try {
-      var target = BeanCopier.copy(source, UnPublicTarget.class);
+      UnPublicTarget target = BeanCopier.copy(source, UnPublicTarget.class);
     } catch (IllegalArgumentException exception) {
       // ignored
       return;

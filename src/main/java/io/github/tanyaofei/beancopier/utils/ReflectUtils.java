@@ -42,8 +42,8 @@ public class ReflectUtils {
       return superClass.getDescriptors();
     }
 
-    var builder = new StringBuilder(superClass.getDescriptors());
-    for (var i : interfaces) {
+    StringBuilder builder = new StringBuilder(superClass.getDescriptors());
+    for (ClassInfo i : interfaces) {
       builder.append(i.getDescriptors());
     }
     return builder.toString();
