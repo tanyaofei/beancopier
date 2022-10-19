@@ -1,8 +1,7 @@
-package com.github.tanyaofei.beancopier.utils;
+package io.github.tanyaofei.beancopier.utils;
 
 /**
  * @author tanyaofei
- * @since 2021.07.0
  */
 public class StringUtils {
 

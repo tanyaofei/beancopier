@@ -1,6 +1,6 @@
-package com.github.tanyaofei.beancopier.utils;
+package io.github.tanyaofei.beancopier.utils;
 
-import com.github.tanyaofei.beancopier.Converter;
+import io.github.tanyaofei.beancopier.Converter;
 import lombok.SneakyThrows;
 
 import java.lang.invoke.LambdaMetafactory;
@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 
 /**
  * @author tanyaofei
- * @since 2021.08.0
  */
 public interface MethodConstants {
 

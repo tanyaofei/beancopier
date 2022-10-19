@@ -1,8 +1,8 @@
-package com.github.tanyaofei.beancopier.exception;
+package io.github.tanyaofei.beancopier.exception;
 
 /**
  * @author tanyaofei
- * @since 2021.07.0
+ *  2021.07.0
  */
 public class CopyException extends RuntimeException {
 

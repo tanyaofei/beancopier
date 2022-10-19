@@ -1,4 +1,7 @@
-package com.github.tanyaofei.beancopier;
+package io.github.tanyaofei.beancopier;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,19 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import com.github.tanyaofei.beancopier.exception.CopyException;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 /**
  * 对象拷贝器
- * <p>经过测试, 一亿个对象拷贝速度(不递归拷贝) 耗时 15 秒, 如果用 ModelMapper 耗时为 149 秒</p>
- * <p>递归拷贝将会大大降低性能, 如果对象没有可递归拷贝的字段, 切勿使用递归拷贝 </p>
  *
- * @author 谭耀飞
- * @see BeanCopier#copy(Object, Class) 非递归拷贝
- * @see BeanCopier#copyList(List, Class) 非递归拷贝
- * @since 2021.04.0
+ * @author tanyaofei
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BeanCopier {
@@ -33,13 +27,13 @@ public class BeanCopier {
    * 类加载器
    */
   private static final ConverterClassLoader CLASS_LOADER = new ConverterClassLoader(
-      "converter", BeanCopier.class.getClassLoader()
+      "beancopier", BeanCopier.class.getClassLoader()
   );
 
   /**
    * 转换器生成工具
    */
-  private static final ConverterMaker CONVERTER_MAKER = new ConverterMaker();
+  private static final ConverterFactory CONVERTER_FACTORY = new ConverterFactory();
 
   /**
    * @param source      拷贝来源
@@ -96,7 +90,7 @@ public class BeanCopier {
    * @param <T>         拷贝目标
    * @param callback    拷贝完之后进行的操作
    * @return 拷贝结果
-   * @see ConverterMaker#generateConverter(Class, Class, ConverterClassLoader) 动态生成 Source -> Target
+   * @see ConverterFactory#generateConverter(Class, Class, ConverterClassLoader) 动态生成 Source  to  Target
    * 的转换器
    */
 
@@ -111,7 +105,7 @@ public class BeanCopier {
     var converter = (Converter<S, T>) Optional
         .ofNullable(CONVERTER_CACHES.get(key))
         .orElseGet(() -> cacheAndReturn(
-            key, CONVERTER_MAKER.generateConverter(
+            key, CONVERTER_FACTORY.generateConverter(
                 (Class<S>) source.getClass(), targetClass, CLASS_LOADER))
         );
 
@@ -146,10 +140,5 @@ public class BeanCopier {
     CONVERTER_CACHES.put(key, converter);
     return converter;
   }
-
-  private static CopyException exception(String msg, Throwable cause) {
-    return new CopyException(msg, cause);
-  }
-
 
 }

@@ -1,10 +1,10 @@
-package com.github.tanyaofei.beancopier;
+package io.github.tanyaofei.beancopier;
 
-import com.github.tanyaofei.beancopier.exception.CopyException;
-import com.github.tanyaofei.beancopier.utils.BytecodeUtils;
-import com.github.tanyaofei.beancopier.utils.ClassInfo;
-import com.github.tanyaofei.beancopier.utils.MethodConstants;
-import com.github.tanyaofei.beancopier.utils.ReflectUtils;
+import io.github.tanyaofei.beancopier.exception.CopyException;
+import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
+import io.github.tanyaofei.beancopier.utils.ClassInfo;
+import io.github.tanyaofei.beancopier.utils.MethodConstants;
+import io.github.tanyaofei.beancopier.utils.ReflectUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.*;
 
@@ -15,12 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
- * 使用 ASM 字节码技术在运行时创建 Source -> Target 的转换器字节码
+ * 使用 ASM 字节码技术在运行时创建 Source  to  Target 的转换器字节码
  *
- * @author 谭耀飞
- * @since 2021.04.0
+ * @author tanyaofei
  */
-public class ConverterMaker implements Opcodes, MethodConstants {
+public class ConverterFactory implements Opcodes, MethodConstants {
 
   /**
    * 生成的转换器所处的包
@@ -33,14 +32,14 @@ public class ConverterMaker implements Opcodes, MethodConstants {
   private static final AtomicInteger COUNTER = new AtomicInteger();
 
   /**
-   * 创建 sType -> tType 的转换器并加载到运行时内存中并创建实例
+   * 创建 sType  to  tType 的转换器并加载到运行时内存中并创建实例
    *
    * @param sType       拷贝来源类
    * @param tType       拷贝目标类
    * @param classLoader 类加载器, 创建的类会加载到此加载器中
    * @param <S>         拷贝来源
    * @param <T>         拷贝目标
-   * @return sType -> tType 转换器实例
+   * @return sType  to  tType 转换器实例
    */
   @SuppressWarnings("unchecked")
   public <S, T> Converter<S, T> generateConverter(

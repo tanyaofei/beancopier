@@ -1,4 +1,4 @@
-package com.github.tanyaofei.beancopier.utils;
+package io.github.tanyaofei.beancopier.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 
 /**
  * @author tanyaofei
- * @since 2021.08.0
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BytecodeUtils implements Opcodes {

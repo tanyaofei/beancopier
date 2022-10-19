@@ -1,4 +1,4 @@
-package com.github.tanyaofei.beancopier;
+package io.github.tanyaofei.beancopier;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author 谭耀飞
- * @since 2021.04.0
+ * @author tanyaofei
+ *  2021.04.0
  */
 public class BeanCopierTest extends Assertions {
 

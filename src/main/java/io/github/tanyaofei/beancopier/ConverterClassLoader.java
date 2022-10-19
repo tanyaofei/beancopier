@@ -1,8 +1,7 @@
-package com.github.tanyaofei.beancopier;
+package io.github.tanyaofei.beancopier;
 
 /**
- * @author 谭耀飞
- * @since 2021.04.0
+ * @author tanyaofei
  */
 public class ConverterClassLoader extends ClassLoader {
 

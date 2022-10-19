@@ -1,4 +1,4 @@
-package com.github.tanyaofei.beancopier.utils;
+package io.github.tanyaofei.beancopier.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -10,8 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author 谭耀飞
- * @since 2021.04.0
+ * @author tanyaofei
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReflectUtils {

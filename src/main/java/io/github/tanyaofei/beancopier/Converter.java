@@ -1,11 +1,10 @@
-package com.github.tanyaofei.beancopier;
+package io.github.tanyaofei.beancopier;
 
 /**
  * 对象拷贝器
  * <p>该类的实现类使用 ASM 技术动态生成</p>
  *
- * @author 谭耀飞
- * @since 2021.04.0
+ * @author tanyaofei
  */
 public interface Converter<S, T> {
 

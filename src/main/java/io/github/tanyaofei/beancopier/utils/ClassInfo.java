@@ -1,4 +1,4 @@
-package com.github.tanyaofei.beancopier.utils;
+package io.github.tanyaofei.beancopier.utils;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -8,12 +8,11 @@ import org.objectweb.asm.Type;
 /**
  * 类信息
  * <p>
- * 假设一个类是 Map<String, Object>，则对应的 ClassInfo 为 -> type: Map.class, genericTypes: [String.class,
+ * 假设一个类是 Map&lt;String, Object&gt;，则对应的 ClassInfo 为  to  type: Map.class, genericTypes: [String.class,
  * Object.class]
  * </p>
  *
  * @author tanyaofei
- * @since 2021.07.0
  */
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

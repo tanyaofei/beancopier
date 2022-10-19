@@ -1,8 +1,7 @@
-package com.github.tanyaofei.beancopier;
+package io.github.tanyaofei.beancopier;
 
 /**
- * @author 谭耀飞
- * @since 2021.05.0
+ * @author tanyaofei
  */
 @FunctionalInterface
 public interface Callback<S, T> {
