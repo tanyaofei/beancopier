@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -100,13 +99,10 @@ public class BeanCopier {
       Class<T> targetClass,
       Callback<S, T> callback
   ) {
-    String key = cacheKey(source.getClass(), targetClass);
-
-    Converter<S, T> converter = (Converter<S, T>) Optional
-        .ofNullable(CONVERTER_CACHES.get(key))
-        .orElseGet(() -> cacheAndReturn(
-            key, CONVERTER_FACTORY.generateConverter(
-                (Class<S>) source.getClass(), targetClass, CLASS_LOADER))
+    Converter<S, T> converter = (Converter<S, T>) CONVERTER_CACHES
+        .computeIfAbsent(
+            cacheKey(source.getClass(), targetClass),
+            key -> CONVERTER_FACTORY.generateConverter((Class<S>) source.getClass(), targetClass, CLASS_LOADER)
         );
 
     // init a target, and copy fields from source
