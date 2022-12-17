@@ -31,6 +31,7 @@ public class BeanCopierTest extends Assertions {
         .setG(new ArrayList<>())
         .setH(new InnerField().setA("inner field"))
         .setI(1);
+    source.setPa("pa");
 
     Target target = BeanCopier.copy(source, Target.class);
     assertEquals(source.getA(), target.getA());
@@ -58,8 +59,10 @@ public class BeanCopierTest extends Assertions {
             .setF(Arrays.asList("hello", "world"))
             .setG(new ArrayList<>())
             .setH(new InnerField().setA("inner field"))
-            .setI(1);
+            .setI(1)
+            ;
 
+    source.setPa("pa");
     Source target = BeanCopier.clone(source);
     assertEquals(source, target);
 

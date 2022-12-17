@@ -85,7 +85,7 @@ public class ReflectUtils {
     }
 
     Class<?> superclass = target.getSuperclass();
-    if (superclass == Object.class) {
+    if (superclass != Object.class) {
       getters.putAll(getFieldGetters(superclass));
     }
 
@@ -113,7 +113,7 @@ public class ReflectUtils {
     }
 
     Class<?> superclass = target.getSuperclass();
-    if (superclass == Object.class) {
+    if (superclass != Object.class) {
       setters.putAll(getFieldSetters(superclass));
     }
 
