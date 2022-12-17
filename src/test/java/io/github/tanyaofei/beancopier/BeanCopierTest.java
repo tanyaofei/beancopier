@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Assertions;
@@ -42,6 +43,35 @@ public class BeanCopierTest extends Assertions {
     assertEquals(source.getH(), target.getH());
     assertEquals(source.getI(), target.getI());
     assertNull(target.getZ());
+
+    assertEquals(source.getPa(), target.getPa());
+  }
+
+  @Test
+  public void testClone() {
+    Source source = new Source()
+            .setA("a")
+            .setB(1)
+            .setC(LocalDateTime.now())
+            .setD(new Source().setA("a"))
+            .setE(Collections.singletonList(new Source()))
+            .setF(Arrays.asList("hello", "world"))
+            .setG(new ArrayList<>())
+            .setH(new InnerField().setA("inner field"))
+            .setI(1);
+
+    Source target = BeanCopier.clone(source);
+    assertEquals(source, target);
+
+    List<Source> sources = new ArrayList<Source>(){{
+      add(source);
+      add(target);
+    }};
+
+    List<Source> targets = BeanCopier.cloneList(sources);
+    for(int i = 0; i < sources.size(); i++) {
+      assertEquals(sources.get(i), targets.get(i));
+    }
   }
 
   @Test
@@ -60,7 +90,16 @@ public class BeanCopierTest extends Assertions {
   @Accessors(chain = true)
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class Source {
+  public static class Parent {
+    private String pa;
+  }
+
+  @Data
+  @Accessors(chain = true)
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static class Source extends Parent{
 
     private String a;
     private Integer b;
@@ -77,7 +116,8 @@ public class BeanCopierTest extends Assertions {
   @Accessors(chain = true)
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class Target {
+  @EqualsAndHashCode(callSuper = true)
+  public static class Target extends Parent{
 
     private String a;         // ok
     private String b;         // null

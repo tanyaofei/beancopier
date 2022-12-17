@@ -3,6 +3,7 @@ package io.github.tanyaofei.beancopier;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -45,6 +46,24 @@ public class BeanCopier {
   public static <S, T> T copy(S source, Class<T> targetClass) {
     return copy(source, targetClass, null);
   }
+
+  @SuppressWarnings("unchecked")
+  public static <T> T clone(T source) {
+    return copy(source, (Class<T>) source.getClass(), null);
+  }
+
+  public static <T> List<T> cloneList(List<T> sources) {
+    return cloneList(sources, null);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> List<T> cloneList(List<T> sources, Callback<T, T> callback) {
+    if (sources.isEmpty()) {
+      return new ArrayList<>();
+    }
+    return copyList(sources, (Class<T>) sources.get(0).getClass(), callback);
+  }
+
 
   /**
    * 批量对象拷贝

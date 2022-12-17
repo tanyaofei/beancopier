@@ -83,6 +83,12 @@ public class ReflectUtils {
       }
       getters.put(field.getName(), Tuple.of(field, getter));
     }
+
+    Class<?> superclass = target.getSuperclass();
+    if (superclass == Object.class) {
+      getters.putAll(getFieldGetters(superclass));
+    }
+
     return getters;
   }
 
@@ -105,6 +111,12 @@ public class ReflectUtils {
       }
       setters.put(field.getName(), Tuple.of(field, setter));
     }
+
+    Class<?> superclass = target.getSuperclass();
+    if (superclass == Object.class) {
+      setters.putAll(getFieldSetters(superclass));
+    }
+
     return setters;
   }
 
