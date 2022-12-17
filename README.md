@@ -13,7 +13,7 @@
 <dependency>
    <groupId>io.github.tanyaofei</groupId>
    <artifactId>beancopier</artifactId>
-   <version>0.0.2</version>
+   <version>0.0.4</version>
 </dependency>
 ```
 
@@ -54,6 +54,8 @@
 6. [X] 无范型向上转型拷贝(如 `Integer` 拷贝为 `Number`)
 
 7. [X] 有范型的向上转型拷贝(如 `ArrayList<Integer>` 拷贝为 `List<Integer>`, 但是范型必须一致)
+
+8. [X] 拷贝父类字段
 
 ## 一些简单的例子
 
