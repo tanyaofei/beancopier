@@ -39,6 +39,28 @@
     2. `Target` 的某字段为 `Target` 类型或 `List<Target>`
     3. 这两个字段名称一样
 
+## 更新日志
+
+### 0.0.5
++ 支持拷贝 boolean 非包装类类型的 isXx 方法
+
+```java
+public class Example {
+   private boolean ok;
+
+   public boolean isOk() {  // 根据 JAVA 的规范, boolean 类型的 getter 方法应当为 isXx 而不是 getXx
+      return ok;
+   }
+
+   public void setOk(boolean ok) {
+      this.ok = ok;
+   }
+}
+```
+
+### 0.0.4
++ 支持拷贝父类字段
+
 ## 功能完成清单
 
 1. [X] 普通字段的拷贝
