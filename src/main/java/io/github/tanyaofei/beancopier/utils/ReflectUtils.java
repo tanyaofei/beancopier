@@ -77,7 +77,11 @@ public class ReflectUtils {
     for (Field field : fields) {
       Method getter;
       try {
-        getter = target.getDeclaredMethod("get" + StringUtils.capitalize(field.getName()));
+        if (field.getType().equals(boolean.class)) {
+          getter = target.getDeclaredMethod("is" + StringUtils.capitalize(field.getName()));
+        } else {
+          getter = target.getDeclaredMethod("get" + StringUtils.capitalize(field.getName()));
+        }
       } catch (NoSuchMethodException e) {
         continue;
       }

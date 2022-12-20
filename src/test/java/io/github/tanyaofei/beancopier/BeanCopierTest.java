@@ -30,7 +30,8 @@ public class BeanCopierTest extends Assertions {
         .setF(Arrays.asList("hello", "world"))
         .setG(new ArrayList<>())
         .setH(new InnerField().setA("inner field"))
-        .setI(1);
+        .setI(1)
+        .setJ(true);
     source.setPa("pa");
 
     Target target = BeanCopier.copy(source, Target.class);
@@ -43,6 +44,7 @@ public class BeanCopierTest extends Assertions {
     assertEquals(source.getG(), target.getG());
     assertEquals(source.getH(), target.getH());
     assertEquals(source.getI(), target.getI());
+    assertEquals(source.isJ(), target.isJ());
     assertNull(target.getZ());
 
     assertEquals(source.getPa(), target.getPa());
@@ -113,6 +115,7 @@ public class BeanCopierTest extends Assertions {
     private ArrayList<Integer> g;
     private InnerField h;
     private Integer i;
+    private boolean j;
   }
 
   @Data
@@ -132,6 +135,7 @@ public class BeanCopierTest extends Assertions {
     private InnerField h;     // ok
     private Number i;         // ok
     private Object z;         // null
+    private boolean j;
   }
 
   @Data
