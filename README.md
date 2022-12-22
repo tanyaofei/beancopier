@@ -151,7 +151,7 @@ System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PA
 
 ## 更新日志
 
-### 0.0.6
+### 0.0.7
 
 + 支持将生成出来的 `Conveter` class 文件写入磁盘用于调试
 
