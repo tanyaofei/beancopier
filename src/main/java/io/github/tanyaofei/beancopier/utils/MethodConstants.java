@@ -19,47 +19,47 @@ import java.util.stream.Stream;
  */
 public interface MethodConstants {
 
-  Method CONVERTER_CONVERT = converterConvertMethod();
-  Method LIST_STREAM = listStreamMethod();
-  Method STREAM_MAP = streamMapMethod();
-  Method STREAM_COLLECT = streamCollectMethod();
-  Method COLLECTORS_TO_LIST = collectorsToListMethod();
-  Method FUNCTION_APPLY = functionApplyMethod();
-  Method LAMBDA_META_FACTORY_METAFACOTRY = lambdaMetaFactoryLambdafacotryMethod();
+  Method CONVERTER$CONVERT = converter$ConvertMethod();
+  Method LIST$STREAM = list$StreamMethod();
+  Method STREAM$MAP = stream$MapMethod();
+  Method STREAM$COLLECT = stream$CollectMethod();
+  Method COLLECTORS$TO_LIST = collectors$ToListMethod();
+  Method FUNCTION$APPLY = function$ApplyMethod();
+  Method LAMBDA_META_FACTORY$METAFACOTRY = lambdaMetaFactory$metafacotryMethod();
 
 
   @SneakyThrows
-  static Method converterConvertMethod() {
+  static Method converter$ConvertMethod() {
     return Converter.class.getMethod("convert", Object.class);
   }
 
   @SneakyThrows
-  static Method listStreamMethod() {
+  static Method list$StreamMethod() {
     return List.class.getMethod("stream");
   }
 
   @SneakyThrows
-  static Method streamMapMethod() {
+  static Method stream$MapMethod() {
     return Stream.class.getMethod("map", Function.class);
   }
 
   @SneakyThrows
-  static Method streamCollectMethod() {
+  static Method stream$CollectMethod() {
     return Stream.class.getMethod("collect", Collector.class);
   }
 
   @SneakyThrows
-  static Method collectorsToListMethod() {
+  static Method collectors$ToListMethod() {
     return Collectors.class.getMethod("toList");
   }
 
   @SneakyThrows
-  static Method functionApplyMethod() {
+  static Method function$ApplyMethod() {
     return Function.class.getMethod("apply", Object.class);
   }
 
   @SneakyThrows
-  static Method lambdaMetaFactoryLambdafacotryMethod() {
+  static Method lambdaMetaFactory$metafacotryMethod() {
     return LambdaMetafactory.class.getMethod("metafactory",
         Lookup.class,
         String.class,

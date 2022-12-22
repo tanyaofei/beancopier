@@ -2,8 +2,10 @@ package io.github.tanyaofei.beancopier;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -24,16 +26,13 @@ public class BeanCopier {
   ConcurrentMap<String, ? super Converter<?, ?>> CONVERTER_CACHES = new ConcurrentHashMap<>(64);
 
   /**
-   * 类加载器
+   * 转换器工厂
    */
-  private static final ConverterClassLoader CLASS_LOADER = new ConverterClassLoader(
-      BeanCopier.class.getClassLoader()
+  private static final ConverterFactory CONVERTER_FACTORY = new ConverterFactory(
+          new ConverterClassLoader(BeanCopier.class.getClassLoader()),
+          Type.getInternalName(ConverterFactory.class) + "/generate/converter",
+          BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
   );
-
-  /**
-   * 转换器生成工具
-   */
-  private static final ConverterFactory CONVERTER_FACTORY = new ConverterFactory();
 
   /**
    * @param source      拷贝来源
@@ -42,26 +41,37 @@ public class BeanCopier {
    * @param <T>         拷贝目标
    * @return 拷贝结果
    */
-
   public static <S, T> T copy(S source, Class<T> targetClass) {
     return copy(source, targetClass, null);
   }
 
+  /**
+   * 克隆对象
+   *
+   * @param source 被克隆对象
+   * @return 克隆结果
+   */
   @SuppressWarnings("unchecked")
   public static <T> T clone(T source) {
     return copy(source, (Class<T>) source.getClass(), null);
   }
 
-  public static <T> List<T> cloneList(List<T> sources) {
+  /**
+   * 批量克隆对象
+   *
+   * @param sources 被克隆对象集合
+   * @return 克隆结果集合
+   */
+  public static <T> List<T> cloneList(Collection<T> sources) {
     return cloneList(sources, null);
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> List<T> cloneList(List<T> sources, Callback<T, T> callback) {
+  public static <T> List<T> cloneList(Collection<T> sources, Callback<T, T> callback) {
     if (sources.isEmpty()) {
       return new ArrayList<>();
     }
-    return copyList(sources, (Class<T>) sources.get(0).getClass(), callback);
+    return copyList(sources, (Class<T>) sources.iterator().next().getClass(), callback);
   }
 
 
@@ -74,7 +84,6 @@ public class BeanCopier {
    * @param <T>         拷贝目标
    * @return 拷贝结果
    */
-
   public static <S, T> List<T> copyList(List<S> sources, Class<T> targetClass) {
     return sources.stream().map(s -> copy(s, targetClass)).collect(Collectors.toList());
   }
@@ -89,9 +98,8 @@ public class BeanCopier {
    * @param <T>         拷贝目标
    * @return 拷贝结果
    */
-
   public static <S, T> List<T> copyList(
-      List<S> source, Class<T> targetClass, Callback<S, T> callback
+          Collection<S> source, Class<T> targetClass, Callback<S, T> callback
   ) {
     return source
         .stream()
@@ -108,20 +116,23 @@ public class BeanCopier {
    * @param <T>         拷贝目标
    * @param callback    拷贝完之后进行的操作
    * @return 拷贝结果
-   * @see ConverterFactory#generateConverter(Class, Class, ConverterClassLoader) 动态生成 Source  to  Target
+   * @see ConverterFactory#generateConverter(Class, Class) 动态生成 Source to Target
    * 的转换器
    */
-
   @SuppressWarnings("unchecked")
   private static <S, T> T copy(
       S source,
       Class<T> targetClass,
       Callback<S, T> callback
   ) {
+    if (targetClass == null) {
+      throw new NullPointerException("targetClass is null");
+    }
+
     Converter<S, T> converter = (Converter<S, T>) CONVERTER_CACHES
         .computeIfAbsent(
             cacheKey(source.getClass(), targetClass),
-            key -> CONVERTER_FACTORY.generateConverter((Class<S>) source.getClass(), targetClass, CLASS_LOADER)
+            key -> CONVERTER_FACTORY.generateConverter((Class<S>) source.getClass(), targetClass)
         );
 
     // init a target, and copy fields from source
@@ -142,7 +153,6 @@ public class BeanCopier {
    * @param targetClass 拷贝目标类
    * @return 缓存 key
    */
-
   private static String cacheKey(
       Class<?> sourceClass, Class<?> targetClass
   ) {

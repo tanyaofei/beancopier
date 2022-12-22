@@ -13,7 +13,7 @@
 <dependency>
    <groupId>io.github.tanyaofei</groupId>
    <artifactId>beancopier</artifactId>
-   <version>0.0.4</version>
+   <version>0.0.6</version>
 </dependency>
 ```
 
@@ -35,31 +35,9 @@
    的,
    简单理解凡是可以直接编写代码进行 `get/set` 的都可以, 其他都不行(除了递归拷贝情况)
 5. 递归拷贝约束:
-    1. `Source` 的某字段为 `Source` 类型或 `List<Source>`
-    2. `Target` 的某字段为 `Target` 类型或 `List<Target>`
-    3. 这两个字段名称一样
-
-## 更新日志
-
-### 0.0.5
-+ 支持拷贝 boolean 非包装类类型的 isXx 方法
-
-```java
-public class Example {
-   private boolean ok;
-
-   public boolean isOk() {  // 根据 JAVA 的规范, boolean 类型的 getter 方法应当为 isXx 而不是 getXx
-      return ok;
-   }
-
-   public void setOk(boolean ok) {
-      this.ok = ok;
-   }
-}
-```
-
-### 0.0.4
-+ 支持拷贝父类字段
+   + `Source` 的某字段为 `Source` 类型或 `List<Source>`
+   + `Target` 的某字段为 `Target` 类型或 `List<Target>`
+   + 这两个字段名称一样
 
 ## 功能完成清单
 
@@ -162,3 +140,42 @@ public class SourceToTargetConverter$GeneratedByBeanCopier$0 implements Converte
 }
 ```
 
+## 调试
+
+通过设置启动参数可以将生成出来的字节码文件写入到磁盘便于调试
+```java
+System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH,"./");
+```
+
+
+
+## 更新日志
+
+### 0.0.6
+
++ 支持将生成出来的 `Conveter` class 文件写入磁盘用于调试
+
+```java
+System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH,"./");
+```
+
+### 0.0.5
+
++ 支持拷贝 boolean 非包装类类型的 isXx 方法
+
+```java
+public class Example {
+   private boolean ok;
+
+   public boolean isOk() {  // 根据 JAVA 的规范, boolean 类型的 getter 方法应当为 isXx 而不是 getXx
+      return ok;
+   }
+
+   public void setOk(boolean ok) {
+      this.ok = ok;
+   }
+}
+```
+
+### 0.0.4
++ 支持拷贝父类字段

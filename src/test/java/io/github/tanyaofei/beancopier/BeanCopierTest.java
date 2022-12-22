@@ -19,6 +19,11 @@ import java.util.List;
  */
 public class BeanCopierTest extends Assertions {
 
+
+  static {
+    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./");
+  }
+
   @Test
   public void testCopy() {
     Source source = new Source()

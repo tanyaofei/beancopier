@@ -5,6 +5,9 @@ import io.github.tanyaofei.beancopier.utils.*;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.reflect.*;
 import java.util.List;
@@ -20,28 +23,32 @@ import java.util.function.Function;
 public class ConverterFactory implements Opcodes, MethodConstants {
 
   /**
-   * 生成的转换器所处的包
-   */
-  private static final String CONVERTER_PACKAGE = "com/tanyaofei/beancopier/generate/converter";
-
-  /**
    * 转换器生成计数器
    */
   private static final AtomicInteger COUNTER = new AtomicInteger();
 
+  private final ConverterClassLoader classLoader;
+  private final String pkg;
+  private final String classDumpPath;
+
+  public ConverterFactory(ConverterClassLoader classLoader, String pkg, String classDumpPath) {
+    this.classLoader = classLoader;
+    this.pkg = pkg;
+    this.classDumpPath = classDumpPath;
+  }
+
   /**
    * 创建 sType  to  tType 的转换器并加载到运行时内存中并创建实例
    *
-   * @param sType       拷贝来源类
-   * @param tType       拷贝目标类
-   * @param classLoader 类加载器, 创建的类会加载到此加载器中
-   * @param <S>         拷贝来源
-   * @param <T>         拷贝目标
+   * @param sType 拷贝来源类
+   * @param tType 拷贝目标类
+   * @param <S>   拷贝来源
+   * @param <T>   拷贝目标
    * @return sType  to  tType 转换器实例
    */
   @SuppressWarnings("unchecked")
   public <S, T> Converter<S, T> generateConverter(
-      Class<S> sType, Class<T> tType, ConverterClassLoader classLoader
+          Class<S> sType, Class<T> tType
   ) {
     // 检查 sType 是一个 public class, 因为无法 import 一个非 public 的类(default 不考虑)
     if (!Modifier.isPublic(sType.getModifiers())) {
@@ -58,7 +65,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
             "Can not access the no args construct of class '%s', make it public", tType));
       }
     } catch (NoSuchMethodException e) {
-      throw new IllegalArgumentException("Can not find the no-args-construct of class: " + tType);
+      throw new IllegalArgumentException("Can not find the no-args-constructor of class: " + tType);
     }
 
     // 创建类编写器, 自动完成局部变量计数和栈深度计数
@@ -83,10 +90,21 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // 加载到内存并实例化
     final byte[] code = cw.toByteArray();
     Class<Converter<S, T>> clazz = (Class<Converter<S, T>>) classLoader.defineClass(null, code);
+    dumpClassIfNeeded(code, clazz.getSimpleName());
     try {
       return clazz.getConstructor().newInstance();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw new BeanCopierException("Failed to initialize converter", e);
+    }
+  }
+
+  private void dumpClassIfNeeded(byte[] code, String className) {
+    if (StringUtils.hasLength(classDumpPath)) {
+      try (FileOutputStream out = new FileOutputStream(classDumpPath + File.separator + className + ".class")) {
+        out.write(code);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -98,13 +116,13 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @return 生成的转换器类名
    */
   private String genConverterInternalName(Class<?> sType, Class<?> tType) {
-    return CONVERTER_PACKAGE
-        + "/"
-        + sType.getSimpleName()
-        + "To"
-        + tType.getSimpleName()
-        + "Converter$GeneratedByBeanCopier$"
-        + COUNTER.getAndIncrement();
+    return pkg
+            + "/"
+            + sType.getSimpleName()
+            + "To"
+            + tType.getSimpleName()
+            + "Converter$GeneratedByBeanCopier$"
+            + COUNTER.getAndIncrement();
   }
 
   /**
@@ -150,8 +168,8 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   ) {
     MethodVisitor visitor = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
-        CONVERTER_CONVERT.getName(),
-        Type.getMethodDescriptor(CONVERTER_CONVERT),
+        CONVERTER$CONVERT.getName(),
+        Type.getMethodDescriptor(CONVERTER$CONVERT),
         null,
         null);
     visitor.visitCode();
@@ -161,7 +179,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     visitor.visitMethodInsn(
         INVOKEVIRTUAL,
         internalName,
-        CONVERTER_CONVERT.getName(),
+        CONVERTER$CONVERT.getName(),
         ReflectUtils.getMethodDescriptor(tType, sType),
         false);
     visitor.visitInsn(ARETURN);
@@ -202,7 +220,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   ) {
     MethodVisitor visitor = cw.visitMethod(
         ACC_PUBLIC,
-        CONVERTER_CONVERT.getName(),
+        CONVERTER$CONVERT.getName(),
         ReflectUtils.getMethodDescriptor(tType, sType),
         null,
         null);
@@ -321,7 +339,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     visitor.visitMethodInsn(
         INVOKEVIRTUAL,
         internalName,
-        CONVERTER_CONVERT.getName(),
+        CONVERTER$CONVERT.getName(),
         ReflectUtils.getMethodDescriptor(tType, sType),
         false);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, setter);
@@ -352,34 +370,34 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
 
     // list.stream()
-    BytecodeUtils.invokeMethod(visitor, INVOKEINTERFACE, LIST_STREAM);
+    BytecodeUtils.invokeMethod(visitor, INVOKEINTERFACE, LIST$STREAM);
 
     // this::convert
     visitor.visitVarInsn(ALOAD, 0);
     visitor.visitInvokeDynamicInsn(
-        FUNCTION_APPLY.getName(),
+        FUNCTION$APPLY.getName(),
         "(L" + internalName + ";)" + Type.getDescriptor(Function.class),
         new Handle(H_INVOKESTATIC,
             Type.getInternalName(LambdaMetafactory.class),
-            LAMBDA_META_FACTORY_METAFACOTRY.getName(),
-            Type.getMethodDescriptor(LAMBDA_META_FACTORY_METAFACOTRY),
+            LAMBDA_META_FACTORY$METAFACOTRY.getName(),
+            Type.getMethodDescriptor(LAMBDA_META_FACTORY$METAFACOTRY),
             false),
         Type.getType(ReflectUtils.getMethodDescriptor(Object.class, Object.class)),
         new Handle(H_INVOKEVIRTUAL,
             internalName,
-            CONVERTER_CONVERT.getName(),
+            CONVERTER$CONVERT.getName(),
             ReflectUtils.getMethodDescriptor(tType, sType),
             false),
         Type.getType(ReflectUtils.getMethodDescriptor(tType, sType)));
 
     // stream.map()
-    BytecodeUtils.invokeMethod(visitor, INVOKEINTERFACE, STREAM_MAP);
+    BytecodeUtils.invokeMethod(visitor, INVOKEINTERFACE, STREAM$MAP);
 
     // collector.toList()
-    BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, COLLECTORS_TO_LIST);
+    BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, COLLECTORS$TO_LIST);
 
     // stream.collect()
-    BytecodeUtils.invokeMethod(visitor, INVOKEINTERFACE, STREAM_COLLECT);
+    BytecodeUtils.invokeMethod(visitor, INVOKEINTERFACE, STREAM$COLLECT);
     visitor.visitTypeInsn(CHECKCAST, Type.getInternalName(List.class));
 
     // target.setField()
