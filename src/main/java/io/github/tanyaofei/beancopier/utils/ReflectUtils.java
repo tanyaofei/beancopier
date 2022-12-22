@@ -85,6 +85,10 @@ public class ReflectUtils {
       } catch (NoSuchMethodException e) {
         continue;
       }
+      if (getter.getParameterTypes().length != 0) {
+        // getter should not have parameters
+        continue;
+      }
       getters.put(field.getName(), Tuple.of(field, getter));
     }
 
@@ -108,9 +112,12 @@ public class ReflectUtils {
     for (Field field : fields) {
       Method setter;
       try {
-        setter = target
-            .getDeclaredMethod("set" + StringUtils.capitalize(field.getName()), field.getType());
+        setter = target.getDeclaredMethod("set" + StringUtils.capitalize(field.getName()), field.getType());
       } catch (NoSuchMethodException e) {
+        continue;
+      }
+      if (setter.getParameterTypes().length != 1) {
+        // setter should have one parameter only
         continue;
       }
       setters.put(field.getName(), Tuple.of(field, setter));
