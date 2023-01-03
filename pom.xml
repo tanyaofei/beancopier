@@ -6,7 +6,7 @@
 
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier</artifactId>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
     <name>beancopier</name>
 
     <url>https://github.com/tanyaofei/beancopier</url>
@@ -53,7 +53,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
