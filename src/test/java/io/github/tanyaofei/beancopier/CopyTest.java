@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * @author tanyaofei
  */
-public class BeanCopierTest extends Assertions {
+public class CopyTest extends Assertions {
 
 
   static {

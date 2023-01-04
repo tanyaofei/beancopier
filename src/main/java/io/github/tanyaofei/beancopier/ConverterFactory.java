@@ -1,7 +1,11 @@
 package io.github.tanyaofei.beancopier;
 
+import io.github.tanyaofei.beancopier.annotation.Feature;
+import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.exception.BeanCopierException;
+import io.github.tanyaofei.beancopier.typehandler.TypeHandler;
 import io.github.tanyaofei.beancopier.utils.*;
+import lombok.SneakyThrows;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.*;
 
@@ -12,11 +16,12 @@ import java.lang.invoke.LambdaMetafactory;
 import java.lang.reflect.*;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
- * 使用 ASM 字节码技术在运行时创建 Source  to  Target 的转换器字节码
+ * 使用 ASM 字节码技术在运行时创建 Source 拷贝为 Target 的转换器字节码
  *
  * @author tanyaofei
  */
@@ -50,15 +55,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   public <S, T> Converter<S, T> generateConverter(
           Class<S> sType, Class<T> tType
   ) {
-    // 检查 sType 是一个 public class, 因为无法 import 一个非 public 的类(default 不考虑)
     if (!Modifier.isPublic(sType.getModifiers())) {
       throw new IllegalArgumentException(String.format("Class '%s' is not a public class", sType));
     }
-    // 检查 sType 是一个 public class, 因为无法 import 一个非 public 的类(default 不考虑)
     if (!Modifier.isPublic(tType.getModifiers())) {
       throw new IllegalArgumentException(String.format("Class '%s' is not a public class", tType));
     }
-    // 检查 tType 提供一个 public 无参构造函数
     try {
       if (!Modifier.isPublic(tType.getConstructor().getModifiers())) {
         throw new IllegalArgumentException(String.format(
@@ -232,19 +234,22 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // dup
     // invokespecial #Converter <init>()V;
     // astore_2
-    visitor.visitTypeInsn(NEW, Type.getInternalName(tType));
-    visitor.visitInsn(DUP);
-    BytecodeUtils.invokeNoArgsConstructor(visitor, tType);
+    BytecodeUtils.newInstanceViaNoArgsConstructor(visitor, tType);
     visitor.visitVarInsn(ASTORE, 2);
     // -- end
 
     Label skipIfNull = null;
     Map<String, Tuple<Field, Method>> getters = ReflectUtils.getFieldGetters(sType);
     for (Map.Entry<String, Tuple<Field, Method>> setterEntry : ReflectUtils.getFieldSetters(tType).entrySet()) {
-      String fieldName = setterEntry.getKey();
       Method setter = setterEntry.getValue().getT2();
       Field tField = setterEntry.getValue().getT1();
 
+      Property property = Optional.ofNullable(tField.getAnnotation(Property.class)).orElse(DefaultProperty.DEFAULT_PROPERTY);
+      if (property.skip()) {
+        continue;
+      }
+
+      String fieldName = property.value().isEmpty() ? setterEntry.getKey() : property.value();
       Tuple<Field, Method> filedGetter = getters.get(fieldName);
       if (filedGetter == null) {
         // target 没有同名字段跳过
@@ -253,6 +258,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       Method getter = filedGetter.getT2();
       Field sField = filedGetter.getT1();
 
+      Class<? extends TypeHandler<?, ?>> typeHandler;
       if (isRecursionCopy(sType, sField, tType, tField)) {
         // 单个递归
         if (skipIfNull != null) {
@@ -274,6 +280,28 @@ public class ConverterFactory implements Opcodes, MethodConstants {
           skipIfNull = null;
         }
         copyNormalField(visitor, getter, setter);
+      } else if ((typeHandler = getTypeHandler(sField, tField)) != null) {
+        // 类型处理器处理字段
+        if (skipIfNull != null) {
+          visitor.visitLabel(skipIfNull);
+        }
+        skipIfNull = skipFieldIfNull(visitor, getter);
+        copyHandledType(visitor, typeHandler, getter, setter);
+      } else if (Feature.AUTO_BOXING_AND_UNBOXING.isSetIn(property)) {
+        // 自动装箱、拆箱
+        if (isBoxing(sField, tField)) {
+          if (skipIfNull != null) {
+            visitor.visitLabel(skipIfNull);
+          }
+          skipIfNull = null;
+          copyUnboxedField(visitor, sField, getter, tField, setter);
+        } else if (isUnboxing(sField, tField)) {
+          if (skipIfNull != null) {
+            visitor.visitLabel(skipIfNull);
+          }
+          skipIfNull = skipFieldIfNull(visitor, getter);  // 如果来源字段为 null 则结果字段为零值
+          copyBoxedField(visitor, sField, getter, tField, setter);
+        }
       }
     }
 
@@ -287,6 +315,71 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     visitor.visitEnd();
   }
 
+  private void copyBoxedField(
+          MethodVisitor visitor,
+          Field sField, Method getter,
+          Field tField, Method setter
+  ) {
+    visitor.visitVarInsn(ALOAD, 2);
+    visitor.visitVarInsn(ALOAD, 1);
+    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
+    java.lang.reflect.Type tType = tField.getType();
+    if (tType == int.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, NUMBER$INT_VALUE);
+    } else if (tType == short.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, NUMBER$SHORT_VALUE);
+    } else if (tType == long.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, NUMBER$LONG_VALUE);
+    } else if (tType == float.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, NUMBER$FLOAT_VALUE);
+    } else if (tType == double.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, NUMBER$DOUBLE_VALUE);
+    } else if (tType == char.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, CHARACTER$CHAR_VALUE);
+    } else if (tType == boolean.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, BOOLEAN$BOOLEAN_VALUE);
+    } else if (tType == byte.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, BYTE$BYTE_VALUE);
+    }
+
+    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, setter);
+    dropSetterReturnVal(visitor, setter);
+  }
+
+  private void copyUnboxedField(
+          MethodVisitor visitor,
+          Field sField, Method getter,
+          Field tField, Method setter
+  ) {
+    visitor.visitVarInsn(ALOAD, 2);
+    visitor.visitVarInsn(ALOAD, 1);
+    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
+
+    java.lang.reflect.Type tType = tField.getType();
+    if (tType == Integer.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.INTEGER$VALUE_OF);
+    } else if (tType == Short.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.SHORT$VALUE_OF);
+    } else if (tType == Long.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.LONG$VALUE_OF);
+    } else if (tType == Byte.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.BYTE$VALUE_OF);
+    } else if (tType == Character.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.CHARACTER$VALUE_OF);
+    } else if (tType == Float.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.FLOAT$VALUE_OF);
+    } else if (tType == Double.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.DOUBLE$VALUE_OF);
+    } else if (tType == Boolean.class) {
+      BytecodeUtils.invokeMethod(visitor, INVOKESTATIC, MethodConstants.BOOLEAN$VALUE_OF);
+    } else {
+      throw new IllegalStateException("Unsupported type: " + tField.getType());
+    }
+
+    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, setter);
+    dropSetterReturnVal(visitor, setter);
+  }
+
 
   /**
    * 拷贝普通字段
@@ -296,12 +389,40 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param setter  拷贝目标字段 setter
    */
   private void copyNormalField(
-      MethodVisitor visitor,
-      Method getter, Method setter
+          MethodVisitor visitor,
+          Method getter,
+          Method setter
   ) {
     visitor.visitVarInsn(ALOAD, 2);
     visitor.visitVarInsn(ALOAD, 1);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
+    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, setter);
+    dropSetterReturnVal(visitor, setter);
+  }
+
+  /**
+   * 使用类型处理器进行字段拷贝
+   *
+   * @param visitor     方法编写器
+   * @param typeHandler 类型处理器类
+   * @param getter      拷贝来源字段 getter 方法
+   * @param setter      拷贝目标字段 setter 方法
+   * @since 0.1.0
+   */
+  @SneakyThrows
+  private void copyHandledType(
+          MethodVisitor visitor,
+          Class<? extends TypeHandler<?, ?>> typeHandler,
+          Method getter,
+          Method setter
+  ) {
+    visitor.visitVarInsn(ALOAD, 2);
+    BytecodeUtils.newInstanceViaNoArgsConstructor(visitor, typeHandler);
+
+    visitor.visitVarInsn(ALOAD, 1);
+    Method handleMethod = typeHandler.getMethod(TYPE_HANDLER$HANDLE.getName(), getter.getReturnType());
+    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
+    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, handleMethod);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, setter);
     dropSetterReturnVal(visitor, setter);
   }
@@ -326,10 +447,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param setter       拷贝目标字段 setter 方法
    */
   private void copyRecursionField(
-      MethodVisitor visitor,
-      String internalName,
-      Class<?> sType, Method getter,
-      Class<?> tType, Method setter
+          MethodVisitor visitor,
+          String internalName,
+          Class<?> sType, Method getter,
+          Class<?> tType, Method setter
   ) {
     // target.setField(convert(source.getField()))
     visitor.visitVarInsn(ALOAD, 2);
@@ -337,11 +458,11 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     visitor.visitVarInsn(ALOAD, 1);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
     visitor.visitMethodInsn(
-        INVOKEVIRTUAL,
-        internalName,
-        CONVERTER$CONVERT.getName(),
-        ReflectUtils.getMethodDescriptor(tType, sType),
-        false);
+            INVOKEVIRTUAL,
+            internalName,
+            CONVERTER$CONVERT.getName(),
+            ReflectUtils.getMethodDescriptor(tType, sType),
+            false);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, setter);
     dropSetterReturnVal(visitor, setter);
   }
@@ -438,6 +559,52 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     }
   }
 
+  private boolean isBoxing(Field sField, Field tField) {
+    Class<?> sType = sField.getType();
+    Class<?> tType = tField.getType();
+    if (sType.equals(int.class)) {
+      return tType == Integer.class;
+    } else if (sType.equals(short.class)) {
+      return tType == Short.class;
+    } else if (sType.equals(long.class)) {
+      return tType == Long.class;
+    } else if (sType.equals(byte.class)) {
+      return tType == Byte.class;
+    } else if (sType.equals(char.class)) {
+      return tType == Character.class;
+    } else if (sType.equals(float.class)) {
+      return tType == Float.class;
+    } else if (sType.equals(double.class)) {
+      return tType == Double.class;
+    } else if (sType.equals(boolean.class)) {
+      return tType == Boolean.class;
+    }
+    return false;
+  }
+
+  private boolean isUnboxing(Field sField, Field tField) {
+    Class<?> sType = sField.getType();
+    Class<?> tType = tField.getType();
+    if (sType == Integer.class) {
+      return tType.equals(int.class);
+    } else if (sType == Short.class) {
+      return tType.equals(short.class);
+    } else if (sType == Long.class) {
+      return tType.equals(long.class);
+    } else if (sType == Byte.class) {
+      return tType.equals(byte.class);
+    } else if (sType == Character.class) {
+      return tType.equals(char.class);
+    } else if (sType == Float.class) {
+      return tType.equals(float.class);
+    } else if (sType == Double.class) {
+      return tType.equals(double.class);
+    } else if (sType == Boolean.class) {
+      return tType.equals(boolean.class);
+    }
+    return false;
+  }
+
   /**
    * 判断是否属于递归拷贝
    *
@@ -473,18 +640,18 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       ParameterizedType sFieldParameterizedType = (ParameterizedType) sFieldType;
       ParameterizedType tFieldParameterizedType = (ParameterizedType) tFieldType;
       if (!((Class<?>) tFieldParameterizedType.getRawType())
-          .isAssignableFrom((Class<?>) sFieldParameterizedType.getRawType())) {
+              .isAssignableFrom((Class<?>) sFieldParameterizedType.getRawType())) {
         // 原始类型不一致, 不兼容
         return false;
       }
       if (sFieldParameterizedType.getActualTypeArguments().length
-          != tFieldParameterizedType.getActualTypeArguments().length) {
+              != tFieldParameterizedType.getActualTypeArguments().length) {
         // 范型数量不一致, 不兼容
         return false;
       }
       for (int i = 0; i < sFieldParameterizedType.getActualTypeArguments().length; i++) {
         if (!tFieldParameterizedType.getActualTypeArguments()[i]
-            .equals(sFieldParameterizedType.getActualTypeArguments()[i])) {
+                .equals(sFieldParameterizedType.getActualTypeArguments()[i])) {
           // 第 i 个范型不一致, 不兼容
           return false;
         }
@@ -496,6 +663,43 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
     // 其他均为不兼容
     return false;
+  }
+
+  /**
+   * 获取类型处理器
+   *
+   * @param sField 拷贝来源字段
+   * @param tField 拷贝目标字段
+   * @return 类型处理器
+   * @since 0.1.0
+   */
+  private Class<? extends TypeHandler<?, ?>> getTypeHandler(Field sField, Field tField) {
+    Property property = tField.getAnnotation(Property.class);
+    if (property == null) {
+      return null;
+    }
+
+    java.lang.reflect.Type sType = sField.getGenericType();
+    java.lang.reflect.Type tType = tField.getGenericType();
+    for (Class<? extends TypeHandler<?, ?>> typeHandler : property.typeHandler()) {
+      for (Method method : typeHandler.getDeclaredMethods()) {
+        if (!method.getName().equals(TYPE_HANDLER$HANDLE.getName())) {
+          continue;
+        }
+        if (!Modifier.isPublic(method.getModifiers())) {
+          continue;
+        }
+        if (!method.getGenericReturnType().equals(tType)) {
+          continue;
+        }
+        if (method.getGenericParameterTypes().length != 1 || !method.getGenericParameterTypes()[0].equals(sType)) {
+          continue;
+        }
+        return typeHandler;
+      }
+    }
+
+    return null;
   }
 
   /**

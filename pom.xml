@@ -6,7 +6,7 @@
 
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier</artifactId>
-    <version>0.0.8</version>
+    <version>0.1.0</version>
     <name>beancopier</name>
 
     <url>https://github.com/tanyaofei/beancopier</url>
@@ -41,6 +41,7 @@
         <asm.version>7.1</asm.version>
         <lombok.version>1.18.20</lombok.version>
         <junit.version>5.7.2</junit.version>
+        <spring-framework.lang.version>5.0.1</spring-framework.lang.version>
     </properties>
 
     <dependencies>
@@ -54,6 +55,12 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>23.1.0</version>
         </dependency>
 
         <dependency>
