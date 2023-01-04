@@ -159,11 +159,5 @@ public class BeanCopier {
     return sourceClass.getName() + ":" + targetClass.getName();
   }
 
-  private static Converter<?, ?> cacheAndReturn(
-      String key, Converter<?, ?> converter
-  ) {
-    CONVERTER_CACHES.put(key, converter);
-    return converter;
-  }
 
 }

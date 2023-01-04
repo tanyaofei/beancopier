@@ -42,4 +42,14 @@ public class BytecodeUtils implements Opcodes {
     visitor.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(objType), "<init>", "()V", false);
   }
 
+  public static void newObject(MethodVisitor visitor, Class<?> objType) {
+    visitor.visitTypeInsn(NEW, Type.getInternalName(objType));
+  }
+
+  public static void createObjectWithNoArgsConstructor(MethodVisitor visitor, Class<?> objType) {
+    newObject(visitor, objType);
+    visitor.visitInsn(DUP);
+    invokeNoArgsConstructor(visitor, objType);
+  }
+
 }
