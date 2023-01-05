@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class DoubleListToArrayTypeHandler extends AbstractListToArrayTypeHandler<Double> {
-    @Override
-    public Double[] handle(@NotNull List<Double> value) {
-        return value.toArray(new Double[0]);
-    }
+  @Override
+  public Double[] handle(@NotNull List<Double> value) {
+    return value.toArray(new Double[0]);
+  }
 }

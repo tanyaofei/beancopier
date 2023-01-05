@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class LongArrayToListTypeHandler extends AbstractArrayToListTypeHandler<Long> {
-    @Override
-    public List<Long> handle(Long @NotNull [] value) {
-        return Arrays.asList(value);
-    }
+  @Override
+  public List<Long> handle(Long @NotNull [] value) {
+    return Arrays.asList(value);
+  }
 }

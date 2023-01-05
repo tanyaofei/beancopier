@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class FloatArrayToListTypeHandler extends AbstractArrayToListTypeHandler<Float> {
-    @Override
-    public List<Float> handle(Float @NotNull [] value) {
-        return Arrays.asList(value);
-    }
+  @Override
+  public List<Float> handle(Float @NotNull [] value) {
+    return Arrays.asList(value);
+  }
 }

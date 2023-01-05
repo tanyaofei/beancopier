@@ -53,7 +53,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    */
   @SuppressWarnings("unchecked")
   public <S, T> Converter<S, T> generateConverter(
-          Class<S> sType, Class<T> tType
+      Class<S> sType, Class<T> tType
   ) {
     if (!Modifier.isPublic(sType.getModifiers())) {
       throw new IllegalArgumentException(String.format("Class '%s' is not a public class", sType));
@@ -119,12 +119,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    */
   private String genConverterInternalName(Class<?> sType, Class<?> tType) {
     return pkg
-            + "/"
-            + sType.getSimpleName()
-            + "To"
-            + tType.getSimpleName()
-            + "Converter$GeneratedByBeanCopier$"
-            + COUNTER.getAndIncrement();
+        + "/"
+        + sType.getSimpleName()
+        + "To"
+        + tType.getSimpleName()
+        + "Converter$GeneratedByBeanCopier$"
+        + COUNTER.getAndIncrement();
   }
 
   /**
@@ -316,9 +316,9 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   }
 
   private void copyBoxedField(
-          MethodVisitor visitor,
-          Field sField, Method getter,
-          Field tField, Method setter
+      MethodVisitor visitor,
+      Field sField, Method getter,
+      Field tField, Method setter
   ) {
     visitor.visitVarInsn(ALOAD, 2);
     visitor.visitVarInsn(ALOAD, 1);
@@ -347,9 +347,9 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   }
 
   private void copyUnboxedField(
-          MethodVisitor visitor,
-          Field sField, Method getter,
-          Field tField, Method setter
+      MethodVisitor visitor,
+      Field sField, Method getter,
+      Field tField, Method setter
   ) {
     visitor.visitVarInsn(ALOAD, 2);
     visitor.visitVarInsn(ALOAD, 1);
@@ -389,9 +389,9 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param setter  拷贝目标字段 setter
    */
   private void copyNormalField(
-          MethodVisitor visitor,
-          Method getter,
-          Method setter
+      MethodVisitor visitor,
+      Method getter,
+      Method setter
   ) {
     visitor.visitVarInsn(ALOAD, 2);
     visitor.visitVarInsn(ALOAD, 1);
@@ -411,10 +411,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    */
   @SneakyThrows
   private void copyHandledType(
-          MethodVisitor visitor,
-          Class<? extends TypeHandler<?, ?>> typeHandler,
-          Method getter,
-          Method setter
+      MethodVisitor visitor,
+      Class<? extends TypeHandler<?, ?>> typeHandler,
+      Method getter,
+      Method setter
   ) {
     visitor.visitVarInsn(ALOAD, 2);
     BytecodeUtils.newInstanceViaNoArgsConstructor(visitor, typeHandler);
@@ -447,10 +447,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param setter       拷贝目标字段 setter 方法
    */
   private void copyRecursionField(
-          MethodVisitor visitor,
-          String internalName,
-          Class<?> sType, Method getter,
-          Class<?> tType, Method setter
+      MethodVisitor visitor,
+      String internalName,
+      Class<?> sType, Method getter,
+      Class<?> tType, Method setter
   ) {
     // target.setField(convert(source.getField()))
     visitor.visitVarInsn(ALOAD, 2);
@@ -458,11 +458,11 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     visitor.visitVarInsn(ALOAD, 1);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
     visitor.visitMethodInsn(
-            INVOKEVIRTUAL,
-            internalName,
-            CONVERTER$CONVERT.getName(),
-            ReflectUtils.getMethodDescriptor(tType, sType),
-            false);
+        INVOKEVIRTUAL,
+        internalName,
+        CONVERTER$CONVERT.getName(),
+        ReflectUtils.getMethodDescriptor(tType, sType),
+        false);
     BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, setter);
     dropSetterReturnVal(visitor, setter);
   }
@@ -640,18 +640,18 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       ParameterizedType sFieldParameterizedType = (ParameterizedType) sFieldType;
       ParameterizedType tFieldParameterizedType = (ParameterizedType) tFieldType;
       if (!((Class<?>) tFieldParameterizedType.getRawType())
-              .isAssignableFrom((Class<?>) sFieldParameterizedType.getRawType())) {
+          .isAssignableFrom((Class<?>) sFieldParameterizedType.getRawType())) {
         // 原始类型不一致, 不兼容
         return false;
       }
       if (sFieldParameterizedType.getActualTypeArguments().length
-              != tFieldParameterizedType.getActualTypeArguments().length) {
+          != tFieldParameterizedType.getActualTypeArguments().length) {
         // 范型数量不一致, 不兼容
         return false;
       }
       for (int i = 0; i < sFieldParameterizedType.getActualTypeArguments().length; i++) {
         if (!tFieldParameterizedType.getActualTypeArguments()[i]
-                .equals(sFieldParameterizedType.getActualTypeArguments()[i])) {
+            .equals(sFieldParameterizedType.getActualTypeArguments()[i])) {
           // 第 i 个范型不一致, 不兼容
           return false;
         }

@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class StringListToArrayTypeHandler extends AbstractListToArrayTypeHandler<String> {
-    @Override
-    public String[] handle(@NotNull List<String> value) {
-        return value.toArray(new String[0]);
-    }
+  @Override
+  public String[] handle(@NotNull List<String> value) {
+    return value.toArray(new String[0]);
+  }
 }

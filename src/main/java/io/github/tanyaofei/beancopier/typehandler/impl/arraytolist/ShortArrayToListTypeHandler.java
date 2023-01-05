@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ShortArrayToListTypeHandler extends AbstractArrayToListTypeHandler<Short> {
-    @Override
-    public List<Short> handle(Short @NotNull [] value) {
-        return Arrays.asList(value);
-    }
+  @Override
+  public List<Short> handle(Short @NotNull [] value) {
+    return Arrays.asList(value);
+  }
 }

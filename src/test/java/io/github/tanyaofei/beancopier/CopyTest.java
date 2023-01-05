@@ -58,28 +58,27 @@ public class CopyTest extends Assertions {
   @Test
   public void testClone() {
     Source source = new Source()
-            .setA("a")
-            .setB(1)
-            .setC(LocalDateTime.now())
-            .setD(new Source().setA("a"))
-            .setE(Collections.singletonList(new Source()))
-            .setF(Arrays.asList("hello", "world"))
-            .setG(new ArrayList<>())
-            .setH(new InnerField().setA("inner field"))
-            .setI(1)
-            ;
+        .setA("a")
+        .setB(1)
+        .setC(LocalDateTime.now())
+        .setD(new Source().setA("a"))
+        .setE(Collections.singletonList(new Source()))
+        .setF(Arrays.asList("hello", "world"))
+        .setG(new ArrayList<>())
+        .setH(new InnerField().setA("inner field"))
+        .setI(1);
 
     source.setPa("pa");
     Source target = BeanCopier.clone(source);
     assertEquals(source, target);
 
-    List<Source> sources = new ArrayList<Source>(){{
+    List<Source> sources = new ArrayList<Source>() {{
       add(source);
       add(target);
     }};
 
     List<Source> targets = BeanCopier.cloneList(sources);
-    for(int i = 0; i < sources.size(); i++) {
+    for (int i = 0; i < sources.size(); i++) {
       assertEquals(sources.get(i), targets.get(i));
     }
   }
@@ -109,7 +108,7 @@ public class CopyTest extends Assertions {
   @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Source extends Parent{
+  public static class Source extends Parent {
 
     private String a;
     private Integer b;
@@ -128,7 +127,7 @@ public class CopyTest extends Assertions {
   @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Target extends Parent{
+  public static class Target extends Parent {
 
     private String a;         // ok
     private String b;         // null

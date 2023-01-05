@@ -12,6 +12,6 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class TypeHandler<S, T> {
 
-    public abstract T handle(@NotNull S value);
+  public abstract T handle(@NotNull S value);
 
 }

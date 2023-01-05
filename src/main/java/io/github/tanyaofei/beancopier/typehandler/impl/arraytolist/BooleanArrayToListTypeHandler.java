@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BooleanArrayToListTypeHandler extends AbstractArrayToListTypeHandler<Boolean> {
-    @Override
-    public List<Boolean> handle(Boolean @NotNull [] value) {
-        return Arrays.asList(value);
-    }
+  @Override
+  public List<Boolean> handle(Boolean @NotNull [] value) {
+    return Arrays.asList(value);
+  }
 }

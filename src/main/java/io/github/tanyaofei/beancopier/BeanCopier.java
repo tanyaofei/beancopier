@@ -43,9 +43,9 @@ public class BeanCopier {
    * 转换器工厂
    */
   private static final ConverterFactory CONVERTER_FACTORY = new ConverterFactory(
-          new ConverterClassLoader(BeanCopier.class.getClassLoader()),
-          Type.getInternalName(ConverterFactory.class) + "/generate/converter",
-          BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
+      new ConverterClassLoader(BeanCopier.class.getClassLoader()),
+      Type.getInternalName(ConverterFactory.class) + "/generate/converter",
+      BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
   );
 
   /**
@@ -129,13 +129,13 @@ public class BeanCopier {
    */
   @NotNull
   public static <S, T> List<T> copyList(
-          @NotNull Collection<S> source,
-          @NotNull Class<T> targetClass,
-          @Nullable Callback<S, T> callback
+      @NotNull Collection<S> source,
+      @NotNull Class<T> targetClass,
+      @Nullable Callback<S, T> callback
   ) {
     return source
-            .stream()
-            .map(s -> copy(s, targetClass, callback))
+        .stream()
+        .map(s -> copy(s, targetClass, callback))
         .collect(Collectors.toList());
   }
 
@@ -154,17 +154,17 @@ public class BeanCopier {
   @Contract("null, _, _ -> null")
   @SuppressWarnings("unchecked")
   private static <S, T> T copy(
-          @Nullable S source,
-          @NotNull(exception = NullPointerException.class) Class<T> targetClass,
-          @Nullable Callback<S, T> callback
+      @Nullable S source,
+      @NotNull(exception = NullPointerException.class) Class<T> targetClass,
+      @Nullable Callback<S, T> callback
   ) {
     if (source == null) {
       return null;
     }
 
     Converter<S, T> converter = (Converter<S, T>) CONVERTER_CACHES.computeIfAbsent(
-            cacheKey(source.getClass(), targetClass),
-            key -> CONVERTER_FACTORY.generateConverter((Class<S>) source.getClass(), targetClass)
+        cacheKey(source.getClass(), targetClass),
+        key -> CONVERTER_FACTORY.generateConverter((Class<S>) source.getClass(), targetClass)
     );
 
     // init a target, and copy fields from source

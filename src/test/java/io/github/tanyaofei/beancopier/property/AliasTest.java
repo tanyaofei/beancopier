@@ -15,36 +15,36 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class AliasTest {
 
-    static {
-        System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./");
-    }
+  static {
+    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./");
+  }
 
-    @Test
-    public void testAlias() {
-        A a = new A()
-                .setA("1")
-                .setB(Arrays.asList("1", "2", "3"));
-        B b = BeanCopier.copy(a, B.class);
+  @Test
+  public void testAlias() {
+    A a = new A()
+        .setA("1")
+        .setB(Arrays.asList("1", "2", "3"));
+    B b = BeanCopier.copy(a, B.class);
 
-        assertNull(b.getA1());
-        assertEquals(a.getB(), b.getB1());
-    }
+    assertNull(b.getA1());
+    assertEquals(a.getB(), b.getB1());
+  }
 
-    @Data
-    @Accessors(chain = true)
-    public static class A {
-        private String a;
-        private List<String> b;
-    }
+  @Data
+  @Accessors(chain = true)
+  public static class A {
+    private String a;
+    private List<String> b;
+  }
 
-    @Data
-    @Accessors(chain = true)
-    public static class B {
+  @Data
+  @Accessors(chain = true)
+  public static class B {
 
-        @Property("a")
-        private Integer a1;
-        @Property("b")
-        private List<String> b1;
-    }
+    @Property("a")
+    private Integer a1;
+    @Property("b")
+    private List<String> b1;
+  }
 
 }
