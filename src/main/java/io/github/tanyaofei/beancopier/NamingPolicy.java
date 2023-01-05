@@ -1,5 +1,7 @@
 package io.github.tanyaofei.beancopier;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.function.Predicate;
 
 public abstract class NamingPolicy {
@@ -14,7 +16,12 @@ public abstract class NamingPolicy {
     return DEFAULT_PACKAGE;
   }
 
-  public abstract String getClassName(Class<?> sourceClass, Class<?> targetClass, Predicate<String> predicate);
+  @NotNull
+  public abstract String getClassName(
+      @NotNull Class<?> sourceClass,
+      @NotNull Class<?> targetClass,
+      @NotNull Predicate<String> predicate
+  );
 
 
   public static class Default extends NamingPolicy {
@@ -22,7 +29,13 @@ public abstract class NamingPolicy {
     private static final Default INSTANCE = new Default();
 
     @Override
-    public String getClassName(Class<?> sourceClass, Class<?> targetClass, Predicate<String> predicate) {
+    @NotNull
+    @SuppressWarnings("StatementWithEmptyBody")
+    public String getClassName(
+        @NotNull Class<?> sourceClass,
+        @NotNull Class<?> targetClass,
+        @NotNull Predicate<String> predicate
+    ) {
       String base = getPackage()
           + "."
           + sourceClass.getSimpleName()

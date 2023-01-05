@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier;
 
+import com.google.common.reflect.TypeToken;
 import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
@@ -464,43 +465,8 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @return 类型是否相等
    */
   private boolean isTypeCompatible(Field sField, Field tField) {
-    java.lang.reflect.Type sFieldType = sField.getGenericType();
-    java.lang.reflect.Type tFieldType = tField.getGenericType();
+    return TypeToken.of(sField.getGenericType()).isSubtypeOf(tField.getGenericType());
 
-    if (sFieldType instanceof Class) {
-      // 如果不是范型类型, 直接判断两者的类的继承关系
-      return tField.getType().isAssignableFrom(sField.getType());
-    } else if (sFieldType.equals(tFieldType)) {
-      // 如果两者类型完全一致(包括范型), 则确定兼容
-      return true;
-    } else if (sFieldType instanceof ParameterizedType && tFieldType instanceof ParameterizedType) {
-      // 如果两者均为范型且不完全一致, 那么只有原始类型继承兼容并且范型一致才为兼容
-      ParameterizedType sFieldParameterizedType = (ParameterizedType) sFieldType;
-      ParameterizedType tFieldParameterizedType = (ParameterizedType) tFieldType;
-      if (!((Class<?>) tFieldParameterizedType.getRawType())
-          .isAssignableFrom((Class<?>) sFieldParameterizedType.getRawType())) {
-        // 原始类型不一致, 不兼容
-        return false;
-      }
-      if (sFieldParameterizedType.getActualTypeArguments().length
-          != tFieldParameterizedType.getActualTypeArguments().length) {
-        // 范型数量不一致, 不兼容
-        return false;
-      }
-      for (int i = 0; i < sFieldParameterizedType.getActualTypeArguments().length; i++) {
-        if (!tFieldParameterizedType.getActualTypeArguments()[i]
-            .equals(sFieldParameterizedType.getActualTypeArguments()[i])) {
-          // 第 i 个范型不一致, 不兼容
-          return false;
-        }
-      }
-
-      // 所有范型一致, 兼容
-      return true;
-    }
-
-    // 其他均为不兼容
-    return false;
   }
 
   /**
@@ -513,13 +479,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @return 是否是列表递归拷贝
    */
   private boolean isListRecursionCopy(Class<?> sType, Field sField, Class<?> tType, Field tField) {
-    if (sField.getType() != List.class) {
+    if (!List.class.isAssignableFrom(sField.getType())) {
       return false;
     }
-    if (tField.getType() != List.class) {
+    if (!List.class.isAssignableFrom(tField.getType())) {
       return false;
     }
-
     return getListElementType(sField) == sType && getListElementType(tField) == tType;
   }
 
@@ -529,8 +494,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param field 字段
    * @return 列表字段元素范型
    */
+  @SuppressWarnings("unchecked")
   private Class<?> getListElementType(Field field) {
-    return (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+    return ((TypeToken<? extends List<?>>) TypeToken.of(field.getGenericType()))
+        .getSupertype(List.class)
+        .resolveType(List.class.getTypeParameters()[0])
+        .getRawType();
   }
 
   private void checkType(Class<?> c) {
