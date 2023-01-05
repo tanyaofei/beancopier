@@ -15,6 +15,16 @@ import java.lang.reflect.Method;
 public class BytecodeUtils implements Opcodes {
 
   /**
+   * 将类名转换为内部名
+   *
+   * @param className 类名, e.g io.github.tanyaofei.Foo
+   * @return 内部名 e.g: io/github/tanyaofei/Foo
+   */
+  public static String classNameToInternalName(String className) {
+    return className.replace(".", "/");
+  }
+
+  /**
    * 调用方法
    *
    * @param visitor 方法编写器

@@ -9,7 +9,7 @@ public interface BeanCopierConfiguration {
   String CONVERTER_CLASS_DUMP_PATH = System.getProperty(PropertyNames.CONVERTER_CLASS_DUMP_PATH, "");
 
   interface PropertyNames {
-    String CONVERTER_CLASS_DUMP_PATH = "beancopier.converterClassDumpPath";
+    String CONVERTER_CLASS_DUMP_PATH = "io.github.tanyaofei.beancopier.converterClassDumpPath";
   }
 
 }

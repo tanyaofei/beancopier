@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier;
 
 import org.jetbrains.annotations.NotNull;
+import org.objectweb.asm.Type;
 
 /**
  * 对象拷贝器
@@ -9,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
  * @author tanyaofei
  */
 public interface Converter<S, T> {
+
+  String INTERNAL_NAME = Type.getInternalName(Converter.class);
 
   /**
    * 拷贝对象

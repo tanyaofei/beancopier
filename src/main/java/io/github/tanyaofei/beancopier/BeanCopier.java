@@ -5,13 +5,12 @@ import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 /**
@@ -37,14 +36,14 @@ public class BeanCopier {
    * 转换器缓存
    */
   private static final
-  ConcurrentMap<String, ? super Converter<?, ?>> CONVERTER_CACHES = new ConcurrentHashMap<>(DEFAULT_CACHE_CAPACITY);
+  Map<String, ? super Converter<?, ?>> CONVERTER_CACHES = new ConcurrentHashMap<>(DEFAULT_CACHE_CAPACITY);
 
   /**
    * 转换器工厂
    */
   private static final ConverterFactory CONVERTER_FACTORY = new ConverterFactory(
       new ConverterClassLoader(BeanCopier.class.getClassLoader()),
-      Type.getInternalName(ConverterFactory.class) + "/generate/converter",
+      NamingPolicy.getDefault(),
       BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
   );
 

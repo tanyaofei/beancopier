@@ -2,7 +2,8 @@ package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.annotation.Feature;
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.exception.BeanCopierException;
+import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
+import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
 import io.github.tanyaofei.beancopier.typehandler.TypeHandler;
 import io.github.tanyaofei.beancopier.utils.*;
 import lombok.SneakyThrows;
@@ -14,10 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.reflect.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -28,18 +26,31 @@ import java.util.function.Function;
 public class ConverterFactory implements Opcodes, MethodConstants {
 
   /**
-   * 转换器生成计数器
+   * 类加载器, 生成的类将会通过此类加载器进行加载
    */
-  private static final AtomicInteger COUNTER = new AtomicInteger();
-
   private final ConverterClassLoader classLoader;
-  private final String pkg;
+
+  /**
+   * 字节码导出路径, 如果为 null 或者为空表示不导出
+   */
   private final String classDumpPath;
 
-  public ConverterFactory(ConverterClassLoader classLoader, String pkg, String classDumpPath) {
+  /**
+   * 已使用的类名, 因为在生成过程中, 有可能出现重复的类名, 因此维护一个类名集来保证类名唯一
+   */
+  private final Set<String> reservedClassNames = new HashSet<>();
+
+  /**
+   * 类名生成策略
+   *
+   * @see NamingPolicy#getDefault()
+   */
+  private final NamingPolicy namingPolicy;
+
+  public ConverterFactory(ConverterClassLoader classLoader, NamingPolicy namingPolicy, String classDumpPath) {
     this.classLoader = classLoader;
-    this.pkg = pkg;
     this.classDumpPath = classDumpPath;
+    this.namingPolicy = namingPolicy;
   }
 
   /**
@@ -55,76 +66,68 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   public <S, T> Converter<S, T> generateConverter(
       Class<S> sType, Class<T> tType
   ) {
-    if (!Modifier.isPublic(sType.getModifiers())) {
-      throw new IllegalArgumentException(String.format("Class '%s' is not a public class", sType));
+    // 类型检查
+    checkType(sType);
+    checkType(tType);
+
+    // 生成类名称
+    String className;
+    synchronized (reservedClassNames) {
+      className = namingPolicy.getClassName(sType, tType, reservedClassNames::contains);
+      reservedClassNames.add(className);
     }
-    if (!Modifier.isPublic(tType.getModifiers())) {
-      throw new IllegalArgumentException(String.format("Class '%s' is not a public class", tType));
-    }
+
+    Class<Converter<S, T>> c;
+    String internalName = BytecodeUtils.classNameToInternalName(className);
     try {
-      if (!Modifier.isPublic(tType.getConstructor().getModifiers())) {
-        throw new IllegalArgumentException(String.format(
-            "Can not access the no args construct of class '%s', make it public", tType));
+      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+      cw.visit(
+          V1_8,
+          ACC_PUBLIC | ACC_SYNTHETIC,
+          internalName,
+          ReflectUtils.getClassSignature(
+              ClassInfo.of(Object.class),
+              ClassInfo.of(Converter.class, sType, tType)),
+          Type.getInternalName(Object.class),
+          new String[]{Converter.INTERNAL_NAME}
+      );
+
+      // 编写构造函数
+      writeNoArgsConstructor(cw);
+      // 编写 convert 实现方法
+      writeConvertMethod(cw, internalName, sType, tType);
+      // 编写 convert 抽象方法
+      writeConvertBridgeMethod(cw, internalName, sType, tType);
+
+      // 加载类
+      final byte[] code = cw.toByteArray();
+      c = (Class<Converter<S, T>>) classLoader.defineClass(null, code);
+      dumpClassIfNeeded(code, c.getSimpleName());
+    } catch (Exception e) {
+      synchronized (reservedClassNames) {
+        reservedClassNames.remove(className);
       }
-    } catch (NoSuchMethodException e) {
-      throw new IllegalArgumentException("Can not find the no-args-constructor of class: " + tType);
+      throw new ConverterGenerateException("Failed to generate converter", e);
     }
 
-    // 创建类编写器, 自动完成局部变量计数和栈深度计数
-    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-    String internalName = genConverterInternalName(sType, tType);
-    // 创建转换器类
-    cw.visit(V1_8, ACC_PUBLIC | ACC_SYNTHETIC,
-        internalName,
-        ReflectUtils.getClassSignature(
-            ClassInfo.of(Object.class),
-            ClassInfo.of(Converter.class, sType, tType)),
-        Type.getInternalName(Object.class),
-        new String[]{Type.getInternalName(Converter.class)});
-
-    // 编写构造函数
-    writeNoArgsConstructor(cw);
-    // 编写 convert 实现方法
-    writeConvertMethod(cw, internalName, sType, tType);
-    // 编写 convert 抽象方法
-    writeConvertBridgeMethod(cw, internalName, sType, tType);
-
-    // 加载到内存并实例化
-    final byte[] code = cw.toByteArray();
-    Class<Converter<S, T>> clazz = (Class<Converter<S, T>>) classLoader.defineClass(null, code);
-    dumpClassIfNeeded(code, clazz.getSimpleName());
+    // 初始化对象
     try {
-      return clazz.getConstructor().newInstance();
+      return c.getConstructor().newInstance();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new BeanCopierException("Failed to initialize converter", e);
+      throw new ConverterNewInstanceException("Failed to new instance converter", e);
     }
   }
 
   private void dumpClassIfNeeded(byte[] code, String className) {
-    if (StringUtils.hasLength(classDumpPath)) {
-      try (FileOutputStream out = new FileOutputStream(classDumpPath + File.separator + className + ".class")) {
-        out.write(code);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+    if (!StringUtils.hasLength(classDumpPath)) {
+      return;
     }
-  }
 
-  /**
-   * 生成转换器的类名, 为了防止类名(SimpleName)重复, 因此在类名最后添加了一个计数防止生成的转换器类名重复
-   *
-   * @param sType 拷贝目标类
-   * @param tType 拷贝目标类
-   * @return 生成的转换器类名
-   */
-  private String genConverterInternalName(Class<?> sType, Class<?> tType) {
-    return pkg
-        + "/"
-        + sType.getSimpleName()
-        + "To"
-        + tType.getSimpleName()
-        + "Converter$GeneratedByBeanCopier$"
-        + COUNTER.getAndIncrement();
+    try (FileOutputStream out = new FileOutputStream(classDumpPath + File.separator + className + ".class")) {
+      out.write(code);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -317,7 +320,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
   private void copyBoxedField(
       MethodVisitor visitor,
-      Field sField, Method getter,
+      @SuppressWarnings("unused") Field sField, Method getter,
       Field tField, Method setter
   ) {
     visitor.visitVarInsn(ALOAD, 2);
@@ -346,9 +349,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     dropSetterReturnVal(visitor, setter);
   }
 
+
   private void copyUnboxedField(
       MethodVisitor visitor,
-      Field sField, Method getter,
+      @SuppressWarnings("unused") Field sField, Method getter,
       Field tField, Method setter
   ) {
     visitor.visitVarInsn(ALOAD, 2);
@@ -730,6 +734,21 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    */
   private Class<?> getListElementType(Field field) {
     return (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+  }
+
+  private void checkType(Class<?> c) {
+    if (!Modifier.isPublic(c.getModifiers())) {
+      throw new ConverterGenerateException("Class '" + c.getName() + "' is not public");
+    }
+
+    try {
+      if (!Modifier.isPublic(c.getConstructor().getModifiers())) {
+        throw new ConverterGenerateException("Class '" + c.getName() + "' non-args-constructor is not public");
+      }
+    } catch (NoSuchMethodException e) {
+      throw new ConverterGenerateException("Class '" + c.getName() + "' missing a non-args-constructor", e);
+    }
+
   }
 
 }

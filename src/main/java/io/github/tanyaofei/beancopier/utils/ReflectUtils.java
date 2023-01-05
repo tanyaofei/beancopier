@@ -37,7 +37,9 @@ public class ReflectUtils {
    * @return 类描述符
    */
   public static String getClassSignature(ClassInfo superClass, ClassInfo... interfaces) {
-    assert superClass != null : "SuperClass can not be null";
+    if (superClass == null) {
+      throw new IllegalArgumentException("superClass is null");
+    }
     if (interfaces == null || interfaces.length == 0) {
       return superClass.getDescriptors();
     }

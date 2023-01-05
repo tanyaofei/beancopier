@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier;
 
+import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -88,7 +89,7 @@ public class CopyTest extends Assertions {
     Source source = new Source();
     try {
       UnPublicTarget target = BeanCopier.copy(source, UnPublicTarget.class);
-    } catch (IllegalArgumentException exception) {
+    } catch (ConverterGenerateException exception) {
       // ignored
       return;
     }
