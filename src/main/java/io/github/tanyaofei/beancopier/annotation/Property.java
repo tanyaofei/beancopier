@@ -34,6 +34,7 @@ public @interface Property {
    * </pre>
    *
    * <p>在拷贝目标字段上使用, 会在拷贝来源中查找同类型的指定名称字段</p>
+   * @return 字段别名
    */
   String value() default "";
 

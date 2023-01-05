@@ -64,6 +64,7 @@ public class BeanCopier {
    * 克隆对象
    *
    * @param source 被克隆对象, 如果该参数为 null 则返回 null
+   * @param <T>    克隆对象类
    * @return 克隆结果
    */
   @Contract("null -> null")
@@ -79,6 +80,7 @@ public class BeanCopier {
    * 批量克隆对象
    *
    * @param sources 被克隆对象集合, 该集合不能为 null, 但集合的元素可以为 null
+   * @param <T> 克隆元素类
    * @return 克隆结果集合
    * @see #cloneList(Collection, Callback)
    */
