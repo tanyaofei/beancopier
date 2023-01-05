@@ -21,8 +21,6 @@ import java.util.stream.Collectors;
  * @author tanyaofei
  * @see Converter
  * @see io.github.tanyaofei.beancopier.annotation.Property
- * @see io.github.tanyaofei.beancopier.typehandler.TypeHandler
- * @see io.github.tanyaofei.beancopier.annotation.Feature
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BeanCopier {

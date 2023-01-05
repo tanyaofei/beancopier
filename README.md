@@ -13,18 +13,18 @@
 <dependency>
    <groupId>io.github.tanyaofei</groupId>
    <artifactId>beancopier</artifactId>
-   <version>0.1.0-SNAPSHOT</version>
+   <version>0.1.0</version>
 </dependency>
 ```
 
 ## 性能对比
 
-| 拷贝工具         | 拷贝 1 百万个对象耗时 | 递归拷贝 | 链式 setter 对象支持 |
-| ---------------- | -------- | -------- | -------------------- |
-| **BeanCopier**   | 141ms    | ✔️     | ✔️                 |
-| cglib BeanCopier | 79ms     | ❌     | ❌                 |
-| BeanUtils        | 5832ms   | ❌     | ✔️                 |
-| ModelMapper      | 2611ms   | ✔️     | ✔️                 |
+| 拷贝工具             | 拷贝 1 百万个对象耗时 | 递归拷贝 | 链式 setter 对象支持 |
+|------------------|--------------|------|----------------|
+| **BeanCopier**   | 141ms        | ✔️   | ✔️             |
+| cglib BeanCopier | 79ms         | ❌    | ❌              |
+| BeanUtils        | 5832ms       | ❌    | ✔️             |
+| ModelMapper      | 2611ms       | ✔️   | ✔️             |
 
 ## 使用前提和约束
 
@@ -57,11 +57,9 @@
 
 8. [X] 拷贝父类字段
 
-9. [X] 自定义类型处理器(`TypeHandler`)
+9. [X] 字段别名
 
-10. [X] 字段别名
-
-11. [X] 跳过字段
+10. [X] 跳过字段
 
 ## 简单例子
 
@@ -124,84 +122,48 @@ public class Main {
 
 ## 字段别名
 
-通过使用 `@Property(value = "xxx")` 为字段指定别名
+使用 `@Property(value = "xxx")` 为字段指定别名
+<p><b>当使用别名时, 在拷贝时不再拷贝同字段名称的同类型字段, 而是拷贝字段名称为别名的同类型字段</b></p>
 
 ```java
 import io.github.tanyaofei.beancopier.annotation.Property;
+import lombok.experimental.Accessors;
+import lombok.Data;
 
 public class Source {
    private String value;
-
-   public String getValue() {
-      return value;
-   }
 }
 
 public class Target {
    @Property("value")   // 从 Source 拷贝时使用 value 字段
    private String val;
-
-   public void setVal(String val) {
-      this.val = val;
-   }
 }
 ```
 
-## 类型处理器 TypeHandler
-
-通过继承 `TypeHandler` 类可以自定义不同类型字段间的拷贝
-
-1. 第一步: 自定义类型处理器, 实现一个 Boolean[] -> List<Boolean> 的转换器
+## 跳过/不拷贝字段
+使用 `@Property(skip=true)` 表示该字段不需要拷贝
 
 ```java
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.typehandler.TypeHandler;
+import lombok.experimental.Accessors;
+import lombok.Data;
 
-import java.util.Arrays;
-
-public class BooleanArrayToListTypeHandler extends TypeHandler<Boolean[], List<Boolean>> {
-   @Override
-   public List<Boolean> handle(Boolean[] value) {
-      return Arrays.asList(value);
-   }
-}
-```
-
-2.第二步: 在拷贝目标字段上标记 `@Property` 注解
-
-```java
-import io.github.tanyaofei.beancopier.annotation.Property;
-
+@Data
+@Accessors(chain = true)
 public class Source {
-   private Boolean[] value;
-
-   public Boolean[] getValue() {
-      return value;
-   }
+   private String value1;
+   private String value2;
 }
 
+@Data
+@Accessors(chain = true)
 public class Target {
-   @Property(typeHandler = BooleanArrayToListTypeHandler.class) // 指定转换器, 可指定多个
-   private List<Boolean> value;
-
-   public void setValue(List<Boolean> value) {
-      this.value = value;
-   }
+   private String value1;
+   @Property(skip = true) // 拷贝时跳过此字段, 因此为 null
+   private String value2;
 }
 ```
 
-3. 第三步: 拷贝对象
-
-```java
-public class Main {
-    public static void main(String[] args) {
-        Source source = new Source();
-        source.setValue(new Boolean[]{true});
-        Target target = BeanCopier.copy(source, Target.class);
-        assert Collections.singletonList(true).equals(target.getValue());
-    }
-}
-```
 
 ## 调试
 
@@ -221,7 +183,7 @@ public class Main {
 class 文件内容为以下
 
 ```java
-public class SourceToTargetConverter$GeneratedByBeanCopier$0 implements Converter<Source, Target> {
+public class SourceToTargetConverter$$GeneratedByBeanCopier$$7b8a009 implements Converter<Source, Target> {
    public Target convert(Source var1) {
     Target var2 = new Target();
     var2.setA(var1.getA());
