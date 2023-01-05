@@ -18,13 +18,12 @@ public @interface Property {
   /**
    * 字段别名
    * <pre>
-   * {@code
    *  public class Source {
    *      private String val;
    *  }
    *
    *  public class Target {
-   *      @Property(value = "val")
+   *     {@literal @}Property(value = "val")
    *      private String value;
    *  }
    *
@@ -32,7 +31,6 @@ public @interface Property {
    *  source.setVal("string");
    *  Target target = BeanCopier.copy(source);
    *  assert source.getVal().equals(target.getValue());
-   * }
    * </pre>
    *
    * <p>在拷贝目标字段上使用, 会在拷贝来源中查找同类型的指定名称字段</p>
