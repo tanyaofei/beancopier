@@ -13,7 +13,7 @@
 <dependency>
    <groupId>io.github.tanyaofei</groupId>
    <artifactId>beancopier</artifactId>
-   <version>0.1.0</version>
+   <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -60,6 +60,8 @@
 9. [X] 自定义类型处理器(`TypeHandler`)
 
 10. [X] 字段别名
+
+11. [X] 跳过字段
 
 ## 简单例子
 
