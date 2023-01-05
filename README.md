@@ -13,7 +13,7 @@
 <dependency>
    <groupId>io.github.tanyaofei</groupId>
    <artifactId>beancopier</artifactId>
-   <version>0.0.8</version>
+   <version>0.1.0</version>
 </dependency>
 ```
 
@@ -57,7 +57,11 @@
 
 8. [X] 拷贝父类字段
 
-## 一些简单的例子
+9. [X] 自定义类型处理器(`TypeHandler`)
+
+10. [X] 字段别名
+
+## 简单例子
 
 ```java
 
@@ -96,20 +100,117 @@ public static class Target {
 ```
 
 ```java
-// 单个拷贝
-Source source = new Source();
-Target target = BeanCopier.copy(source, Target.class);
+public class Main {
+   public static void main(String[] args) {
+      // 单个拷贝
+      Source source = new Source();
+      Target target = BeanCopier.copy(source, Target.class);
 
-// 列表拷贝
-List<Source> sources = List.of(new Source(), new Source());
-List<Target> targets = BeanCopier.copyList(sources, Target.class);
+      // 列表拷贝
+      List<Source> sources=List.of(new Source(),new Source());
+      List<Target> targets=BeanCopier.copyList(sources,Target.class);
 
-// 列表拷贝后回调动作, 可以用来手动实现一些无法拷贝的字段或其他复杂动作
-List<Target> targets = BeanCopier.copyList(
-    sources,
-    Target.class,
-    (source,target) -> target.setF(target.getA())
-);
+      // 列表拷贝后回调动作, 可以用来手动实现一些无法拷贝的字段或其他复杂动作
+      List<Target> targets=BeanCopier.copyList(
+              sources,
+              Target.class,
+              (source,target)->target.setF(target.getA())
+      );
+   }
+}
+```
+
+## 字段别名
+
+通过使用 `@Property(value = "xxx")` 为字段指定别名
+
+```java
+import io.github.tanyaofei.beancopier.annotation.Property;
+
+public class Source {
+   private String value;
+
+   public String getValue() {
+      return value;
+   }
+}
+
+public class Target {
+   @Property("value")   // 从 Source 拷贝时使用 value 字段
+   private String val;
+
+   public void setVal(String val) {
+      this.val = val;
+   }
+}
+```
+
+## 类型处理器 TypeHandler
+
+通过继承 `TypeHandler` 类可以自定义不同类型字段间的拷贝
+
+1. 第一步: 自定义类型处理器, 实现一个 Boolean[] -> List<Boolean> 的转换器
+
+```java
+import io.github.tanyaofei.beancopier.annotation.Property;
+import io.github.tanyaofei.beancopier.typehandler.TypeHandler;
+
+import java.util.Arrays;
+
+public class BooleanArrayToListTypeHandler extends TypeHandler<Boolean[], List<Boolean>> {
+   @Override
+   public List<Boolean> handle(Boolean[] value) {
+      return Arrays.asList(value);
+   }
+}
+```
+
+2.第二步: 在拷贝目标字段上标记 `@Property` 注解
+
+```java
+import io.github.tanyaofei.beancopier.annotation.Property;
+
+public class Source {
+   private Boolean[] value;
+
+   public Boolean[] getValue() {
+      return value;
+   }
+}
+
+public class Target {
+   @Property(typeHandler = BooleanArrayToListTypeHandler.class) // 指定转换器, 可指定多个
+   private List<Boolean> value;
+
+   public void setValue(List<Boolean> value) {
+      this.value = value;
+   }
+}
+```
+
+3. 第三步: 拷贝对象
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Source source = new Source();
+        source.setValue(new Boolean[]{true});
+        Target target = BeanCopier.copy(source, Target.class);
+        assert Collections.singletonList(true).equals(target.getValue());
+    }
+}
+```
+
+## 调试
+
+通过设置启动参数可以将生成出来的字节码文件写入到磁盘便于调试
+
+```java
+public class Main {
+   public static void main(String[] args) {
+      System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH,"./");
+   }
+}
 ```
 
 ## 原理
@@ -119,7 +220,7 @@ class 文件内容为以下
 
 ```java
 public class SourceToTargetConverter$GeneratedByBeanCopier$0 implements Converter<Source, Target> {
-  public Target convert(Source var1) {
+   public Target convert(Source var1) {
     Target var2 = new Target();
     var2.setA(var1.getA());
     var2.setC(var1.getC());
@@ -139,43 +240,3 @@ public class SourceToTargetConverter$GeneratedByBeanCopier$0 implements Converte
   }
 }
 ```
-
-## 调试
-
-通过设置启动参数可以将生成出来的字节码文件写入到磁盘便于调试
-```java
-System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH,"./");
-```
-
-
-
-## 更新日志
-
-### 0.0.7
-
-+ 支持将生成出来的 `Conveter` class 文件写入磁盘用于调试
-
-```java
-System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH,"./");
-```
-
-### 0.0.5
-
-+ 支持拷贝 boolean 非包装类类型的 isXx 方法
-
-```java
-public class Example {
-   private boolean ok;
-
-   public boolean isOk() {  // 根据 JAVA 的规范, boolean 类型的 getter 方法应当为 isXx 而不是 getXx
-      return ok;
-   }
-
-   public void setOk(boolean ok) {
-      this.ok = ok;
-   }
-}
-```
-
-### 0.0.4
-+ 支持拷贝父类字段

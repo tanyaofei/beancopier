@@ -1,5 +1,7 @@
 package io.github.tanyaofei.beancopier;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * 对象拷贝器
  * <p>该类的实现类使用 ASM 技术动态生成</p>
@@ -15,6 +17,6 @@ public interface Converter<S, T> {
    * @param source 拷贝来源
    * @return T
    */
-  T convert(S source);
+  T convert(@NotNull S source);
 
 }
