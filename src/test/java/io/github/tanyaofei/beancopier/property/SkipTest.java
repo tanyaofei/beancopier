@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier.property;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
+import io.github.tanyaofei.beancopier.BeanCopierConfiguration;
 import io.github.tanyaofei.beancopier.annotation.Property;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -10,6 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SkipTest {
+
+  static {
+    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
+  }
 
   @Test
   public void testSkip() {

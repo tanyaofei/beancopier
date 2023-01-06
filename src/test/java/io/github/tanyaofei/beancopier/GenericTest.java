@@ -4,13 +4,16 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class GenericTest {
 
   static {
-    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./");
+    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
   }
 
   @Test
@@ -78,6 +81,25 @@ public class GenericTest {
     private Container<String, String> b;
     private Container<Integer, String> c;
     private Container<Integer, Integer> d;
+  }
+
+  @Test
+  public void testExtendsArgument() {
+    C c = new C().setA(Arrays.asList(1, 2, 3));
+    D d = BeanCopier.copy(c, D.class);
+    assertEquals(c.getA(), d.getA());
+  }
+
+  @Data
+  @Accessors(chain = true)
+  public static class C {
+    private List<Integer> a;
+  }
+
+  @Data
+  @Accessors(chain = true)
+  public static class D {
+    private List<? extends Number> a;
   }
 
 }

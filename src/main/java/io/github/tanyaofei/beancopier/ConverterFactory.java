@@ -5,14 +5,16 @@ import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
 import io.github.tanyaofei.beancopier.utils.*;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.invoke.LambdaMetafactory;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
 
@@ -95,12 +97,14 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       // 编写 convert 实现方法
       writeConvertMethod(cw, internalName, sType, tType);
       // 编写 convert 抽象方法
-      writeConvertBridgeMethod(cw, internalName, sType, tType);
+      if (sType != Object.class && tType != Object.class) {
+        writeConvertBridgeMethod(cw, internalName, sType, tType);
+      }
 
       // 加载类
       final byte[] code = cw.toByteArray();
       c = (Class<Converter<S, T>>) classLoader.defineClass(null, code);
-      dumpClassIfNeeded(code, c.getSimpleName());
+      writeClassIfConfigured(code, c.getSimpleName());
     } catch (Exception e) {
       synchronized (reservedClassNames) {
         reservedClassNames.remove(className);
@@ -116,12 +120,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     }
   }
 
-  private void dumpClassIfNeeded(byte[] code, String className) {
+  private void writeClassIfConfigured(byte[] code, String filename) {
     if (!StringUtils.hasLength(classDumpPath)) {
       return;
     }
 
-    try (FileOutputStream out = new FileOutputStream(classDumpPath + File.separator + className + ".class")) {
+    try (FileOutputStream out = new FileOutputStream(classDumpPath + File.separator + filename + ".class")) {
       out.write(code);
     } catch (IOException e) {
       e.printStackTrace();

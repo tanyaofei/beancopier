@@ -10,6 +10,10 @@ import java.util.Map;
 
 public class MapTest {
 
+  static {
+    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
+  }
+
   @Test
   public void testMap() {
     A a = new A()

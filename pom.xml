@@ -6,7 +6,7 @@
 
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <name>beancopier</name>
 
     <url>https://github.com/tanyaofei/beancopier</url>

@@ -39,7 +39,7 @@ public abstract class NamingPolicy {
       String base = getPackage()
           + "."
           + sourceClass.getSimpleName()
-          + "to"
+          + "To"
           + targetClass.getSimpleName()
           + "Converter$$GeneratedByBeanCopier$$"
           + Integer.toHexString((sourceClass.getName() + targetClass.getName()).hashCode());

@@ -26,23 +26,23 @@ public class ClassInfo {
   /**
    * 范型类
    */
-  private final Class<?>[] genericTypes;
+  private final Class<?>[] typeArguments;
 
-  public static ClassInfo of(Class<?> type, Class<?>... genericTypes) {
-    return new ClassInfo(type, genericTypes);
+  public static ClassInfo of(Class<?> type, Class<?>... argumentTypes) {
+    return new ClassInfo(type, argumentTypes);
   }
 
   /**
    * @return 描述符
    */
   public final String getDescriptors() {
-    if (genericTypes == null || genericTypes.length == 0) {
+    if (typeArguments == null || typeArguments.length == 0) {
       return Type.getDescriptor(type);
     }
 
     String descriptor = Type.getDescriptor(type);
     StringBuilder builder = new StringBuilder(descriptor.substring(0, descriptor.length() - 1)).append("<");
-    for (Class<?> g : genericTypes) {
+    for (Class<?> g : typeArguments) {
       builder.append(Type.getDescriptor(g));
     }
     builder.append(">;");
