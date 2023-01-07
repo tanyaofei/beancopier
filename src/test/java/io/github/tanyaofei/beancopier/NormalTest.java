@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier;
 
+import io.github.tanyaofei.beancopier.asserts.XAsserts;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -300,6 +301,18 @@ public class NormalTest extends Assertions {
     private String a1;
     private ArrayList<String> b;
     private Integer c;
+  }
+
+  @Test
+  public void testCopyList() {
+    List<StandardSour> objs = Arrays.asList(
+        new StandardSour().setA(1),
+        new StandardSour().setA(2),
+        new StandardSour().setA(3)
+    );
+
+    assertEquals(BeanCopier.cloneList(objs), objs);
+    XAsserts.assertEquals(BeanCopier.copyList(objs, StandardDest.class), objs, StandardDest::getA, StandardSour::getA);
   }
 
 }

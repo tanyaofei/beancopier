@@ -6,7 +6,7 @@
 
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <name>beancopier</name>
 
     <url>https://github.com/tanyaofei/beancopier</url>
@@ -39,10 +39,15 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <asm.version>7.1</asm.version>
-        <lombok.version>1.18.20</lombok.version>
-        <junit.version>5.7.2</junit.version>
+        <lombok.version>1.18.24</lombok.version>
         <jetbrains-annotations.version>23.1.0</jetbrains-annotations.version>
         <guava.version>31.1-jre</guava.version>
+
+        <!--   test     -->
+        <junit.version>5.9.0</junit.version>
+        <modelmapper.version>3.0.0</modelmapper.version>
+        <cglib.version>3.3.0</cglib.version>
+        <beanutils.version>1.9.4</beanutils.version>
     </properties>
 
     <dependencies>
@@ -76,11 +81,31 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>${modelmapper.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${beanutils.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- 打包 jar 包时包含源码 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>

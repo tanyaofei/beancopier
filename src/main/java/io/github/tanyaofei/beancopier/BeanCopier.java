@@ -27,49 +27,49 @@ import java.util.List;
 public final class BeanCopier {
 
   /**
-   * {@linkplain BeanCopierImpl#copy(Object, Class)}
+   * {@link BeanCopierImpl#copy(Object, Class)}
    */
   public static <S, T> T copy(S source, Class<T> targetClass) {
     return Lazy.IMPL.copy(source, targetClass, null);
   }
 
   /**
-   * {@linkplain BeanCopierImpl#clone(Object)}
+   * {@link BeanCopierImpl#clone(Object)}
    */
   public static <T> T clone(T source) {
     return Lazy.IMPL.clone(source);
   }
 
   /**
-   * {@linkplain BeanCopierImpl#cloneList(Collection)}
+   * {@link BeanCopierImpl#cloneList(Collection)}
    */
   public static <T> List<T> cloneList(Collection<T> sources) {
     return Lazy.IMPL.cloneList(sources, null);
   }
 
   /**
-   * {@linkplain BeanCopierImpl#cloneList(Collection, Callback)}
+   * {@link BeanCopierImpl#cloneList(Collection, Callback)}
    */
   public static <T> List<T> cloneList(Collection<T> sources, Callback<T, T> callback) {
     return Lazy.IMPL.cloneList(sources, callback);
   }
 
   /**
-   * {@linkplain BeanCopierImpl#copyList(Collection, Class)}
+   * {@link BeanCopierImpl#copyList(Collection, Class)}
    */
   public static <S, T> List<T> copyList(Collection<S> sources, Class<T> targetClass) {
     return Lazy.IMPL.copyList(sources, targetClass);
   }
 
   /**
-   * {@linkplain BeanCopierImpl#copyList(Collection, Class, Callback)}
+   * {@link BeanCopierImpl#copyList(Collection, Class, Callback)}
    */
   public static <S, T> List<T> copyList(Collection<S> source, Class<T> targetClass, Callback<S, T> callback) {
     return Lazy.IMPL.copyList(source, targetClass, callback);
   }
 
   /**
-   * {@linkplain BeanCopierImpl#copy(Object, Class, Callback)}
+   * {@link BeanCopierImpl#copy(Object, Class, Callback)}
    */
   public static <S, T> T copy(S source, Class<T> targetClass, Callback<S, T> callback) {
     return Lazy.IMPL.copy(source, targetClass, callback);

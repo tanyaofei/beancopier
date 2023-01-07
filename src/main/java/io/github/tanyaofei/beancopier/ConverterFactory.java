@@ -277,7 +277,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
         }
         skipIfNull = skipFieldIfNull(visitor, getter);
         copyListRecursionField(visitor, internalName, sType, getter, tType, setter);
-      } else if (isTypeCompatible(sField, tField)) {
+      } else if (isCompatible(sField, tField)) {
         // 正常字段
         if (skipIfNull != null) {
           visitor.visitLabel(skipIfNull);
@@ -468,7 +468,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param tField 拷贝目标字段
    * @return 类型是否相等
    */
-  private boolean isTypeCompatible(Field sField, Field tField) {
+  private boolean isCompatible(Field sField, Field tField) {
     return TypeToken.of(sField.getGenericType()).isSubtypeOf(tField.getGenericType());
 
   }

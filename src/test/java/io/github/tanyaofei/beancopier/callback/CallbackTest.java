@@ -46,6 +46,9 @@ public class CallbackTest {
 
     @Override
     public void apply(Boxed source, Unboxed target) {
+      if (source == null) {
+        return;
+      }
       if (source.getA() != null) {
         target.setA(source.getA());
       }
