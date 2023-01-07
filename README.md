@@ -9,7 +9,7 @@
 <dependency>
    <groupId>io.github.tanyaofei</groupId>
    <artifactId>beancopier</artifactId>
-   <version>0.1.3</version>
+   <version>0.1.4</version>
 </dependency>
 ```
 

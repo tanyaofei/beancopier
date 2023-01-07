@@ -9,14 +9,14 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class Tuple<T1, T2> {
+public class Pair<X, Y> {
 
-  private T1 t1;
+  private X x;
 
-  private T2 t2;
+  private Y y;
 
-  public static <T1, T2> Tuple<T1, T2> of(T1 t1, T2 t2) {
-    return new Tuple<T1, T2>().setT1(t1).setT2(t2);
+  public static <X, Y> Pair<X, Y> of(X x, Y y) {
+    return new Pair<X, Y>().setX(x).setY(y);
   }
 
 }

@@ -73,9 +73,9 @@ public class ReflectUtils {
    * @param target 目标类
    * @return 该类的所有字段的 Getter 方法
    */
-  public static Map<String, Tuple<Field, Method>> getFieldGetters(Class<?> target) {
+  public static Map<String, Pair<Field, Method>> getFieldGetters(Class<?> target) {
     Field[] fields = target.getDeclaredFields();
-    Map<String, Tuple<Field, Method>> getters = new HashMap<>(fields.length, 1.0F);
+    Map<String, Pair<Field, Method>> getters = new HashMap<>(fields.length, 1.0F);
     for (Field field : fields) {
       Method getter;
       try {
@@ -91,7 +91,7 @@ public class ReflectUtils {
         // getter should not have parameters
         continue;
       }
-      getters.put(field.getName(), Tuple.of(field, getter));
+      getters.put(field.getName(), Pair.of(field, getter));
     }
 
     Class<?> superclass = target.getSuperclass();
@@ -108,9 +108,9 @@ public class ReflectUtils {
    * @param target 目标类
    * @return 该类的所有字段的 Setter 方法
    */
-  public static Map<String, Tuple<Field, Method>> getFieldSetters(Class<?> target) {
+  public static Map<String, Pair<Field, Method>> getFieldSetters(Class<?> target) {
     Field[] fields = target.getDeclaredFields();
-    Map<String, Tuple<Field, Method>> setters = new HashMap<>(fields.length, 1.0F);
+    Map<String, Pair<Field, Method>> setters = new HashMap<>(fields.length, 1.0F);
     for (Field field : fields) {
       Method setter;
       try {
@@ -122,7 +122,7 @@ public class ReflectUtils {
         // setter should have one parameter only
         continue;
       }
-      setters.put(field.getName(), Tuple.of(field, setter));
+      setters.put(field.getName(), Pair.of(field, setter));
     }
 
     Class<?> superclass = target.getSuperclass();

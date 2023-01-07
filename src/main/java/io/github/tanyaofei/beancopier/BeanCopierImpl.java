@@ -86,13 +86,13 @@ public class BeanCopierImpl {
 
     // 因为 source 有可能出现 null, 因此要一致迭代到不为 null 才能正确获得 class
     while (itr.hasNext()) {
-      T next = itr.next();
-      if (next == null) {
+      T t = itr.next();
+      if (t == null) {
         ret.add(null);
       } else {
-        Class<T> clazz = (Class<T>) next.getClass();
-        ret.add(copy(next, clazz, callback));
-        ret.addAll(copyList(itr, clazz, callback, objs.size() - i));
+        Class<T> c = (Class<T>) t.getClass();
+        ret.add(copy(t, c, callback));
+        ret.addAll(copyList(itr, c, callback, objs.size() - i));
         return ret;
       }
     }
@@ -136,7 +136,7 @@ public class BeanCopierImpl {
    * 批量对象拷贝
    *
    * @param itr         拷贝来源
-   * @param targetClass 拷贝目标类
+   * @param tc 拷贝目标类
    * @param callback    列表里每个对象拷贝完之后进行的回调操作
    * @param <S>         拷贝来源类
    * @param <T>         拷贝目标类
@@ -146,7 +146,7 @@ public class BeanCopierImpl {
   @SuppressWarnings("unchecked")
   private <S, T> List<T> copyList(
       @NotNull Iterator<S> itr,
-      @NotNull Class<T> targetClass,
+      @NotNull Class<T> tc,
       @Nullable Callback<S, T> callback,
       int size
   ) {
@@ -155,25 +155,25 @@ public class BeanCopierImpl {
     }
 
     // 因为 itr 可能一直返回 null, 因此要一直迭代到第一个不为 null 才能正确获取 class
-    Converter<S, T> converter = null;
+    Converter<S, T> c = null;
     List<T> ret = size > 0 ? new ArrayList<>(size) : new ArrayList<>();
     while (itr.hasNext()) {
-      S source = itr.next();
-      T target;
-      if (source == null) {
-        target = null;
-      } else if (converter == null) {
-        Class<S> sourceClass = (Class<S>) source.getClass();
-        String cacheKey = cacheKey(sourceClass, targetClass);
-        converter = generateConverter(cacheKey, sourceClass, targetClass);
-        target = converter.convert(source);
+      S s = itr.next();
+      T t;
+      if (s == null) {
+        t = null;
+      } else if (c == null) {
+        Class<S> sourceClass = (Class<S>) s.getClass();
+        String cacheKey = cacheKey(sourceClass, tc);
+        c = generateConverter(cacheKey, sourceClass, tc);
+        t = c.convert(s);
       } else {
-        target = converter.convert(source);
+        t = c.convert(s);
       }
 
-      ret.add(target);
+      ret.add(t);
       if (callback != null) {
-        callback.apply(source, target);
+        callback.apply(s, t);
       }
     }
 
@@ -204,25 +204,25 @@ public class BeanCopierImpl {
       return null;
     }
 
-    Class<S> sourceClass = (Class<S>) source.getClass();
+    Class<S> sc = (Class<S>) source.getClass();
     Converter<S, T> converter = generateConverter(
-        cacheKey(sourceClass, targetClass),
-        sourceClass,
+        cacheKey(sc, targetClass),
+        sc,
         targetClass
     );
 
-    // init a target, and copy fields from source
-    T target;
+    // init a t, and copy fields from source
+    T t;
     try {
-      target = converter.convert(source);
+      t = converter.convert(source);
     } catch (Exception e) {
       throw new CopyException("Failed to copy object", e);
     }
 
     if (callback != null) {
-      callback.apply(source, target);
+      callback.apply(source, t);
     }
-    return target;
+    return t;
   }
 
   /**
@@ -245,8 +245,8 @@ public class BeanCopierImpl {
 
   /**
    * @param cacheKey 缓存 Key
-   * @param source   拷贝来源类
-   * @param target   拷贝目标类
+   * @param s   拷贝来源类
+   * @param t   拷贝目标类
    * @param <S>      拷贝来源类
    * @param <T>      拷贝目标类
    * @return 来源拷贝到目标的转换器
@@ -255,12 +255,12 @@ public class BeanCopierImpl {
   @SuppressWarnings("unchecked")
   private <S, T> Converter<S, T> generateConverter(
       @NotNull String cacheKey,
-      @NotNull Class<S> source,
-      @NotNull Class<T> target
+      @NotNull Class<S> s,
+      @NotNull Class<T> t
   ) {
     return (Converter<S, T>) caches.computeIfAbsent(
         cacheKey,
-        key -> converterFactory.generateConverter(source, target)
+        key -> converterFactory.generateConverter(s, t)
     );
   }
 
@@ -268,14 +268,14 @@ public class BeanCopierImpl {
    * 生成缓存 key
    * <p>格式 sourceClass:targetClass</p>
    *
-   * @param sourceClass 拷贝来源类
-   * @param targetClass 拷贝目标类
+   * @param sc 拷贝来源类
+   * @param tc 拷贝目标类
    * @return 缓存 key
    */
   private String cacheKey(
-      Class<?> sourceClass, Class<?> targetClass
+      Class<?> sc, Class<?> tc
   ) {
-    return sourceClass.getName() + ":" + targetClass.getName();
+    return sc.getName() + ":" + tc.getName();
   }
 
 }

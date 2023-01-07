@@ -27,12 +27,12 @@ public class BytecodeUtils implements Opcodes {
   /**
    * 调用方法
    *
-   * @param visitor 方法编写器
+   * @param v 方法编写器
    * @param opcode  操作码
    * @param method  方法
    */
-  public static void invokeMethod(MethodVisitor visitor, int opcode, Method method) {
-    visitor.visitMethodInsn(opcode,
+  public static void invokeMethod(MethodVisitor v, int opcode, Method method) {
+    v.visitMethodInsn(opcode,
         Type.getInternalName(method.getDeclaringClass()),
         method.getName(),
         Type.getMethodDescriptor(method),
@@ -45,21 +45,21 @@ public class BytecodeUtils implements Opcodes {
    *   INVOKESPECIAL #objType &lt;init&gt;()V
    * </pre>
    *
-   * @param visitor 方法编写器
+   * @param v 方法编写器
    * @param objType 对象类型
    */
-  public static void invokeNoArgsConstructor(MethodVisitor visitor, Class<?> objType) {
-    visitor.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(objType), "<init>", "()V", false);
+  public static void invokeNoArgsConstructor(MethodVisitor v, Class<?> objType) {
+    v.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(objType), "<init>", "()V", false);
   }
 
-  public static void newObject(MethodVisitor visitor, Class<?> objType) {
-    visitor.visitTypeInsn(NEW, Type.getInternalName(objType));
+  public static void newObject(MethodVisitor v, Class<?> objType) {
+    v.visitTypeInsn(NEW, Type.getInternalName(objType));
   }
 
-  public static void newInstanceViaNoArgsConstructor(MethodVisitor visitor, Class<?> objType) {
-    newObject(visitor, objType);
-    visitor.visitInsn(DUP);
-    invokeNoArgsConstructor(visitor, objType);
+  public static void newInstanceViaNoArgsConstructor(MethodVisitor v, Class<?> objType) {
+    newObject(v, objType);
+    v.visitInsn(DUP);
+    invokeNoArgsConstructor(v, objType);
   }
 
 }
