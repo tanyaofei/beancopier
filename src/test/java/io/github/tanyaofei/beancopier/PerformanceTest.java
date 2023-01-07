@@ -1,15 +1,24 @@
 package io.github.tanyaofei.beancopier;
 
 import com.google.common.base.Stopwatch;
+import jdk.internal.org.objectweb.asm.Type;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.commons.SimpleRemapper;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTimeout;
@@ -156,6 +165,43 @@ public class PerformanceTest {
     private String g;
     private String h;
     private String i;
+  }
+
+  @Test
+  public void testGenerateConverter() throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    XClassLoader classloader = new XClassLoader();
+    List<Class<?>> classes = new LinkedList<>();
+
+    // 通过重命名 TemplateObject 来创建不同的类
+    for (int i = 0; i < 100; i++) {
+      ClassReader cr = new ClassReader(TemplateObject.class.getName());
+      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+
+      Remapper remapper = new SimpleRemapper(Type.getInternalName(TemplateObject.class), Type.getInternalName(TemplateObject.class) + i);
+      ClassVisitor cv = new ClassRemapper(cw, remapper);
+
+      cr.accept(cv, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+      byte[] code = cw.toByteArray();
+      classes.add(classloader.defineClass(code));
+    }
+
+    ConverterFactory converterFactory = new ConverterFactory(new ConverterClassLoader(this.getClass().getClassLoader()), NamingPolicy.getDefault(), null);
+    TemplateObject source = new TemplateObject();
+
+    Stopwatch stopwatch = Stopwatch.createUnstarted();
+    stopwatch.start();
+    for (Class<?> c : classes) {
+      converterFactory.generateConverter(source.getClass(), c);
+    }
+    stopwatch.stop();
+    System.out.println("Time of creating " + classes.size() + " converter classes: " + stopwatch.elapsed().toMillis() + " ms");
+  }
+
+
+  public static class XClassLoader extends ClassLoader {
+    public Class<?> defineClass(byte[] code) {
+      return super.defineClass(null, code, 0, code.length);
+    }
   }
 
 }

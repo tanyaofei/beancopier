@@ -38,7 +38,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <asm.version>7.1</asm.version>
+        <asm.version>9.4</asm.version>
         <lombok.version>1.18.24</lombok.version>
         <jetbrains-annotations.version>23.1.0</jetbrains-annotations.version>
         <guava.version>31.1-jre</guava.version>
@@ -48,6 +48,7 @@
         <modelmapper.version>3.0.0</modelmapper.version>
         <cglib.version>3.3.0</cglib.version>
         <beanutils.version>1.9.4</beanutils.version>
+        <asm-commons.version>9.4</asm-commons.version>
     </properties>
 
     <dependencies>
@@ -102,6 +103,14 @@
             <version>${beanutils.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>${asm-commons.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

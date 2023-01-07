@@ -4,6 +4,7 @@ import com.google.common.reflect.TypeToken;
 import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
+import io.github.tanyaofei.beancopier.utils.Constants;
 import io.github.tanyaofei.beancopier.utils.*;
 import io.github.tanyaofei.beancopier.utils.Reflection.BeanProperty;
 import org.objectweb.asm.*;
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.*;
 
 import static java.lang.reflect.Modifier.isPublic;
@@ -25,10 +28,7 @@ import static java.lang.reflect.Modifier.isPublic;
  */
 public class ConverterFactory implements Opcodes, MethodConstants {
 
-  /**
-   * 类加载器, 生成的类将会通过此类加载器进行加载
-   */
-  private final ConverterClassLoader classLoader;
+  static Method defineClass;
 
   /**
    * 字节码导出路径, 如果为 null 或者为空表示不导出
@@ -47,7 +47,25 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    */
   private final NamingPolicy namingPolicy;
 
-  public ConverterFactory(ConverterClassLoader classLoader, NamingPolicy namingPolicy, String classDumpPath) {
+  static {
+    defineClass = (Method) AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+      try {
+        Class<?> loader = Class.forName("java.lang.ClassLoader");
+        Method defineClass = loader.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+        defineClass.setAccessible(true);
+        return defineClass;
+      } catch (ClassNotFoundException | NoSuchMethodException e) {
+        throw new IllegalStateException(e);
+      }
+    });
+  }
+
+  /**
+   * 类加载器, 生成的类将会通过此类加载器进行加载
+   */
+  private final ClassLoader classLoader;
+
+  public ConverterFactory(ClassLoader classLoader, NamingPolicy namingPolicy, String classDumpPath) {
     this.classLoader = classLoader;
     this.classDumpPath = classDumpPath;
     this.namingPolicy = namingPolicy;
@@ -98,13 +116,17 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       // 编写 convert 实现方法
       writeConvertMethod(cw, internalName, sc, tc);
       // 编写 convert 抽象方法
-      if (sc != Object.class && tc != Object.class) {
+      if (sc != Object.class || tc != Object.class) {
         writeConvertBridgeMethod(cw, internalName, sc, tc);
       }
 
       // 加载类
       final byte[] code = cw.toByteArray();
-      c = (Class<Converter<S, T>>) classLoader.defineClass(null, code);
+      if (classLoader == ClassLoader.getSystemClassLoader()) {
+        c = (Class<Converter<S, T>>) defineClass(sc, tc, code);
+      } else {
+        c = (Class<Converter<S, T>>) ((ConverterClassLoader) classLoader).defineClass(null, code);
+      }
       writeClassIfConfigured(code, c.getSimpleName());
     } catch (Exception e) {
       synchronized (reservedClassNames) {
@@ -120,6 +142,15 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       throw new ConverterNewInstanceException("Failed to new instance converter", e);
     }
   }
+
+  private Class<?> defineClass(Class<?> sc, Class<?> tc, byte[] code) {
+    try {
+      return (Class<?>) defineClass.invoke(tc.getClassLoader(), null, code, 0, code.length);
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new ConverterGenerateException(String.format("Failed to generate converter for '%s' copy to '%s'", sc, tc), e);
+    }
+  }
+
 
   private void writeClassIfConfigured(byte[] code, String filename) {
     if (!StringUtils.hasLength(classDumpPath)) {

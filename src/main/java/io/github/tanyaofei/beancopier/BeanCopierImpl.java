@@ -8,6 +8,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * BeanCopier 的实现
+ * <p>通过 public 方法创建的实例都将使用自定义类加载器, 因此具有类卸载能力, 但是无法对自定义类加载器加载的对象进行拷贝, 如果有这个需要, 应当使用 {@link BeanCopier} 提供的静态方法进行拷贝. {@link BeanCopier} 生成的转换器使用 app 类加载器进行加载</p>
+ */
 public class BeanCopierImpl {
 
   /**
@@ -24,20 +28,59 @@ public class BeanCopierImpl {
   /**
    * 转换器工厂
    */
-  private final ConverterFactory converterFactory = new ConverterFactory(
-      new ConverterClassLoader(BeanCopierImpl.class.getClassLoader()),
-      NamingPolicy.getDefault(),
-      BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
-  );
+  private final ConverterFactory converterFactory;
 
-  public BeanCopierImpl(int cachesCapacity) {
-    this.caches = new ConcurrentHashMap<>(cachesCapacity);
-  }
 
+  /**
+   * @see #BeanCopierImpl(int)
+   */
   public BeanCopierImpl() {
     this(DEFAULT_CACHES_CAPACITY);
   }
 
+  /**
+   * 生成一个对象拷贝工具, 该拷贝工具生成的类使用 {@link ConverterClassLoader} 加载, 这意味着拷贝器无法拷贝到一个自定义类加载器加载的对象.
+   * <p>如果需要拷贝自定义类加载器加载的类, 应当使用 {@link BeanCopier} 提供的静态方法进行拷贝. 这个静态方法使用的 app classloader 加载</p>
+   *
+   * @param cachesCapacity 初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
+   */
+  public BeanCopierImpl(int cachesCapacity) {
+    this(cachesCapacity, new ConverterFactory(
+        new ConverterClassLoader(ClassLoader.getSystemClassLoader()),
+        NamingPolicy.getDefault(),
+        BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
+    ));
+  }
+
+  /**
+   * @param cachesCapacity   初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
+   * @param converterFactory 转换器工厂
+   */
+  BeanCopierImpl(int cachesCapacity, ConverterFactory converterFactory) {
+    this.caches = new ConcurrentHashMap<>(cachesCapacity);
+    this.converterFactory = converterFactory;
+  }
+
+  /**
+   * 获取一个单例, 该单例使用 app classloader 来加载转换器类, 所以加载的类是不会释放
+   *
+   * @return BeanCopier 单例
+   */
+  static BeanCopierImpl getInstance() {
+    return Lazy.INSTANCE;
+  }
+
+  public static class Lazy {
+
+    /**
+     * 默认实现由于没有类卸载需求, 因此使用 app classloader 来加载转换器类
+     */
+    static BeanCopierImpl INSTANCE = new BeanCopierImpl(DEFAULT_CACHES_CAPACITY, new ConverterFactory(
+        ClassLoader.getSystemClassLoader(),
+        NamingPolicy.getDefault(),
+        BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
+    ));
+  }
 
   /**
    * 拷贝对象
