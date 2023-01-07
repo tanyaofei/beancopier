@@ -14,59 +14,7 @@ import java.util.Map;
  * @author tanyaofei
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ReflectUtils {
-
-  /**
-   * 批量获取类描述符
-   *
-   * @param classes 类数组
-   * @return 类描述符
-   */
-  public static String getDescriptors(Class<?>... classes) {
-    StringBuilder builder = new StringBuilder();
-    for (Class<?> clazz : classes) {
-      builder.append(Type.getDescriptor(clazz));
-    }
-    return builder.toString();
-  }
-
-  /**
-   * 获取类的签名
-   *
-   * @param superClass 父类
-   * @param interfaces 接口
-   * @return 类描述符
-   */
-  public static String getClassSignature(ClassInfo superClass, ClassInfo... interfaces) {
-    if (superClass == null) {
-      throw new IllegalArgumentException("superClass is null");
-    }
-    if (interfaces == null || interfaces.length == 0) {
-      return superClass.getDescriptors();
-    }
-
-    StringBuilder builder = new StringBuilder(superClass.getDescriptors());
-    for (ClassInfo i : interfaces) {
-      builder.append(i.getDescriptors());
-    }
-    return builder.toString();
-  }
-
-  /**
-   * 获取方法描述符
-   *
-   * @param rType  方法返回值类
-   * @param pTypes 方法参数类型数组
-   * @return 方法描述符
-   */
-  public static String getMethodDescriptor(Class<?> rType, Class<?>... pTypes) {
-    StringBuilder builder = new StringBuilder(pTypes.length + 4);
-    builder.append("(");
-    for (Class<?> type : pTypes) {
-      builder.append(Type.getDescriptor(type));
-    }
-    return builder.append(")").append(Type.getDescriptor(rType)).toString();
-  }
+public class Reflection {
 
   /**
    * 获取一个对象包括父类所有的 getter

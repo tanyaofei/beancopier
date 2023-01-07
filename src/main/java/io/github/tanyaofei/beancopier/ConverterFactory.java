@@ -5,18 +5,16 @@ import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
 import io.github.tanyaofei.beancopier.utils.*;
-import io.github.tanyaofei.beancopier.utils.ReflectUtils.BeanProperty;
+import io.github.tanyaofei.beancopier.utils.Reflection.BeanProperty;
 import org.objectweb.asm.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.invoke.LambdaMetafactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.Function;
 
 import static java.lang.reflect.Modifier.isPublic;
 
@@ -80,18 +78,18 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     }
 
     Class<Converter<S, T>> c;
-    String internalName = BytecodeUtils.classNameToInternalName(className);
+    String internalName = CodeEmitter.classNameToInternalName(className);
     try {
       ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
       cw.visit(
           V1_8,
           ACC_PUBLIC | ACC_SYNTHETIC,
           internalName,
-          ReflectUtils.getClassSignature(
-              ClassInfo.of(Object.class),
+          CodeEmitter.getClassSignature(
+              Constants.OBJECT_CLASS_INFO,
               ClassInfo.of(Converter.class, sc, tc)),
-          Type.getInternalName(Object.class),
-          new String[]{Converter.INTERNAL_NAME}
+          Constants.OBJECT_INTERNAL_NAME,
+          Constants.CONVERTER_INTERNAL_NAME_ARRAY
       );
       cw.visitSource(Constants.SOURCE_FILE, null);
 
@@ -151,7 +149,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // this 入栈
     v.visitVarInsn(ALOAD, 0);
     // 调用 Object 的构造方法
-    BytecodeUtils.invokeNoArgsConstructor(v, Object.class);
+    CodeEmitter.invokeNoArgsConstructor(v, Object.class);
     // 结束方法
     v.visitInsn(RETURN);
     v.visitMaxs(-1, -1);
@@ -179,7 +177,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
         CONVERTER$CONVERT.getName(),
-        Type.getMethodDescriptor(CONVERTER$CONVERT),
+        Constants.CONVERTER_CONVERT_METHOD_DESCRIPTOR,
         null,
         null);
     v.visitCode();
@@ -190,7 +188,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
         INVOKEVIRTUAL,
         internalName,
         CONVERTER$CONVERT.getName(),
-        ReflectUtils.getMethodDescriptor(tc, sc),
+        CodeEmitter.getMethodDescriptor(tc, sc),
         false);
     v.visitInsn(ARETURN);
     v.visitMaxs(-1, -1);
@@ -231,9 +229,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC,
         CONVERTER$CONVERT.getName(),
-        ReflectUtils.getMethodDescriptor(tc, sc),
+        CodeEmitter.getMethodDescriptor(tc, sc),
         null,
-        null);
+        null
+    );
 
     v.visitCode();
 
@@ -242,13 +241,13 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // dup
     // invokespecial #Converter <init>()V;
     // astore_2
-    BytecodeUtils.newInstanceViaNoArgsConstructor(v, tc);
+    CodeEmitter.newInstanceViaNoArgsConstructor(v, tc);
     v.visitVarInsn(ASTORE, 2);
     // -- end
 
     Label jumpHere = null;
-    Iterable<BeanProperty> setters = ReflectUtils.getBeanSetters(tc);
-    Map<String, BeanProperty> getters = BeanProperty.mapIterable(ReflectUtils.getBeanGetters(sc));
+    Iterable<BeanProperty> setters = Reflection.getBeanSetters(tc);
+    Map<String, BeanProperty> getters = BeanProperty.mapIterable(Reflection.getBeanGetters(sc));
 
     for(BeanProperty tbp: setters) {
       Field tf = tbp.getField();
@@ -272,7 +271,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
           v.visitLabel(jumpHere);
         }
         jumpHere = skipFieldIfNull(v, getter);
-        recusitionCopy(v, internalName, sc, getter, tc, setter);
+        recursionCopy(v, internalName, sc, getter, tc, setter);
       } else if (isListRecursionCopy(sc, sf, tc, tf)) {
         // 列表递归
         if (jumpHere != null) {
@@ -314,8 +313,8 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   ) {
     v.visitVarInsn(ALOAD, 2);
     v.visitVarInsn(ALOAD, 1);
-    BytecodeUtils.invokeMethod(v, INVOKEVIRTUAL, getter);
-    BytecodeUtils.invokeMethod(v, INVOKEVIRTUAL, setter);
+    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
+    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, setter);
     dropSetterReturnVal(v, setter);
   }
 
@@ -338,7 +337,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param tc        拷贝目标类
    * @param setter       拷贝目标字段 setter 方法
    */
-  private void recusitionCopy(
+  private void recursionCopy(
       MethodVisitor v,
       String internalName,
       Class<?> sc, Method getter,
@@ -348,14 +347,14 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     v.visitVarInsn(ALOAD, 2);
     v.visitVarInsn(ALOAD, 0);
     v.visitVarInsn(ALOAD, 1);
-    BytecodeUtils.invokeMethod(v, INVOKEVIRTUAL, getter);
+    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
     v.visitMethodInsn(
         INVOKEVIRTUAL,
         internalName,
         CONVERTER$CONVERT.getName(),
-        ReflectUtils.getMethodDescriptor(tc, sc),
+        CodeEmitter.getMethodDescriptor(tc, sc),
         false);
-    BytecodeUtils.invokeMethod(v, INVOKEVIRTUAL, setter);
+    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, setter);
     dropSetterReturnVal(v, setter);
   }
 
@@ -376,45 +375,49 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       Class<?> sc, Method getter,
       Class<?> tc, Method setter
   ) {
+    String methodDescriptor = CodeEmitter.getMethodDescriptor(tc, sc);
     v.visitVarInsn(ALOAD, 2);
 
     // this.getField()
     v.visitVarInsn(ALOAD, 1);
-    BytecodeUtils.invokeMethod(v, INVOKEVIRTUAL, getter);
+    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
 
     // list.stream()
-    BytecodeUtils.invokeMethod(v, INVOKEINTERFACE, LIST$STREAM);
+    CodeEmitter.invokeMethod(v, INVOKEINTERFACE, LIST$STREAM);
 
     // this::convert
     v.visitVarInsn(ALOAD, 0);
     v.visitInvokeDynamicInsn(
         FUNCTION$APPLY.getName(),
-        "(L" + internalName + ";)" + Type.getDescriptor(Function.class),
+        "(L" + internalName + ";)" + Constants.FUNCTION_DESCRIPTOR,
         new Handle(H_INVOKESTATIC,
-            Type.getInternalName(LambdaMetafactory.class),
+            Constants.LAMBDA_METAFACTORY_INTERNAL_NAME,
             LAMBDA_META_FACTORY$METAFACOTRY.getName(),
-            Type.getMethodDescriptor(LAMBDA_META_FACTORY$METAFACOTRY),
+            Constants.LAMBDA_META_FACTORY_METAFACTORY_METHOD_DESCRIPTOR,
             false),
-        Type.getType(ReflectUtils.getMethodDescriptor(Object.class, Object.class)),
+        Constants.CONVERTER_TYPE,
         new Handle(H_INVOKEVIRTUAL,
             internalName,
             CONVERTER$CONVERT.getName(),
-            ReflectUtils.getMethodDescriptor(tc, sc),
+            methodDescriptor,
             false),
-        Type.getType(ReflectUtils.getMethodDescriptor(tc, sc)));
+        Type.getType(methodDescriptor)
+    );
 
     // stream.map()
-    BytecodeUtils.invokeMethod(v, INVOKEINTERFACE, STREAM$MAP);
+    CodeEmitter.invokeMethod(v, INVOKEINTERFACE, STREAM$MAP);
 
     // collector.toList()
-    BytecodeUtils.invokeMethod(v, INVOKESTATIC, COLLECTORS$TO_LIST);
+    CodeEmitter.invokeMethod(v, INVOKESTATIC, COLLECTORS$TO_LIST);
 
     // stream.collect()
-    BytecodeUtils.invokeMethod(v, INVOKEINTERFACE, STREAM$COLLECT);
-    v.visitTypeInsn(CHECKCAST, Type.getInternalName(List.class));
+    CodeEmitter.invokeMethod(v, INVOKEINTERFACE, STREAM$COLLECT);
+
+    // (List) .....
+    v.visitTypeInsn(CHECKCAST, Constants.LIST_INTERNAL_NAME);
 
     // target.setField()
-    BytecodeUtils.invokeMethod(v, INVOKEVIRTUAL, setter);
+    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, setter);
     dropSetterReturnVal(v, setter);
   }
 
@@ -434,7 +437,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   private Label skipFieldIfNull(MethodVisitor visitor, Method getter) {
     Label label = new Label();
     visitor.visitVarInsn(ALOAD, 1);
-    BytecodeUtils.invokeMethod(visitor, INVOKEVIRTUAL, getter);
+    CodeEmitter.invokeMethod(visitor, INVOKEVIRTUAL, getter);
     visitor.visitJumpInsn(IFNULL, label);
     return label;
   }

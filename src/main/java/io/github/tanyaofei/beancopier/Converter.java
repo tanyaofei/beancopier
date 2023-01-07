@@ -11,8 +11,6 @@ import org.objectweb.asm.Type;
  */
 public interface Converter<S, T> {
 
-  String INTERNAL_NAME = Type.getInternalName(Converter.class);
-
   /**
    * 拷贝对象
    * <p>该方法的具体实现由 asm 字节码生成, 内容为所有 target.setXX(source.getXX)</p>
