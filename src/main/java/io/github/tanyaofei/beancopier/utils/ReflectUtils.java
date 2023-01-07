@@ -1,11 +1,12 @@
 package io.github.tanyaofei.beancopier.utils;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import com.google.common.collect.Iterables;
+import lombok.*;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,69 +69,98 @@ public class ReflectUtils {
   }
 
   /**
-   * 获取一个类的所有字段的 Getter 方法
+   * 获取一个对象包括父类所有的 getter
+   * <p>
+   * 如果某个字段没有 getter 或者 getter 没有对应的字段, 则不会在返回值丽
+   * </p>
    *
-   * @param target 目标类
-   * @return 该类的所有字段的 Getter 方法
+   * @param c 类
+   * @return 该类包括父类的所有 getter 集合迭代器
    */
-  public static Map<String, Pair<Field, Method>> getFieldGetters(Class<?> target) {
-    Field[] fields = target.getDeclaredFields();
-    Map<String, Pair<Field, Method>> getters = new HashMap<>(fields.length, 1.0F);
-    for (Field field : fields) {
+  public static Iterable<BeanProperty> getBeanGetters(Class<?> c) {
+    Field[] fields = c.getDeclaredFields();
+    ArrayList<BeanProperty> properties = new ArrayList<>(fields.length);
+    for (Field f : fields) {
+      String name = f.getName();
       Method getter;
       try {
-        if (field.getType().equals(boolean.class)) {
-          getter = target.getDeclaredMethod("is" + StringUtils.capitalize(field.getName()));
+        if (f.getType() == boolean.class) {
+          getter = c.getDeclaredMethod("is" + StringUtils.capitalize(name));
         } else {
-          getter = target.getDeclaredMethod("get" + StringUtils.capitalize(field.getName()));
+          getter = c.getDeclaredMethod("get" + StringUtils.capitalize(name));
         }
       } catch (NoSuchMethodException e) {
         continue;
       }
       if (getter.getParameterTypes().length != 0) {
-        // getter should not have parameters
         continue;
       }
-      getters.put(field.getName(), Pair.of(field, getter));
+
+      properties.add(new BeanProperty(name, f, getter));
     }
 
-    Class<?> superclass = target.getSuperclass();
-    if (superclass != Object.class && superclass != null) {
-      getters.putAll(getFieldGetters(superclass));
+    Class<?> sc = c.getSuperclass();
+    if (sc != null && sc != Object.class) {
+      return Iterables.concat(properties, getBeanGetters(sc));
     }
 
-    return getters;
+    return properties;
   }
 
   /**
-   * 获取一个类的所有字段的 Setter 方法, key: 字段名, value: setter 方法
+   * 获取一个对象包括父类所有的 setter
+   * <p>
+   * 如果某个字段没有 setter 或者 setter 没有对应的字段, 则不会在返回值丽
+   * </p>
    *
-   * @param target 目标类
-   * @return 该类的所有字段的 Setter 方法
+   * @param c 类
+   * @return 该类包括父类的所有 setter 集合迭代器
    */
-  public static Map<String, Pair<Field, Method>> getFieldSetters(Class<?> target) {
-    Field[] fields = target.getDeclaredFields();
-    Map<String, Pair<Field, Method>> setters = new HashMap<>(fields.length, 1.0F);
-    for (Field field : fields) {
+  public static Iterable<BeanProperty> getBeanSetters(Class<?> c) {
+    Field[] fields = c.getDeclaredFields();
+    ArrayList<BeanProperty> properties = new ArrayList<>(fields.length);
+    for (Field f : fields) {
+      String name = f.getName();
       Method setter;
       try {
-        setter = target.getDeclaredMethod("set" + StringUtils.capitalize(field.getName()), field.getType());
+        setter = c.getDeclaredMethod("set" + StringUtils.capitalize(f.getName()), f.getType());
       } catch (NoSuchMethodException e) {
         continue;
       }
       if (setter.getParameterTypes().length != 1) {
-        // setter should have one parameter only
         continue;
       }
-      setters.put(field.getName(), Pair.of(field, setter));
+
+      properties.add(new BeanProperty(name, f, setter));
     }
 
-    Class<?> superclass = target.getSuperclass();
-    if (superclass != Object.class && superclass != null) {
-      setters.putAll(getFieldSetters(superclass));
+    Class<?> sc = c.getSuperclass();
+    if (sc != null && sc != Object.class) {
+      return Iterables.concat(properties, getBeanSetters(sc));
     }
 
-    return setters;
+    return properties;
+  }
+
+
+  @Getter
+  @ToString
+  @AllArgsConstructor
+  public static class BeanProperty {
+    private String name;
+    private Field field;
+    private Method xtter;
+
+
+    public static Map<String, BeanProperty> mapIterable(Iterable<BeanProperty> itr) {
+      Map<String, BeanProperty> map = new HashMap<>();
+      for (BeanProperty p : itr) {
+        map.put(p.getName(), p);
+      }
+      return map;
+    }
+
+
   }
 
 

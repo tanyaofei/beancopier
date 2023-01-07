@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier.utils;
 
+import com.google.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.objectweb.asm.MethodVisitor;

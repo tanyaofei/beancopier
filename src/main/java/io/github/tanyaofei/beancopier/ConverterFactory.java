@@ -5,6 +5,7 @@ import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
 import io.github.tanyaofei.beancopier.utils.*;
+import io.github.tanyaofei.beancopier.utils.ReflectUtils.BeanProperty;
 import org.objectweb.asm.*;
 
 import java.io.File;
@@ -92,6 +93,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
           Type.getInternalName(Object.class),
           new String[]{Converter.INTERNAL_NAME}
       );
+      cw.visitSource(Constants.SOURCE_FILE, null);
 
       // 编写构造函数
       writeNoArgsConstructor(cw);
@@ -245,24 +247,24 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // -- end
 
     Label jumpHere = null;
-    Map<String, Pair<Field, Method>> getters = ReflectUtils.getFieldGetters(sc);
-    for (Map.Entry<String, Pair<Field, Method>> setterEntry : ReflectUtils.getFieldSetters(tc).entrySet()) {
-      Method setter = setterEntry.getValue().getY();
-      Field tf = setterEntry.getValue().getX();
+    Iterable<BeanProperty> setters = ReflectUtils.getBeanSetters(tc);
+    Map<String, BeanProperty> getters = BeanProperty.mapIterable(ReflectUtils.getBeanGetters(sc));
 
-      Property property = Optional.ofNullable(tf.getAnnotation(Property.class)).orElse(DefaultProperty.DEFAULT_PROPERTY);
+    for(BeanProperty tbp: setters) {
+      Field tf = tbp.getField();
+      Property property = Optional.ofNullable(tf.getAnnotation(Property.class)).orElse(Constants.DEFAULT_PROPERTY);
       if (property.skip()) {
         continue;
       }
 
-      String fieldName = property.value().isEmpty() ? setterEntry.getKey() : property.value();
-      Pair<Field, Method> g = getters.get(fieldName);
-      if (g == null) {
-        // target 没有同名字段跳过
+      String name = property.value().isEmpty() ? tbp.getName() : property.value();
+      BeanProperty sbp = getters.get(name);
+      if (sbp == null) {
         continue;
       }
-      Method getter = g.getY();
-      Field sf = g.getX();
+      Field sf = sbp.getField();
+      Method getter = sbp.getXtter();
+      Method setter = tbp.getXtter();
 
       if (isRecursionCopy(sc, sf, tc, tf)) {
         // 单个递归
