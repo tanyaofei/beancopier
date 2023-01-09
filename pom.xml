@@ -10,7 +10,7 @@
     <name>beancopier</name>
 
     <url>https://github.com/tanyaofei/beancopier</url>
-    <description>Java Bean copy utils.</description>
+    <description>Java Bean copy utils inspired by cglib beancopier. Added Support for copying parent properties, alias, property skipping and upcasting copying.</description>
     <developers>
         <developer>
             <name>tanyaofei</name>
