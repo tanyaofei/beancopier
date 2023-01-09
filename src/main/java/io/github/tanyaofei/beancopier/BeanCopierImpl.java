@@ -32,7 +32,7 @@ public class BeanCopierImpl {
   /**
    * 转换器缓存
    */
-  private final ConcurrentMap<String, ? super Converter<?, ?>> caches;
+  private final ConcurrentMap<CacheKey, ? super Converter<?, ?>> caches;
 
   /**
    * 转换器工厂
@@ -254,9 +254,9 @@ public class BeanCopierImpl {
       if (s == null) {
         t = null;
       } else if (c == null) {
-        Class<S> sourceClass = (Class<S>) s.getClass();
-        String cacheKey = cacheKey(sourceClass, tc);
-        c = generateConverter(cacheKey, sourceClass, tc);
+        Class<S> sc = (Class<S>) s.getClass();
+        CacheKey cacheKey = new CacheKey(sc, tc);
+        c = generateConverter(cacheKey, sc, tc);
         t = c.convert(s);
       } else {
         t = c.convert(s);
@@ -297,7 +297,7 @@ public class BeanCopierImpl {
 
     Class<S> sc = (Class<S>) source.getClass();
     Converter<S, T> converter = generateConverter(
-        cacheKey(sc, targetClass),
+        new CacheKey(sc, targetClass),
         sc,
         targetClass
     );
@@ -344,7 +344,7 @@ public class BeanCopierImpl {
    */
   @SuppressWarnings("unchecked")
   private <S, T> Converter<S, T> generateConverter(
-      @NotNull String cacheKey,
+      @NotNull CacheKey cacheKey,
       @NotNull Class<S> s,
       @NotNull Class<T> t
   ) {
@@ -352,20 +352,6 @@ public class BeanCopierImpl {
         cacheKey,
         key -> converterFactory.generateConverter(s, t)
     );
-  }
-
-  /**
-   * 生成缓存 key
-   * <p>格式 sourceClass:targetClass</p>
-   *
-   * @param sc 拷贝来源类
-   * @param tc 拷贝目标类
-   * @return 缓存 key
-   */
-  private String cacheKey(
-      Class<?> sc, Class<?> tc
-  ) {
-    return sc.getName() + ":" + tc.getName();
   }
 
 }
