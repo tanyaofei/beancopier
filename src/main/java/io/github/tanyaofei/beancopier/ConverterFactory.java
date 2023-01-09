@@ -2,12 +2,17 @@ package io.github.tanyaofei.beancopier;
 
 import com.google.common.reflect.TypeToken;
 import io.github.tanyaofei.beancopier.annotation.Property;
+import io.github.tanyaofei.beancopier.exception.BeanCopierException;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
 import io.github.tanyaofei.beancopier.utils.Constants;
 import io.github.tanyaofei.beancopier.utils.*;
-import io.github.tanyaofei.beancopier.utils.Reflection.BeanProperty;
+import io.github.tanyaofei.beancopier.utils.Reflections.BeanProperty;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
+import sun.misc.Unsafe;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,8 +20,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.*;
 
 import static java.lang.reflect.Modifier.isPublic;
@@ -24,12 +27,12 @@ import static java.lang.reflect.Modifier.isPublic;
 /**
  * 使用 ASM 字节码技术在运行时创建 Source 拷贝为 Target 的转换器字节码
  *
- * @see ConverterClassLoader
  * @author tanyaofei
+ * @see DefaultClassLoader
  */
 public class ConverterFactory implements Opcodes, MethodConstants {
 
-  static Method defineClass;
+  private final static Unsafe unsafe = UnsafeUtils.getUnsafe();
 
   /**
    * 字节码导出路径, 如果为 null 或者为空表示不导出
@@ -48,32 +51,61 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    */
   private final NamingPolicy namingPolicy;
 
-  static {
-    defineClass = (Method) AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
-      try {
-        Class<?> loader = Class.forName("java.lang.ClassLoader");
-        Method defineClass = loader.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
-        defineClass.setAccessible(true);
-        return defineClass;
-      } catch (ClassNotFoundException | NoSuchMethodException e) {
-        throw new IllegalStateException(e);
-      }
-    });
-  }
-
   /**
    * 类加载器, 生成的类将会通过此类加载器进行加载
    */
   private final ClassLoader classLoader;
 
-  public ConverterFactory(ClassLoader classLoader, NamingPolicy namingPolicy, String classDumpPath) {
+  /**
+   * 创建转换器工厂
+   *
+   * @param classLoader   类加载器, 如果为 null 则自动选取
+   * @param namingPolicy  转换器类命名规则
+   * @param classDumpPath 用于调试, 转换器类持久化到磁盘的路径, 如果为 null 或者为空则表示不持久化。如果路径不存在则自动创建文件详见
+   */
+  @Contract(pure = true)
+  public ConverterFactory(
+      @Nullable ClassLoader classLoader,
+      @NotNull NamingPolicy namingPolicy,
+      @Nullable String classDumpPath
+  ) {
     this.classLoader = classLoader;
     this.classDumpPath = classDumpPath;
     this.namingPolicy = namingPolicy;
   }
 
   /**
-   * 创建 sc  to  tc 的转换器并加载到运行时内存中并创建实例
+   * 加载类, 在加载时会选用两个类加载器继承链更下级的类加载器来进行加载
+   *
+   * @param sc   拷贝来源类
+   * @param tc   拷贝结果类
+   * @param code 字节码
+   * @return 类
+   * @throws ConverterGenerateException 两个类没有继承关系, 则抛出磁异常
+   */
+  public static Class<?> chooseClassLoaderToDefineClass(Class<?> sc, Class<?> tc, byte[] code) {
+    // 使用继承链中最下级的 classloader 加载, 这样这个 classloader 加载出来的类可以访问另外一个更上级 classloader 加载的类
+    ClassLoader scl = sc.getClassLoader();
+    ClassLoader tcl = tc.getClassLoader();
+    ClassLoader classLoader = ClassLoaders.isAssignableFrom(scl, tcl)
+        ? tcl
+        : ClassLoaders.isAssignableFrom(tcl, scl)
+        ? scl : null;
+
+    if (classLoader == null) {
+      throw new ConverterGenerateException(
+          String.format("Converter can not access classes that loaded by unrelated classloaders in the same time (%s was loaded by '%s' but %s was loaded by '%s')",
+              sc,
+              sc.getClassLoader(),
+              tc,
+              tc.getClassLoader()
+          ));
+    }
+    return unsafe.defineClass(null, code, 0, code.length, classLoader, null);
+  }
+
+  /**
+   * 创建 sc 拷贝为 tc 的转换器并加载到运行时内存中并创建实例
    *
    * @param sc  拷贝来源类
    * @param tc  拷贝目标类
@@ -105,10 +137,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
           ACC_PUBLIC | ACC_SYNTHETIC,
           internalName,
           CodeEmitter.getClassSignature(
-              Constants.OBJECT_CLASS_INFO,
+              Constants.CLASS_INFO_OBJECT,
               ClassInfo.of(Converter.class, sc, tc)),
-          Constants.OBJECT_INTERNAL_NAME,
-          Constants.CONVERTER_INTERNAL_NAME_ARRAY
+          Constants.INTERNAL_NAME_OBJECT,
+          Constants.INTERNAL_NAME_ARRAY_CONVERTER
       );
       cw.visitSource(Constants.SOURCE_FILE, null);
 
@@ -126,11 +158,14 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
       // 加载类
       final byte[] code = cw.toByteArray();
-      dumpClassIfConfigured(code, Reflection.getClassSimpleNameByInternalName(internalName));
-      if (classLoader instanceof ConverterClassLoader) {
+      dumpClassIfConfigured(code, Reflections.getClassSimpleNameByInternalName(internalName));
+
+      if (classLoader == null) {
+        c = (Class<Converter<S, T>>) chooseClassLoaderToDefineClass(sc, tc, code);
+      } else if (classLoader instanceof ConverterClassLoader) {
         c = (Class<Converter<S, T>>) ((ConverterClassLoader) classLoader).defineClass(null, code);
       } else {
-        c = (Class<Converter<S, T>>) defineClass(sc, tc, code);
+        c = (Class<Converter<S, T>>) unsafe.defineClass(null, code, 0, code.length, classLoader, null);
       }
     } catch (Exception e) {
       synchronized (reservedClassNames) {
@@ -144,14 +179,6 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       return c.getConstructor().newInstance();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw new ConverterNewInstanceException(c, e);
-    }
-  }
-
-  private Class<?> defineClass(Class<?> sc, Class<?> tc, byte[] code) {
-    try {
-      return (Class<?>) defineClass.invoke(tc.getClassLoader(), null, code, 0, code.length);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new ConverterGenerateException(sc, tc, e);
     }
   }
 
@@ -197,7 +224,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
         CONVERTER$CONVERT.getName(),
-        Constants.CONVERTER_CONVERT_METHOD_DESCRIPTOR,
+        Constants.METHOD_DESCRIPTOR_CONVERTER_CONVERT,
         null,
         null);
     v.visitCode();
@@ -268,10 +295,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // -- end
 
     Label jumpHere = null;
-    Iterable<BeanProperty> setters = Reflection.getBeanSetters(tc);
-    Map<String, BeanProperty> getters = BeanProperty.mapIterable(Reflection.getBeanGetters(sc));
+    Iterable<BeanProperty> setters = Reflections.getBeanSetters(tc);
+    Map<String, BeanProperty> getters = BeanProperty.mapIterable(Reflections.getBeanGetters(sc));
 
-    for(BeanProperty tbp: setters) {
+    for (BeanProperty tbp : setters) {
       Field tf = tbp.getField();
       Property property = Optional.ofNullable(tf.getAnnotation(Property.class)).orElse(Constants.DEFAULT_PROPERTY);
       if (property.skip()) {
@@ -331,7 +358,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   ) {
     MethodVisitor v = cw.visitMethod(
         ACC_PRIVATE | ACC_SYNTHETIC,
-        Constants.LAMBDA$CONVERT$0_METHOD_NAME,
+        Constants.METHOD_NAME_LAMBDA$CONVERT$0,
         CodeEmitter.getMethodDescriptor(tc, sc),
         null,
         null
@@ -447,16 +474,16 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     v.visitVarInsn(ALOAD, 0);
     v.visitInvokeDynamicInsn(
         FUNCTION$APPLY.getName(),
-        "(L" + internalName + ";)" + Constants.FUNCTION_DESCRIPTOR,
+        "(L" + internalName + ";)" + Constants.TYPE_DESCRIPTOR_FUNCTION,
         new Handle(H_INVOKESTATIC,
-            Constants.LAMBDA_METAFACTORY_INTERNAL_NAME,
+            Constants.INTERNAL_NAME_LAMBDA_METAFACTORY,
             LAMBDA_META_FACTORY$METAFACOTRY.getName(),
-            Constants.LAMBDA_META_FACTORY_METAFACTORY_METHOD_DESCRIPTOR,
+            Constants.METHOD_DESCRIPTOR_LAMBDA_META_FACTORY_METAFACTORY,
             false),
-        Constants.CONVERTER_TYPE,
+        Constants.METHOD_TYPE_CONVERTER,
         new Handle(H_INVOKESPECIAL,
             internalName,
-            Constants.LAMBDA$CONVERT$0_METHOD_NAME,
+            Constants.METHOD_NAME_LAMBDA$CONVERT$0,
             methodDescriptor,
             false
         ),
@@ -473,7 +500,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     CodeEmitter.invokeMethod(v, INVOKEINTERFACE, STREAM$COLLECT);
 
     // (List) .....
-    v.visitTypeInsn(CHECKCAST, Constants.LIST_INTERNAL_NAME);
+    v.visitTypeInsn(CHECKCAST, Constants.INTERNAL_NAME_LIST);
 
     // target.setField()
     CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, setter);

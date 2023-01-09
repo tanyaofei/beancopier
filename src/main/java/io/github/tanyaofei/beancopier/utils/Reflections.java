@@ -13,7 +13,7 @@ import java.util.Map;
  * @author tanyaofei
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Reflection {
+public class Reflections {
 
   /**
    * 通过 internalName 获取 class 的 simpleName

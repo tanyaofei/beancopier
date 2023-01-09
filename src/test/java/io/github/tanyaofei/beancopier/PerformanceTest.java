@@ -188,7 +188,7 @@ public class PerformanceTest {
     List<Class<?>> classes = new LinkedList<>();
 
     // 通过重命名 TemplateObject 来创建不同的类
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10000; i++) {
       ClassReader cr = new ClassReader(TemplateObject.class.getName());
       ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
@@ -201,7 +201,7 @@ public class PerformanceTest {
     }
 
     ConverterFactory converterFactory = new ConverterFactory(
-        new ConverterClassLoader(this.getClass().getClassLoader()),
+        new DefaultClassLoader(this.getClass().getClassLoader()),
         NamingPolicy.getDefault(),
         null
     );

@@ -14,25 +14,27 @@ public interface Constants {
 
   Property DEFAULT_PROPERTY = DefaultProperty.DEFAULT_PROPERTY;
 
-  String OBJECT_INTERNAL_NAME = Type.getInternalName(Object.class);
+  String INTERNAL_NAME_OBJECT = Type.getInternalName(Object.class);
 
-  String CONVERTER_CONVERT_METHOD_DESCRIPTOR = Type.getMethodDescriptor(MethodConstants.CONVERTER$CONVERT);
+  String[] INTERNAL_NAME_ARRAY_CONVERTER = {Type.getInternalName(Converter.class)};
 
-  String LAMBDA$CONVERT$0_METHOD_NAME = "lambda$convert$0";
+  String INTERNAL_NAME_LIST = Type.getInternalName(List.class);
 
-  String[] CONVERTER_INTERNAL_NAME_ARRAY = {Type.getInternalName(Converter.class)};
+  String INTERNAL_NAME_LAMBDA_METAFACTORY = Type.getInternalName(LambdaMetafactory.class);
 
-  String LIST_INTERNAL_NAME = Type.getInternalName(List.class);
+  String METHOD_DESCRIPTOR_CONVERTER_CONVERT = Type.getMethodDescriptor(MethodConstants.CONVERTER$CONVERT);
 
-  String LAMBDA_METAFACTORY_INTERNAL_NAME = Type.getInternalName(LambdaMetafactory.class);
+  String METHOD_NAME_LAMBDA$CONVERT$0 = "lambda$convert$0";
 
-  String LAMBDA_META_FACTORY_METAFACTORY_METHOD_DESCRIPTOR = Type.getMethodDescriptor(MethodConstants.LAMBDA_META_FACTORY$METAFACOTRY);
+  String METHOD_DESCRIPTOR_LAMBDA_META_FACTORY_METAFACTORY = Type.getMethodDescriptor(MethodConstants.LAMBDA_META_FACTORY$METAFACOTRY);
 
-  String FUNCTION_DESCRIPTOR = Type.getDescriptor(Function.class);
+  String TYPE_DESCRIPTOR_FUNCTION = Type.getDescriptor(Function.class);
 
-  Type CONVERTER_TYPE = Type.getType(CodeEmitter.getMethodDescriptor(Object.class, Object.class));
+  Type METHOD_TYPE_CONVERTER = Type.getType(CodeEmitter.getMethodDescriptor(Object.class, Object.class));
 
-  ClassInfo OBJECT_CLASS_INFO = ClassInfo.of(Object.class);
+  ClassInfo CLASS_INFO_OBJECT = ClassInfo.of(Object.class);
+
+  String INTERNAL_EXCEPTION_MESSAGE = "It should be a bug from beancopier, please submit an issue on github";
 
   class DefaultProperty {
 
@@ -42,7 +44,7 @@ public interface Constants {
       try {
         DEFAULT_PROPERTY = DefaultProperty.class.getDeclaredField("field").getAnnotation(Property.class);
       } catch (NoSuchFieldException e) {
-        throw new IllegalStateException(e);
+        throw new IllegalStateException(INTERNAL_EXCEPTION_MESSAGE, e);
       }
     }
 

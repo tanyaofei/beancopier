@@ -1,13 +1,9 @@
 package io.github.tanyaofei.beancopier;
 
-/**
- * @author tanyaofei
- */
-public class ConverterClassLoader extends ClassLoader {
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-  public ConverterClassLoader(ClassLoader parent) {
-    super(parent);
-  }
+public interface ConverterClassLoader {
 
   /**
    * 加载类
@@ -16,8 +12,7 @@ public class ConverterClassLoader extends ClassLoader {
    * @param code 字节码字节数组
    * @return 类
    */
-  public final Class<?> defineClass(String name, byte[] code) {
-    return super.defineClass(name, code, 0, code.length);
-  }
+  @NotNull
+  Class<?> defineClass(@Nullable String name, byte @NotNull [] code);
 
 }

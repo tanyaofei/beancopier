@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier;
 
+import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
 import io.github.tanyaofei.beancopier.util.TemplateObject;
 import org.junit.jupiter.api.Assertions;
@@ -30,9 +31,13 @@ public class DifferenceClassLoadersTest {
       BeanCopier.copy(new TemplateObject(), c1);
     });
 
+    // 两个类来自于没有血缘关系的 classloader, 应当抛出异常
+    Assertions.assertThrows(ConverterGenerateException.class, () -> {
+      BeanCopier.copy(BeanCopier.copy(new TemplateObject(), c1), c2);
+    });
+
     Assertions.assertThrows(NoClassDefFoundError.class, () -> {
       new BeanCopierImpl().copy(new TemplateObject(), c1);
-      BeanCopier.copy(BeanCopier.copy(new TemplateObject(), c1), c2);
     });
   }
 

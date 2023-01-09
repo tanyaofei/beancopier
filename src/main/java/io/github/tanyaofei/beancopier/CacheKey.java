@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier;
 
 
 import lombok.AllArgsConstructor;
+import sun.misc.Unsafe;
 
 import java.util.Objects;
 

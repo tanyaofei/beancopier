@@ -48,7 +48,7 @@ public class BeanCopierImpl {
   }
 
   /**
-   * 创建一个指定初始容量的实例, 该实例将使用 {@link ConverterClassLoader} 类加载器加载创建的类, 因此该实例无法访问当前以外的类加载器加载的类.
+   * 创建一个指定初始容量的实例, 该实例将使用 {@link DefaultClassLoader} 类加载器加载创建的类, 因此该实例无法访问当前以外的类加载器加载的类.
    * <p>
    * 如果需要拷贝或拷贝到其他类加载器加载的类应当使用 {@link #BeanCopierImpl(ClassLoader)}, 同时该类加载器必须重载父类方法 {@link ClassLoader#defineClass(String, byte[], int, int)} 来自定义你的类加载逻辑
    * </p>
@@ -72,7 +72,7 @@ public class BeanCopierImpl {
   public BeanCopierImpl(int cachesInitialCapacity) {
     this(
         cachesInitialCapacity,
-        new ConverterClassLoader(BeanCopierImpl.class.getClassLoader())
+        new DefaultClassLoader(BeanCopierImpl.class.getClassLoader())
     );
   }
 
@@ -323,7 +323,12 @@ public class BeanCopierImpl {
     /**
      * 默认实现由于没有类卸载需求, 因此使用 app classloader 来加载转换器类
      */
-    private final static BeanCopierImpl INSTANCE = new BeanCopierImpl(DEFAULT_CACHES_CAPACITY, new ConverterFactory(ClassLoader.getSystemClassLoader(), NamingPolicy.getDefault(), BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH));
+    private final static BeanCopierImpl INSTANCE = new BeanCopierImpl(
+        DEFAULT_CACHES_CAPACITY,
+        new ConverterFactory(null,
+            NamingPolicy.getDefault(),
+            BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH)
+    );
   }
 
   /**

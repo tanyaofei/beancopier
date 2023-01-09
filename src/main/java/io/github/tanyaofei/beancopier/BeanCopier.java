@@ -14,8 +14,8 @@ import java.util.List;
  * </p>
  * <ol>
  *   <li>{@link BeanCopierImpl} 实例不再引用并被 GC 掉</li>
- *   <li>{@link BeanCopierImpl} 持有的 {@link ConverterFactory} 和 {@link ConverterClassLoader} 被 GC 掉</li>
- *   <li>{@link ConverterClassLoader} 装载的类被卸载 </li>
+ *   <li>{@link BeanCopierImpl} 持有的 {@link ConverterFactory} 和 {@link DefaultClassLoader} 被 GC 掉</li>
+ *   <li>{@link DefaultClassLoader} 装载的类被卸载 </li>
  * </ol>
  * <p>即当 {@link BeanCopierImpl} 实例不再被引用时, 该类在运行时生成的转换器类都会被卸载</p>
  * <p>
