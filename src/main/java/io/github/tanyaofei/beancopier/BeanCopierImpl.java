@@ -48,7 +48,7 @@ public class BeanCopierImpl {
   }
 
   /**
-   * 创建一个指定初始容量的实例, 该实例将使用 {@link ConverterClassLoader} 类加载器加载创建的类, 因此该实例无法访问加载 {@link BeanCopierImpl} 的以外的类加载器加载的类.
+   * 创建一个指定初始容量的实例, 该实例将使用 {@link ConverterClassLoader} 类加载器加载创建的类, 因此该实例无法访问当前以外的类加载器加载的类.
    * <p>
    * 如果需要拷贝或拷贝到其他类加载器加载的类应当使用 {@link #BeanCopierImpl(ClassLoader)}, 同时该类加载器必须重载父类方法 {@link ClassLoader#defineClass(String, byte[], int, int)} 来自定义你的类加载逻辑
    * </p>
@@ -66,11 +66,12 @@ public class BeanCopierImpl {
    *
    * </pre>
    *
-   * @param cachesCapacity 初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
+   * @param cachesInitialCapacity 初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
    */
-  public BeanCopierImpl(int cachesCapacity) {
+  @Contract(pure = true)
+  public BeanCopierImpl(int cachesInitialCapacity) {
     this(
-        cachesCapacity,
+        cachesInitialCapacity,
         new ConverterClassLoader(BeanCopierImpl.class.getClassLoader())
     );
   }
@@ -79,7 +80,8 @@ public class BeanCopierImpl {
    * @param classLoader 类加载器
    * @see #BeanCopierImpl(int, ClassLoader)
    */
-  public BeanCopierImpl(ClassLoader classLoader) {
+  @Contract(pure = true)
+  public BeanCopierImpl(@NotNull ClassLoader classLoader) {
     this(
         DEFAULT_CACHES_CAPACITY,
         classLoader
@@ -89,22 +91,24 @@ public class BeanCopierImpl {
   /**
    * 创建一个指定缓存初始容量和类加载器的实例, 之后生成的转换器类都将会使用该类加载器进行加载
    *
-   * @param cachesCapacity 缓存初始容量
-   * @param classLoader    类加载器
+   * @param cachesInitialCapacity 缓存初始容量
+   * @param classLoader           类加载器
    */
-  public BeanCopierImpl(int cachesCapacity, ClassLoader classLoader) {
+  @Contract(pure = true)
+  public BeanCopierImpl(int cachesInitialCapacity, @NotNull ClassLoader classLoader) {
     this(
-        cachesCapacity,
+        cachesInitialCapacity,
         new ConverterFactory(classLoader, NamingPolicy.getDefault(), BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH)
     );
   }
 
   /**
-   * @param cachesCapacity   初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
-   * @param converterFactory 转换器工厂
+   * @param cachesInitialCapacity 初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
+   * @param converterFactory      转换器工厂
    */
-  private BeanCopierImpl(int cachesCapacity, ConverterFactory converterFactory) {
-    this.caches = new ConcurrentHashMap<>(cachesCapacity);
+  @Contract(pure = true)
+  private BeanCopierImpl(int cachesInitialCapacity, @NotNull ConverterFactory converterFactory) {
+    this.caches = new ConcurrentHashMap<>(cachesInitialCapacity);
     this.converterFactory = converterFactory;
   }
 
@@ -113,6 +117,7 @@ public class BeanCopierImpl {
    *
    * @return BeanCopier 单例
    */
+  @Contract(pure = true)
   static BeanCopierImpl getInstance() {
     return Lazy.INSTANCE;
   }
@@ -127,13 +132,22 @@ public class BeanCopierImpl {
    * @return 拷贝结果
    * @see #copy(Object, Class, Callback)
    */
-  @Contract("null, _ -> null")
+  @Contract(value = "null, _ -> null", pure = true)
   public <S, T> T copy(@Nullable S source, @NotNull Class<T> targetClass) {
     return copy(source, targetClass, null);
   }
 
   /**
-   * 对象拷贝
+   * 对象拷贝, 会将类型兼容并名称相同的字段逐一拷贝到结果中去, 以下字段可以成功拷贝
+   * <ul>
+   *   <li>相同类型, 如 String -> String, Source -> Source</li>
+   *   <li>类型兼容, 如 Integer -> Number, List&lt;Integer&gt; -> List&lt;Number&gt;, ArrayList&lt;Integer&gt -> List&lt;Number&gt;</li>
+   *   <li>递归拷贝, 如 Source -> Target </li>
+   *   <li>列表递归拷贝, 如 List&lt;Source&gt; -> List&lt;Target&gt;</li>
+   *   <li>父类字段拷贝</li>
+   * </ul>
+   *
+   * <p>使用 {@link io.github.tanyaofei.beancopier.annotation.Property} 将会影响上述拷贝的结果</p>
    * <p>如果需要批量拷贝对象, 使用 {@link #copyList(Collection, Class)} 可以提供更好的性能</p>
    *
    * @param source      拷贝来源
@@ -143,11 +157,16 @@ public class BeanCopierImpl {
    * @param callback    拷贝完之后进行的操作
    * @return 拷贝结果
    * @throws CopyException 如果拷贝过程中发生异常
+   * @see io.github.tanyaofei.beancopier.annotation.Property 属性配置
    * @see ConverterFactory#generateConverter(Class, Class) 动态生成 Source to Target 的转换器
    */
-  @Contract("null, _, _ -> null")
   @SuppressWarnings("unchecked")
-  public <S, T> T copy(@Nullable S source, @NotNull(exception = NullPointerException.class) Class<T> targetClass, @Nullable Callback<S, T> callback) {
+  @Contract(value = "null, _, _ -> null", pure = true)
+  public <S, T> T copy(
+      @Nullable S source,
+      @NotNull Class<T> targetClass,
+      @Nullable Callback<S, T> callback
+  ) {
     if (source == null) {
       return null;
     }
@@ -177,8 +196,8 @@ public class BeanCopierImpl {
    * @param <T>    克隆对象类
    * @return 克隆结果
    */
-  @Contract("null -> null")
   @SuppressWarnings("unchecked")
+  @Contract(value = "null -> null", pure = true)
   public <T> T clone(@Nullable T source) {
     if (source == null) {
       return null;
@@ -196,6 +215,7 @@ public class BeanCopierImpl {
    * @see #cloneList(Collection, Callback)
    */
   @NotNull
+  @Contract(pure = true)
   public <T> List<T> cloneList(@NotNull Collection<@Nullable T> sources) {
     return cloneList(sources, null);
   }
@@ -210,8 +230,12 @@ public class BeanCopierImpl {
    * @see #copy(Object, Class, Callback)
    * @see #copyList(Collection, Class, Callback)
    */
+  @Contract(pure = true)
   @SuppressWarnings("unchecked")
-  public <T> List<T> cloneList(@NotNull Collection<@Nullable T> objs, @Nullable Callback<T, T> callback) {
+  public <T> List<T> cloneList(
+      @NotNull Collection<@Nullable T> objs,
+      @Nullable Callback<T, T> callback
+  ) {
     if (objs.isEmpty()) {
       return new ArrayList<>();
     }
@@ -265,7 +289,11 @@ public class BeanCopierImpl {
    * @param <T>         拷贝目标类
    * @return {@link ArrayList} 拷贝结果列表
    */
-  public <S, T> List<T> copyList(@NotNull Collection<@Nullable S> sources, @NotNull Class<T> targetClass) {
+  @Contract(pure = true)
+  public <S, T> List<T> copyList(
+      @NotNull Collection<@Nullable S> sources,
+      @NotNull Class<T> targetClass
+  ) {
     return copyList(sources, targetClass, null);
   }
 
@@ -281,6 +309,7 @@ public class BeanCopierImpl {
    * @throws CopyException 如果拷贝过程中发生异常
    */
   @NotNull
+  @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> source,
       @NotNull Class<T> targetClass,
@@ -300,11 +329,12 @@ public class BeanCopierImpl {
   /**
    * 批量对象拷贝
    *
-   * @param itr         拷贝来源
-   * @param tc 拷贝目标类
-   * @param callback    列表里每个对象拷贝完之后进行的回调操作
-   * @param <S>         拷贝来源类
-   * @param <T>         拷贝目标类
+   * @param itr             拷贝来源, 这个方法会调用 {@link Iterator#next()}, 因此该参数的状态有可能发生变化
+   * @param tc              拷贝目标类
+   * @param callback        列表里每个对象拷贝完之后进行的回调操作
+   * @param initialCapacity 返回结果列表初始化容量
+   * @param <S>             拷贝来源类
+   * @param <T>             拷贝目标类
    * @return {@link ArrayList} 拷贝结果列表
    */
   @NotNull
@@ -313,7 +343,7 @@ public class BeanCopierImpl {
       @NotNull Iterator<@Nullable S> itr,
       @NotNull Class<T> tc,
       @Nullable Callback<S, T> callback,
-      int size
+      int initialCapacity
   ) {
     if (!itr.hasNext()) {
       return new ArrayList<>();
@@ -321,7 +351,7 @@ public class BeanCopierImpl {
 
     // 因为 itr 可能一直返回 null, 因此要一直迭代到第一个不为 null 才能正确获取 class
     Converter<S, T> c = null;
-    List<T> ret = size > 0 ? new ArrayList<>(size) : new ArrayList<>();
+    List<T> ret = initialCapacity > 0 ? new ArrayList<>(initialCapacity) : new ArrayList<>();
     while (itr.hasNext()) {
       S s = itr.next();
       T t;

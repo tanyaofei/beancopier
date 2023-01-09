@@ -39,7 +39,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   /**
    * 已使用的类名, 因为在生成过程中, 有可能出现重复的类名, 因此维护一个类名集来保证类名唯一
    */
-  private final Set<String> reservedClassNames = new HashSet<>();
+  private final Set<String> reservedClassNames = new HashSet<>(64);
 
   /**
    * 类名生成策略

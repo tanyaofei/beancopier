@@ -5,6 +5,11 @@ import lombok.AllArgsConstructor;
 
 import java.util.Objects;
 
+/**
+ * 缓存 Key 对象
+ * @author tanyaofei
+ * @since 0.1.4 用这个比拼接 String 要快，并且更节省内存
+ */
 @AllArgsConstructor
 public class CacheKey {
 
