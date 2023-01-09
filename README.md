@@ -333,21 +333,25 @@ public class StandardSourToStandardDestConverter$$GeneratedByBeanCopier$$ba69502
 ```
 
 ```java
+import java.util.List;
+
 public class RecursionSourToRecursionDestConverter$$GeneratedByBeanCopier$$41d66bc9 implements Converter<NormalTest.RecursionSour, NormalTest.RecursionDest> {
-   public NormalTest.RecursionDest convert(NormalTest.RecursionSour var1) {
-      NormalTest.RecursionDest var2 = new NormalTest.RecursionDest();
-      var2.setD(var1.getD());
-      if (var1.getA() != null) {
-         var2.setA(this.convert(var1.getA()));
-      }
+  public NormalTest.RecursionDest convert(NormalTest.RecursionSour var1) {
+    NormalTest.RecursionDest var2 = new NormalTest.RecursionDest();
+    if (var1.getA() != null) {
+      var2.setA(this.convert(var1.getA()));
+    }
 
-      if (var1.getB() != null) {
-         var2.setB((List) var1.getB().stream().map(this::convert).collect(Collectors.toList()));
-      }
+    if (var1.getB() != null) {
+      var2.setB((List)var1.getB().stream().map((var1x) -> {
+        return var1x == null ? null : this.convert(var1x);
+      }).collect(Collectors.toList()));
+    }
 
-      var2.setC(var1.getC());
-      return var2;
-   }
+    var2.setC(var1.getC());
+    var2.setD(var1.getD());
+    return var2;
+  }
 }
 ```
 
