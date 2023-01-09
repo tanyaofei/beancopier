@@ -1,5 +1,8 @@
 package io.github.tanyaofei.beancopier.exception;
 
+/**
+ * 拷贝异常
+ */
 public class CopyException extends BeanCopierException {
 
 

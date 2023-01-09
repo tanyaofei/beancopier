@@ -5,12 +5,22 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * BeanCopier 的实现
  * <p>通过 public 方法创建的实例都将使用自定义类加载器, 因此具有类卸载能力, 但是无法对自定义类加载器加载的对象进行拷贝, 如果有这个需要, 应当使用 {@link BeanCopier} 提供的静态方法进行拷贝. {@link BeanCopier} 生成的转换器使用 app 类加载器进行加载</p>
+ *
+ * @see io.github.tanyaofei.beancopier.exception.BeanCopierException
+ * @see io.github.tanyaofei.beancopier.exception.ConverterGenerateException
+ * @see io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException
+ * @see CopyException
+ * @see ConverterFactory
  */
 public class BeanCopierImpl {
 
@@ -22,8 +32,7 @@ public class BeanCopierImpl {
   /**
    * 转换器缓存
    */
-  private final
-  Map<String, ? super Converter<?, ?>> caches;
+  private final ConcurrentMap<String, ? super Converter<?, ?>> caches;
 
   /**
    * 转换器工厂
@@ -39,24 +48,62 @@ public class BeanCopierImpl {
   }
 
   /**
-   * 生成一个对象拷贝工具, 该拷贝工具生成的类使用 {@link ConverterClassLoader} 加载, 这意味着拷贝器无法拷贝到一个自定义类加载器加载的对象.
-   * <p>如果需要拷贝自定义类加载器加载的类, 应当使用 {@link BeanCopier} 提供的静态方法进行拷贝. 这个静态方法使用的 app classloader 加载</p>
+   * 创建一个指定初始容量的实例, 该实例将使用 {@link ConverterClassLoader} 类加载器加载创建的类, 因此该实例无法访问加载 {@link BeanCopierImpl} 的以外的类加载器加载的类.
+   * <p>
+   * 如果需要拷贝或拷贝到其他类加载器加载的类应当使用 {@link #BeanCopierImpl(ClassLoader)}, 同时该类加载器必须重载父类方法 {@link ClassLoader#defineClass(String, byte[], int, int)} 来自定义你的类加载逻辑
+   * </p>
+   * <p>
+   * <br/>
+   * <pre>{@code
+   *  Class c = yourClassLoader.defineClass();
+   *  new BeanCopierImpl().copy(new Object(), c);  // NoClassDefFoundError
+   * }</pre>
+   * <p>
+   * <br/><pre>{@code
+   *  Class c = yourClassLoader.defineClass();
+   *  new BeanCopierImpl(yourClassLoader).copy(new Object(), c);   // ok
+   * }
+   *
+   * </pre>
    *
    * @param cachesCapacity 初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
    */
   public BeanCopierImpl(int cachesCapacity) {
-    this(cachesCapacity, new ConverterFactory(
-        new ConverterClassLoader(ClassLoader.getSystemClassLoader()),
-        NamingPolicy.getDefault(),
-        BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
-    ));
+    this(
+        cachesCapacity,
+        new ConverterClassLoader(BeanCopierImpl.class.getClassLoader())
+    );
+  }
+
+  /**
+   * @param classLoader 类加载器
+   * @see #BeanCopierImpl(int, ClassLoader)
+   */
+  public BeanCopierImpl(ClassLoader classLoader) {
+    this(
+        DEFAULT_CACHES_CAPACITY,
+        classLoader
+    );
+  }
+
+  /**
+   * 创建一个指定缓存初始容量和类加载器的实例, 之后生成的转换器类都将会使用该类加载器进行加载
+   *
+   * @param cachesCapacity 缓存初始容量
+   * @param classLoader    类加载器
+   */
+  public BeanCopierImpl(int cachesCapacity, ClassLoader classLoader) {
+    this(
+        cachesCapacity,
+        new ConverterFactory(classLoader, NamingPolicy.getDefault(), BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH)
+    );
   }
 
   /**
    * @param cachesCapacity   初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
    * @param converterFactory 转换器工厂
    */
-  BeanCopierImpl(int cachesCapacity, ConverterFactory converterFactory) {
+  private BeanCopierImpl(int cachesCapacity, ConverterFactory converterFactory) {
     this.caches = new ConcurrentHashMap<>(cachesCapacity);
     this.converterFactory = converterFactory;
   }
@@ -68,18 +115,6 @@ public class BeanCopierImpl {
    */
   static BeanCopierImpl getInstance() {
     return Lazy.INSTANCE;
-  }
-
-  public static class Lazy {
-
-    /**
-     * 默认实现由于没有类卸载需求, 因此使用 app classloader 来加载转换器类
-     */
-    static BeanCopierImpl INSTANCE = new BeanCopierImpl(DEFAULT_CACHES_CAPACITY, new ConverterFactory(
-        ClassLoader.getSystemClassLoader(),
-        NamingPolicy.getDefault(),
-        BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
-    ));
   }
 
   /**
@@ -112,7 +147,7 @@ public class BeanCopierImpl {
   /**
    * 批量克隆对象
    *
-   * @param objs  被克隆对象集合, 该集合不能为 null, 但集合的元素可以为 null
+   * @param objs     被克隆对象集合, 该集合不能为 null, 但集合的元素可以为 null
    * @param callback 如果这个参数不为 null 时, 每一个克隆对象被克隆时都会调用此接口
    * @param <T>      克隆对象类
    * @return {@link ArrayList} 克隆结果列表
@@ -154,6 +189,19 @@ public class BeanCopierImpl {
    */
   public <S, T> List<T> copyList(Collection<S> sources, Class<T> targetClass) {
     return copyList(sources, targetClass, null);
+  }
+
+  private static class Lazy {
+
+    /**
+     * 默认实现由于没有类卸载需求, 因此使用 app classloader 来加载转换器类
+     */
+    static BeanCopierImpl INSTANCE = new BeanCopierImpl(DEFAULT_CACHES_CAPACITY,
+        new ConverterFactory(
+            ClassLoader.getSystemClassLoader(),
+            NamingPolicy.getDefault(),
+            BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
+        ));
   }
 
   /**
@@ -293,7 +341,6 @@ public class BeanCopierImpl {
    * @param <S>      拷贝来源类
    * @param <T>      拷贝目标类
    * @return 来源拷贝到目标的转换器
-   * @// TODO: 2023/1/7 在并发情况下可能同时生成两个 converter, 但是问题不大
    */
   @SuppressWarnings("unchecked")
   private <S, T> Converter<S, T> generateConverter(

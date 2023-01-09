@@ -168,7 +168,7 @@ public class PerformanceTest {
   }
 
   @Test
-  public void testGenerateConverter() throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+  public void testGenerateConverter() throws IOException {
     XClassLoader classloader = new XClassLoader();
     List<Class<?>> classes = new LinkedList<>();
 
@@ -188,8 +188,7 @@ public class PerformanceTest {
     ConverterFactory converterFactory = new ConverterFactory(new ConverterClassLoader(this.getClass().getClassLoader()), NamingPolicy.getDefault(), null);
     TemplateObject source = new TemplateObject();
 
-    Stopwatch stopwatch = Stopwatch.createUnstarted();
-    stopwatch.start();
+    Stopwatch stopwatch = Stopwatch.createStarted();
     for (Class<?> c : classes) {
       converterFactory.generateConverter(source.getClass(), c);
     }

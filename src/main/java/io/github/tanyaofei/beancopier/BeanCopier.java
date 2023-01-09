@@ -13,15 +13,15 @@ import java.util.List;
  * 如果在项目中使用有类卸载需求, 则应该自行创建 {@link BeanCopierImpl}, 那么类卸载的流程应当如下:
  * </p>
  * <ol>
- *   <li>1. {@link BeanCopierImpl} 实例不再引用并被 GC 掉</li>
- *   <li>2. {@link BeanCopierImpl} 持有的 {@link ConverterFactory} 和 {@link ConverterClassLoader} 被 GC 掉</li>
- *   <li>3. {@link ConverterClassLoader} 装载的类被卸载 </li>
+ *   <li>{@link BeanCopierImpl} 实例不再引用并被 GC 掉</li>
+ *   <li>{@link BeanCopierImpl} 持有的 {@link ConverterFactory} 和 {@link ConverterClassLoader} 被 GC 掉</li>
+ *   <li>{@link ConverterClassLoader} 装载的类被卸载 </li>
  * </ol>
  * <p>即当 {@link BeanCopierImpl} 实例不再被引用时, 该类在运行时生成的转换器类都会被卸载</p>
- * <p><i>注意: 类的卸载依赖垃圾回收器具有类卸载能力</i></p>
  * <p>
  *   这个 BeanCopier 生成的转换器将会由 app classloader 进行加载, 因此基本上不可能进行类卸载
  * </p>
+ * <p><i>注意: 类的卸载依赖垃圾回收器具有类卸载能力</i></p>
  *
  * @author tanyaofei
  * @see BeanCopierImpl

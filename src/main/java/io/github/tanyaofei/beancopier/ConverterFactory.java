@@ -24,6 +24,7 @@ import static java.lang.reflect.Modifier.isPublic;
 /**
  * 使用 ASM 字节码技术在运行时创建 Source 拷贝为 Target 的转换器字节码
  *
+ * @see ConverterClassLoader
  * @author tanyaofei
  */
 public class ConverterFactory implements Opcodes, MethodConstants {
@@ -122,24 +123,24 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
       // 加载类
       final byte[] code = cw.toByteArray();
-      if (classLoader == ClassLoader.getSystemClassLoader()) {
-        c = (Class<Converter<S, T>>) defineClass(sc, tc, code);
-      } else {
+      if (classLoader instanceof ConverterClassLoader) {
         c = (Class<Converter<S, T>>) ((ConverterClassLoader) classLoader).defineClass(null, code);
+      } else {
+        c = (Class<Converter<S, T>>) defineClass(sc, tc, code);
       }
       writeClassIfConfigured(code, c.getSimpleName());
     } catch (Exception e) {
       synchronized (reservedClassNames) {
         reservedClassNames.remove(className);
       }
-      throw new ConverterGenerateException("Failed to generate converter", e);
+      throw new ConverterGenerateException("Failed to generate converter: " + sc.getName() + " -> " + tc.getName(), e);
     }
 
     // 初始化对象
     try {
       return c.getConstructor().newInstance();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new ConverterNewInstanceException("Failed to new instance converter", e);
+      throw new ConverterNewInstanceException("Failed to new instance converter: " + c.getName(), e);
     }
   }
 
