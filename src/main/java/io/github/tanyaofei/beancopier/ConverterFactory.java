@@ -254,6 +254,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param cw    类编写器
    * @param sc 拷贝来源类
    * @param tc 拷贝目标类
+   * @return 是否包含列表递归拷贝
    * @see Converter#convert(Object)
    */
   private <S, T> boolean writeConvertMethod(
@@ -262,7 +263,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       Class<S> sc,
       Class<T> tc
   ) {
-    boolean writeLambda$convert$0Method = false;
+    boolean hasListRecursionCopy = false;
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC,
         CONVERTER$CONVERT.getName(),
@@ -316,7 +317,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
         }
         jumpHere = skipFieldIfNull(v, getter);
         listRecursionCopy(v, internalName, sc, getter, tc, setter);
-        writeLambda$convert$0Method = true;
+        hasListRecursionCopy = true;
       } else if (isCompatible(sf, tf)) {
         // 正常字段
         if (jumpHere != null) {
@@ -335,7 +336,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     v.visitInsn(ARETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
-    return writeLambda$convert$0Method;
+    return hasListRecursionCopy;
   }
 
   private void writeLambda$convert$0Method(
