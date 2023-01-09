@@ -459,7 +459,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // list.stream()
     CodeEmitter.invokeMethod(v, INVOKEINTERFACE, LIST$STREAM);
 
-    // this::convert
+    // (o) -> o == null ? null : this.convert(o)
     v.visitVarInsn(ALOAD, 0);
     v.visitInvokeDynamicInsn(
         FUNCTION$APPLY.getName(),
