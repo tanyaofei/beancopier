@@ -1,11 +1,15 @@
 package io.github.tanyaofei.beancopier;
 
 import com.google.common.base.Stopwatch;
+import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
+import io.github.tanyaofei.beancopier.util.TemplateObject;
 import jdk.internal.org.objectweb.asm.Type;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.beanutils.BeanUtils;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.modelmapper.ModelMapper;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -23,133 +27,144 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
+@ExtendWith(DumpConverterClasses.class)
 public class PerformanceTest {
 
-  private final static Duration TIMEOUT = Duration.ofMillis(500);
-  private final static int N = 1_000_000;
+  private static List<Obj> objs;
 
-  static {
-    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
-  }
-
-  private static List<Obj> objects(int n) {
-    Stopwatch stopwatch = Stopwatch.createUnstarted();
-    ArrayList<Obj> objs = new ArrayList<>(n);
-
-    stopwatch.start();
+  @BeforeAll
+  public static void createObjs() {
+    int n = 1_000_000;
+    objs = new ArrayList<>(n);
+    Stopwatch stopwatch = Stopwatch.createStarted();
     for (int i = 0; i < n; i++) {
       objs.add(new Obj().setA("1").setB("1").setC("1").setD("1").setE("1").setF("1").setG("1").setH("1").setI("1"));
     }
-    stopwatch.stop();
-    System.out.println("Time of creating " + n + " objects: " + stopwatch.elapsed().toMillis() + " ms");
-    stopwatch.reset();
-    return objs;
+    System.out.println("-------- createObjs() -------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-----------------------------\n");
   }
 
   @Test
   public void testClone() {
-    List<Obj> sources = objects(N);
-    BeanCopier.clone(sources.get(0));
+    BeanCopier.clone(objs.get(0));
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    assertTimeout(TIMEOUT, () -> {
-      for (int i = 0; i < N; i++) {
-        BeanCopier.clone(sources.get(i));
+    assertTimeout(Duration.ofMillis(500), () -> {
+      for (Obj obj : objs) {
+        BeanCopier.clone(obj);
       }
     });
     stopwatch.stop();
-    System.out.println("Time of copying " + N + " objects: " + stopwatch.elapsed().toMillis() + " ms");
+
+    System.out.println("-------- testClone() --------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-----------------------------");
   }
 
   @Test
   public void testCopy() {
-    List<Obj> sources = objects(N);
-    BeanCopier.copy(sources.get(0), Obj.class);
+    BeanCopier.copy(objs.get(0), Obj.class);
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    assertTimeout(TIMEOUT, () -> {
-      for (int i = 0; i < N; i++) {
-        BeanCopier.copy(sources.get(i), Obj.class);
+    assertTimeout(Duration.ofMillis(500), () -> {
+      for (Obj obj : objs) {
+        BeanCopier.copy(obj, Obj.class);
       }
     });
     stopwatch.stop();
-    System.out.println("Time of copying " + N + " objects: " + stopwatch.elapsed().toMillis() + " ms");
+
+    System.out.println("-------- testCopy() --------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-----------------------------");
   }
 
   @Test
   public void testCloneList() {
-    List<Obj> sources = objects(N);
-    BeanCopier.clone(sources.get(0));
+    BeanCopier.clone(objs.get(0));
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    BeanCopier.cloneList(sources);
+    assertTimeout(Duration.ofMillis(100), () -> {
+      BeanCopier.cloneList(objs);
+    });
     stopwatch.stop();
-    System.out.println("Time of copying " + N + " objects: " + stopwatch.elapsed().toMillis() + " ms");
+
+    System.out.println("-------- testCloneList() --------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("---------------------------------");
   }
 
   @Test
   public void testCopyList() {
-    List<Obj> sources = objects(N);
-    BeanCopier.copy(sources.get(0), Obj.class);
+    BeanCopier.copy(objs.get(0), Obj.class);
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    BeanCopier.copyList(sources, Obj.class);
+    assertTimeout(Duration.ofMillis(100), () -> {
+      BeanCopier.copyList(objs, Obj.class);
+    });
     stopwatch.stop();
-    System.out.println("Time of copying " + N + " objects: " + stopwatch.elapsed().toMillis() + " ms");
+
+    System.out.println("-------- testCopyList() --------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("--------------------------------");
   }
 
   @Test
   public void testCglib() {
-    List<Obj> sources = objects(N);
     net.sf.cglib.beans.BeanCopier beanCopier = net.sf.cglib.beans.BeanCopier.create(Obj.class, Obj.class, false);
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    ArrayList<Obj> targets = new ArrayList<>(N);
-    for (Obj source : sources) {
+    ArrayList<Obj> targets = new ArrayList<>(objs.size());
+    for (Obj o : objs) {
       Obj target = new Obj();
-      beanCopier.copy(source, target, null);
+      beanCopier.copy(o, target, null);
       targets.add(target);
     }
     stopwatch.stop();
-    System.out.println("Time of copying " + N + " objects: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-------- testCglib() --------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-----------------------------");
   }
 
   @Test
   public void testBeanUtils() throws InvocationTargetException, IllegalAccessException {
-    List<Obj> sources = objects(N);
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    ArrayList<Obj> targets = new ArrayList<>(N);
-    for (Obj source : sources) {
+    ArrayList<Obj> targets = new ArrayList<>(objs.size());
+    for (Obj o : objs) {
       Obj target = new Obj();
-      BeanUtils.copyProperties(source, target);
+      BeanUtils.copyProperties(o, target);
       targets.add(target);
     }
     stopwatch.stop();
-    System.out.println("Time of copying " + N + " objects: " + stopwatch.elapsed().toMillis() + " ms");
+
+    System.out.println("-------- testCopy() --------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-----------------------------");
   }
 
   @Test
   public void testModelMapper() {
-    List<Obj> sources = objects(N);
     ModelMapper modelMapper = new ModelMapper();
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    ArrayList<Obj> targets = new ArrayList<>(N);
-    for (Obj source : sources) {
+    ArrayList<Obj> targets = new ArrayList<>(objs.size());
+    for (Obj source : objs) {
       Obj target = new Obj();
       modelMapper.map(source, target);
       targets.add(target);
     }
     stopwatch.stop();
-    System.out.println("Time of copying " + N + " objects: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-------- testModelMapper() --------");
+    System.out.println("time: " + stopwatch.elapsed().toMillis() + " ms");
+    System.out.println("-----------------------------------");
   }
 
 
@@ -185,12 +200,16 @@ public class PerformanceTest {
       classes.add(classloader.defineClass(code));
     }
 
-    ConverterFactory converterFactory = new ConverterFactory(new ConverterClassLoader(this.getClass().getClassLoader()), NamingPolicy.getDefault(), null);
-    TemplateObject source = new TemplateObject();
+    ConverterFactory converterFactory = new ConverterFactory(
+        new ConverterClassLoader(this.getClass().getClassLoader()),
+        NamingPolicy.getDefault(),
+        null
+    );
+    TemplateObject o = new TemplateObject();
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     for (Class<?> c : classes) {
-      converterFactory.generateConverter(source.getClass(), c);
+      converterFactory.generateConverter(o.getClass(), c);
     }
     stopwatch.stop();
     System.out.println("Time of creating " + classes.size() + " converter classes: " + stopwatch.elapsed().toMillis() + " ms");

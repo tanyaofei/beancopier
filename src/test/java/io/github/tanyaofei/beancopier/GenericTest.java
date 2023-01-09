@@ -1,8 +1,10 @@
 package io.github.tanyaofei.beancopier;
 
+import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10,11 +12,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@ExtendWith(DumpConverterClasses.class)
 public class GenericTest {
 
-  static {
-    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
-  }
 
   @Test
   public void testGeneric() {

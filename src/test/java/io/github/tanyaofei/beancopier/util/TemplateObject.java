@@ -1,4 +1,4 @@
-package io.github.tanyaofei.beancopier;
+package io.github.tanyaofei.beancopier.util;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

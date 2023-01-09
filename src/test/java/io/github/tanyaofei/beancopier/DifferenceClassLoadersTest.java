@@ -1,7 +1,10 @@
 package io.github.tanyaofei.beancopier;
 
+import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
+import io.github.tanyaofei.beancopier.util.TemplateObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -12,6 +15,7 @@ import org.objectweb.asm.commons.SimpleRemapper;
 
 import java.io.IOException;
 
+@ExtendWith(DumpConverterClasses.class)
 public class DifferenceClassLoadersTest {
 
   @Test
@@ -33,10 +37,10 @@ public class DifferenceClassLoadersTest {
   }
 
   public Class<?> renameClass(Class<?> c, XCLassLoader cLassLoader, String name) throws IOException {
-    ClassReader cr = new ClassReader(TemplateObject.class.getName());
+    ClassReader cr = new ClassReader(c.getName());
     ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
-    Remapper remapper = new SimpleRemapper(Type.getInternalName(TemplateObject.class), name);
+    Remapper remapper = new SimpleRemapper(Type.getInternalName(c), name);
     ClassVisitor cv = new ClassRemapper(cw, remapper);
 
     cr.accept(cv, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);

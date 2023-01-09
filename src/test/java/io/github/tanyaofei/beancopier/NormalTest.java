@@ -1,11 +1,13 @@
 package io.github.tanyaofei.beancopier;
 
-import io.github.tanyaofei.beancopier.asserts.XAsserts;
+import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
+import io.github.tanyaofei.beancopier.util.XAsserts;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,15 +17,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.github.tanyaofei.beancopier.util.XAsserts.assertEquals;
+
 /**
  * @author tanyaofei
  */
+@ExtendWith(DumpConverterClasses.class)
 public class NormalTest extends Assertions {
-
-
-  static {
-    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
-  }
 
   @Test
   public void testClone() {

@@ -5,10 +5,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -219,23 +216,43 @@ public class BeanCopierImpl {
       return new ArrayList<>();
     }
 
-    int i = 0;
-    List<T> ret = new ArrayList<>(objs.size());
-    Iterator<T> itr = objs.iterator();
+    int remains = objs.size();
+    List<T> ret = new ArrayList<>(remains);
 
-    // 因为 source 有可能出现 null, 因此要一致迭代到不为 null 才能正确获得 class
-    while (itr.hasNext()) {
-      T t = itr.next();
-      if (t == null) {
-        ret.add(null);
-      } else {
+    if (objs instanceof List) {
+      ListIterator<T> itr = ((List<T>) objs).listIterator();
+      while (itr.hasNext()) {
+        T t = itr.next();
+        if (t == null) {
+          remains--;
+          ret.add(null);
+          continue;
+        }
+
+        itr.previous();
+        Class<T> c = (Class<T>) t.getClass();
+        assert remains + ret.size() == objs.size();
+        ret.addAll(copyList(itr, c, callback, remains));
+      }
+    } else {
+      Iterator<T> itr = objs.iterator();
+      while (itr.hasNext()) {
+        T t = itr.next();
+        if (t == null) {
+          remains--;
+          ret.add(null);
+          continue;
+        }
+
         Class<T> c = (Class<T>) t.getClass();
         ret.add(copy(t, c, callback));
-        ret.addAll(copyList(itr, c, callback, objs.size() - i));
+        assert remains - 1 + ret.size() == objs.size();
+        ret.addAll(copyList(itr, c, callback, remains - 1));
         return ret;
       }
     }
 
+    assert objs.size() == ret.size();
     return ret;
   }
 

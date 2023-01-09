@@ -1,4 +1,4 @@
-package io.github.tanyaofei.beancopier.asserts;
+package io.github.tanyaofei.beancopier.util;
 
 import org.junit.jupiter.api.Assertions;
 

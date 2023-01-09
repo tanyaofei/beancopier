@@ -3,14 +3,13 @@ package io.github.tanyaofei.beancopier.exception;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
 import io.github.tanyaofei.beancopier.BeanCopierConfiguration;
+import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(DumpConverterClasses.class)
 public class ExceptionTest {
-
-  static {
-    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
-  }
 
   @Test
   public void testGenerateException() {
