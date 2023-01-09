@@ -14,7 +14,10 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * BeanCopier 的实现
- * <p>通过 public 方法创建的实例都将使用自定义类加载器, 因此具有类卸载能力, 但是无法对自定义类加载器加载的对象进行拷贝, 如果有这个需要, 应当使用 {@link BeanCopier} 提供的静态方法进行拷贝. {@link BeanCopier} 生成的转换器使用 app 类加载器进行加载</p>
+ * <p>
+ * 通过 public 方法创建的实例都将使用自定义类加载器, 因此具有类卸载能力, 但是无法对自定义类加载器加载的对象进行拷贝, 如果有这个需要, 应当使用 {@link BeanCopier} 提供的静态方法进行拷贝.
+ * {@link BeanCopier} 生成的转换器使用 app 类加载器进行加载
+ * </p>
  *
  * @see io.github.tanyaofei.beancopier.exception.BeanCopierException
  * @see io.github.tanyaofei.beancopier.exception.ConverterGenerateException
@@ -125,11 +128,67 @@ public class BeanCopierImpl {
    * @param <S>         拷贝来源类
    * @param <T>         拷贝目标类
    * @return 拷贝结果
+   * @see #copy(Object, Class, Callback)
    */
   @Contract("null, _ -> null")
   public <S, T> T copy(@Nullable S source, @NotNull Class<T> targetClass) {
     return copy(source, targetClass, null);
   }
+
+  /**
+   * 对象拷贝
+   * <p>如果需要批量拷贝对象, 使用 {@link #copyList(Collection, Class)} 可以提供更好的性能</p>
+   *
+   * @param source      拷贝来源
+   * @param targetClass 拷贝目标类
+   * @param <S>         拷贝来源
+   * @param <T>         拷贝目标
+   * @param callback    拷贝完之后进行的操作
+   * @return 拷贝结果
+   * @throws CopyException 如果拷贝过程中发生异常
+   * @see ConverterFactory#generateConverter(Class, Class) 动态生成 Source to Target 的转换器
+   */
+  @Contract("null, _, _ -> null")
+  @SuppressWarnings("unchecked")
+  public <S, T> T copy(@Nullable S source, @NotNull(exception = NullPointerException.class) Class<T> targetClass, @Nullable Callback<S, T> callback) {
+    if (source == null) {
+      return null;
+    }
+
+    Class<S> sc = (Class<S>) source.getClass();
+    Converter<S, T> converter = generateConverter(new CacheKey(sc, targetClass), sc, targetClass);
+
+    // init a t, and copy fields from source
+    T t;
+    try {
+      t = converter.convert(source);
+      if (callback != null) {
+        callback.apply(source, t);
+      }
+    } catch (Exception e) {
+      throw new CopyException("Failed to copy bean with the following converter: " + converter.getClass().getName(), e);
+    }
+
+    return t;
+  }
+
+  /**
+   * 克隆对象
+   * <p>如果需要批量去克隆对象的, 使用 {@link #cloneList(Collection)} 可以提供更好的性能</p>
+   *
+   * @param source 被克隆对象, 如果该参数为 null 则返回 null
+   * @param <T>    克隆对象类
+   * @return 克隆结果
+   */
+  @Contract("null -> null")
+  @SuppressWarnings("unchecked")
+  public <T> T clone(@Nullable T source) {
+    if (source == null) {
+      return null;
+    }
+    return copy(source, (Class<T>) source.getClass(), null);
+  }
+
 
   /**
    * 批量克隆对象
@@ -151,6 +210,8 @@ public class BeanCopierImpl {
    * @param callback 如果这个参数不为 null 时, 每一个克隆对象被克隆时都会调用此接口
    * @param <T>      克隆对象类
    * @return {@link ArrayList} 克隆结果列表
+   * @see #copy(Object, Class, Callback)
+   * @see #copyList(Collection, Class, Callback)
    */
   @SuppressWarnings("unchecked")
   public <T> List<T> cloneList(@NotNull Collection<@Nullable T> objs, @Nullable Callback<T, T> callback) {
@@ -191,19 +252,6 @@ public class BeanCopierImpl {
     return copyList(sources, targetClass, null);
   }
 
-  private static class Lazy {
-
-    /**
-     * 默认实现由于没有类卸载需求, 因此使用 app classloader 来加载转换器类
-     */
-    static BeanCopierImpl INSTANCE = new BeanCopierImpl(DEFAULT_CACHES_CAPACITY,
-        new ConverterFactory(
-            ClassLoader.getSystemClassLoader(),
-            NamingPolicy.getDefault(),
-            BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH
-        ));
-  }
-
   /**
    * 批量对象拷贝
    *
@@ -213,6 +261,7 @@ public class BeanCopierImpl {
    * @param <S>         拷贝来源类
    * @param <T>         拷贝目标类
    * @return {@link ArrayList} 拷贝结果列表
+   * @throws CopyException 如果拷贝过程中发生异常
    */
   @NotNull
   public <S, T> List<T> copyList(
@@ -221,6 +270,14 @@ public class BeanCopierImpl {
       @Nullable Callback<S, T> callback
   ) {
     return copyList(source.iterator(), targetClass, callback, source.size());
+  }
+
+  private static class Lazy {
+
+    /**
+     * 默认实现由于没有类卸载需求, 因此使用 app classloader 来加载转换器类
+     */
+    private final static BeanCopierImpl INSTANCE = new BeanCopierImpl(DEFAULT_CACHES_CAPACITY, new ConverterFactory(ClassLoader.getSystemClassLoader(), NamingPolicy.getDefault(), BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH));
   }
 
   /**
@@ -271,67 +328,7 @@ public class BeanCopierImpl {
     return ret;
   }
 
-  /**
-   * 对象拷贝
-   * <p>如果需要批量拷贝对象, 使用 {@link #copyList(Collection, Class)} 可以提供更好的性能</p>
-   *
-   * @param source      拷贝来源
-   * @param targetClass 拷贝目标类
-   * @param <S>         拷贝来源
-   * @param <T>         拷贝目标
-   * @param callback    拷贝完之后进行的操作
-   * @return 拷贝结果
-   * @see ConverterFactory#generateConverter(Class, Class) 动态生成 Source to Target
-   * 的转换器
-   */
-  @Contract("null, _, _ -> null")
-  @SuppressWarnings("unchecked")
-  public <S, T> T copy(
-      @Nullable S source,
-      @NotNull(exception = NullPointerException.class) Class<T> targetClass,
-      @Nullable Callback<S, T> callback
-  ) {
-    if (source == null) {
-      return null;
-    }
 
-    Class<S> sc = (Class<S>) source.getClass();
-    Converter<S, T> converter = generateConverter(
-        new CacheKey(sc, targetClass),
-        sc,
-        targetClass
-    );
-
-    // init a t, and copy fields from source
-    T t;
-    try {
-      t = converter.convert(source);
-    } catch (Exception e) {
-      throw new CopyException("Failed to copy object", e);
-    }
-
-    if (callback != null) {
-      callback.apply(source, t);
-    }
-    return t;
-  }
-
-  /**
-   * 克隆对象
-   * <p>如果需要批量去克隆对象的, 使用 {@link #cloneList(Collection)} 可以提供更好的性能</p>
-   *
-   * @param source 被克隆对象, 如果该参数为 null 则返回 null
-   * @param <T>    克隆对象类
-   * @return 克隆结果
-   */
-  @Contract("null -> null")
-  @SuppressWarnings("unchecked")
-  public <T> T clone(@Nullable T source) {
-    if (source == null) {
-      return null;
-    }
-    return copy(source, (Class<T>) source.getClass(), null);
-  }
 
 
   /**

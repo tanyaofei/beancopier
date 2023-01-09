@@ -136,14 +136,14 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       synchronized (reservedClassNames) {
         reservedClassNames.remove(className);
       }
-      throw new ConverterGenerateException("Failed to generate converter: " + sc.getName() + " -> " + tc.getName(), e);
+      throw new ConverterGenerateException(sc, tc, e);
     }
 
     // 初始化对象
     try {
       return c.getConstructor().newInstance();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new ConverterNewInstanceException("Failed to new instance converter: " + c.getName(), e);
+      throw new ConverterNewInstanceException(c, e);
     }
   }
 
@@ -151,13 +151,13 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     try {
       return (Class<?>) defineClass.invoke(tc.getClassLoader(), null, code, 0, code.length);
     } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new ConverterGenerateException(String.format("Failed to generate converter for '%s' copy to '%s'", sc, tc), e);
+      throw new ConverterGenerateException(sc, tc, e);
     }
   }
 
 
   private void dumpClassIfConfigured(byte[] code, String filename) {
-    if (!StringUtils.hasLength(classDumpPath)) {
+    if (StringUtils.hasNotLength(classDumpPath)) {
       return;
     }
 
@@ -171,22 +171,13 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
   /**
    * 编写无参构造方法
-   * <ol>
-   *   <li>aload 0  // load this</li>
-   *   <li>invokespecial java/lang/Object#!&lt;init&gt;() // init Converter</li>
-   *   <li>return</li>
-   * </ol>
-   *
    * @param cw 类编写器
    */
   private void writeNoArgsConstructor(ClassWriter cw) {
     MethodVisitor v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, "<init>", "()V", null, null);
     v.visitCode();
-    // this 入栈
     v.visitVarInsn(ALOAD, 0);
-    // 调用 Object 的构造方法
     CodeEmitter.invokeNoArgsConstructor(v, Object.class);
-    // 结束方法
     v.visitInsn(RETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
@@ -194,13 +185,6 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
   /**
    * 编写 convert 的桥接方法
-   * <ol>
-   *   <li>aload 0  // load this<li>
-   *   <li>aload 1  // load source<li>
-   *   <li>checkcase Source.class // case source to Source.class => source = (Source) source<li>
-   *   <li>invokevirtual convert()  // invoke method convert() => this.convert(target) <li>
-   *   <li>areturn // return return-value from convert()<li>
-   * </ol>
    *
    * @param cw           类编写器
    * @param internalName 转换器 JAVA 内部名称
@@ -300,8 +284,8 @@ public class ConverterFactory implements Opcodes, MethodConstants {
         continue;
       }
       Field sf = sbp.getField();
-      Method getter = sbp.getXtter();
-      Method setter = tbp.getXtter();
+      Method getter = sbp.getXetter();
+      Method setter = tbp.getXetter();
 
       if (isRecursionCopy(sc, sf, tc, tf)) {
         // 单个递归

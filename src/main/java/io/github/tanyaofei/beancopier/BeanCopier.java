@@ -39,6 +39,13 @@ public final class BeanCopier {
   }
 
   /**
+   * {@link BeanCopierImpl#copy(Object, Class, Callback)}
+   */
+  public static <S, T> T copy(S source, Class<T> targetClass, Callback<S, T> callback) {
+    return IMPL.copy(source, targetClass, callback);
+  }
+
+  /**
    * {@link BeanCopierImpl#clone(Object)}
    */
   public static <T> T clone(T source) {
@@ -73,11 +80,5 @@ public final class BeanCopier {
     return IMPL.copyList(source, targetClass, callback);
   }
 
-  /**
-   * {@link BeanCopierImpl#copy(Object, Class, Callback)}
-   */
-  public static <S, T> T copy(S source, Class<T> targetClass, Callback<S, T> callback) {
-    return IMPL.copy(source, targetClass, callback);
-  }
 
 }

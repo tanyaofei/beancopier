@@ -35,7 +35,8 @@ public class CodeEmitter implements Opcodes {
    * @param rType  方法返回值类
    * @param pTypes 方法参数类型数组
    * @return 方法描述符
-   */  public static String getMethodDescriptor(Class<?> rType, Class<?>... pTypes) {
+   */
+  public static String getMethodDescriptor(Class<?> rType, Class<?>... pTypes) {
     StringBuilder builder = new StringBuilder(pTypes.length + 4);
     builder.append("(");
     for (Class<?> type : pTypes) {

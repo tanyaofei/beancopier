@@ -36,7 +36,7 @@ public class Reflection {
   /**
    * 获取一个对象包括父类所有的 getter
    * <p>
-   * 如果某个字段没有 getter 或者 getter 没有对应的字段, 则不会在返回值丽
+   * 如果某个字段没有 getter 或者 getter 没有对应的字段, 则不会在返回值
    * </p>
    *
    * @param c 类
@@ -75,7 +75,7 @@ public class Reflection {
   /**
    * 获取一个对象包括父类所有的 setter
    * <p>
-   * 如果某个字段没有 setter 或者 setter 没有对应的字段, 则不会在返回值丽
+   * 如果某个字段没有 setter 或者 setter 没有对应的字段, 则不会在返回值
    * </p>
    *
    * @param c 类
@@ -112,10 +112,24 @@ public class Reflection {
   @ToString
   @AllArgsConstructor
   public static class BeanProperty {
-    private String name;
-    private Field field;
-    private Method xtter;
 
+    /**
+     * 字段名称
+     */
+    private String name;
+
+    /**
+     * 字段反射对象
+     */
+    private Field field;
+
+    /**
+     * getter or setter
+     *
+     * @see #getBeanGetters(Class)
+     * @see #getBeanSetters(Class)
+     */
+    private Method xetter;
 
     public static Map<String, BeanProperty> mapIterable(Iterable<BeanProperty> itr) {
       Map<String, BeanProperty> map = new HashMap<>();
