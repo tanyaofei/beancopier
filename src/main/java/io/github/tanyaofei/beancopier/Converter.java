@@ -1,7 +1,6 @@
 package io.github.tanyaofei.beancopier;
 
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.Type;
 
 /**
  * 对象拷贝器
@@ -18,6 +17,7 @@ public interface Converter<S, T> {
    * @param source 拷贝来源
    * @return T
    */
+  @NotNull
   T convert(@NotNull S source);
 
 }

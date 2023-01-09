@@ -140,7 +140,7 @@ public class BeanCopierImpl {
    * @see #cloneList(Collection, Callback)
    */
   @NotNull
-  public <T> List<T> cloneList(@NotNull Collection<T> sources) {
+  public <T> List<T> cloneList(@NotNull Collection<@Nullable T> sources) {
     return cloneList(sources, null);
   }
 
@@ -153,7 +153,7 @@ public class BeanCopierImpl {
    * @return {@link ArrayList} 克隆结果列表
    */
   @SuppressWarnings("unchecked")
-  public <T> List<T> cloneList(@NotNull Collection<T> objs, @Nullable Callback<T, T> callback) {
+  public <T> List<T> cloneList(@NotNull Collection<@Nullable T> objs, @Nullable Callback<T, T> callback) {
     if (objs.isEmpty()) {
       return new ArrayList<>();
     }
@@ -187,7 +187,7 @@ public class BeanCopierImpl {
    * @param <T>         拷贝目标类
    * @return {@link ArrayList} 拷贝结果列表
    */
-  public <S, T> List<T> copyList(Collection<S> sources, Class<T> targetClass) {
+  public <S, T> List<T> copyList(@NotNull Collection<@Nullable S> sources, @NotNull Class<T> targetClass) {
     return copyList(sources, targetClass, null);
   }
 
@@ -216,7 +216,7 @@ public class BeanCopierImpl {
    */
   @NotNull
   public <S, T> List<T> copyList(
-      @NotNull Collection<S> source,
+      @NotNull Collection<@Nullable S> source,
       @NotNull Class<T> targetClass,
       @Nullable Callback<S, T> callback
   ) {
@@ -236,7 +236,7 @@ public class BeanCopierImpl {
   @NotNull
   @SuppressWarnings("unchecked")
   private <S, T> List<T> copyList(
-      @NotNull Iterator<S> itr,
+      @NotNull Iterator<@Nullable S> itr,
       @NotNull Class<T> tc,
       @Nullable Callback<S, T> callback,
       int size
