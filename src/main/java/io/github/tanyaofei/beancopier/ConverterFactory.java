@@ -115,7 +115,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       // 编写构造函数
       writeNoArgsConstructor(cw);
       // 编写 convert 实现方法
-      writeConvertMethod(cw, internalName, sc, tc);
+      if (writeConvertMethod(cw, internalName, sc, tc)) {
+        // 编写 lambda 函数
+        writeLambda$convert$0Method(cw, internalName, sc, tc);
+      }
       // 编写 convert 抽象方法
       if (sc != Object.class || tc != Object.class) {
         writeConvertBridgeMethod(cw, internalName, sc, tc);
@@ -123,12 +126,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
       // 加载类
       final byte[] code = cw.toByteArray();
+      dumpClassIfConfigured(code, Reflection.getClassSimpleNameByInternalName(internalName));
       if (classLoader instanceof ConverterClassLoader) {
         c = (Class<Converter<S, T>>) ((ConverterClassLoader) classLoader).defineClass(null, code);
       } else {
         c = (Class<Converter<S, T>>) defineClass(sc, tc, code);
       }
-      writeClassIfConfigured(code, c.getSimpleName());
     } catch (Exception e) {
       synchronized (reservedClassNames) {
         reservedClassNames.remove(className);
@@ -153,7 +156,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   }
 
 
-  private void writeClassIfConfigured(byte[] code, String filename) {
+  private void dumpClassIfConfigured(byte[] code, String filename) {
     if (!StringUtils.hasLength(classDumpPath)) {
       return;
     }
@@ -164,6 +167,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       e.printStackTrace();
     }
   }
+
 
   /**
    * 编写无参构造方法
@@ -252,12 +256,13 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param tc 拷贝目标类
    * @see Converter#convert(Object)
    */
-  private <S, T> void writeConvertMethod(
+  private <S, T> boolean writeConvertMethod(
       ClassWriter cw,
       String internalName,
       Class<S> sc,
       Class<T> tc
   ) {
+    boolean writeLambda$convert$0Method = false;
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC,
         CONVERTER$CONVERT.getName(),
@@ -311,6 +316,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
         }
         jumpHere = skipFieldIfNull(v, getter);
         listRecursionCopy(v, internalName, sc, getter, tc, setter);
+        writeLambda$convert$0Method = true;
       } else if (isCompatible(sf, tf)) {
         // 正常字段
         if (jumpHere != null) {
@@ -329,14 +335,49 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     v.visitInsn(ARETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
+    return writeLambda$convert$0Method;
+  }
+
+  private void writeLambda$convert$0Method(
+      ClassWriter cw,
+      String internalName,
+      Class<?> sc,
+      Class<?> tc
+  ) {
+    MethodVisitor v = cw.visitMethod(
+        ACC_PRIVATE | ACC_SYNTHETIC,
+        Constants.LAMBDA$CONVERT$0_METHOD_NAME,
+        CodeEmitter.getMethodDescriptor(tc, sc),
+        null,
+        null
+    );
+
+    v.visitCode();
+
+    Label ifnonnullLabel = new Label();
+    Label gotoLabel = new Label();
+
+    v.visitVarInsn(ALOAD, 1);
+    v.visitJumpInsn(IFNONNULL, ifnonnullLabel);
+    v.visitInsn(ACONST_NULL);
+    v.visitJumpInsn(GOTO, gotoLabel);
+    v.visitLabel(ifnonnullLabel);
+    v.visitVarInsn(ALOAD, 0);
+    v.visitVarInsn(ALOAD, 1);
+    v.visitMethodInsn(INVOKEVIRTUAL, internalName, CONVERTER$CONVERT.getName(), CodeEmitter.getMethodDescriptor(tc, sc), false);
+    v.visitLabel(gotoLabel);
+    v.visitInsn(ARETURN);
+
+    v.visitMaxs(-1, -1);
+    v.visitEnd();
   }
 
   /**
    * 拷贝普通字段
    *
-   * @param v 方法编写器
-   * @param getter  拷贝来源字段 getter 方法
-   * @param setter  拷贝目标字段 setter
+   * @param v      方法编写器
+   * @param getter 拷贝来源字段 getter 方法
+   * @param setter 拷贝目标字段 setter
    */
   private void copy(
       MethodVisitor v,
@@ -428,11 +469,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
             Constants.LAMBDA_META_FACTORY_METAFACTORY_METHOD_DESCRIPTOR,
             false),
         Constants.CONVERTER_TYPE,
-        new Handle(H_INVOKEVIRTUAL,
+        new Handle(H_INVOKESPECIAL,
             internalName,
-            CONVERTER$CONVERT.getName(),
+            Constants.LAMBDA$CONVERT$0_METHOD_NAME,
             methodDescriptor,
-            false),
+            false
+        ),
         Type.getType(methodDescriptor)
     );
 

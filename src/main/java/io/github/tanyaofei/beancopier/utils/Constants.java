@@ -18,6 +18,8 @@ public interface Constants {
 
   String CONVERTER_CONVERT_METHOD_DESCRIPTOR = Type.getMethodDescriptor(MethodConstants.CONVERTER$CONVERT);
 
+  String LAMBDA$CONVERT$0_METHOD_NAME = "lambda$convert$0";
+
   String[] CONVERTER_INTERNAL_NAME_ARRAY = {Type.getInternalName(Converter.class)};
 
   String LIST_INTERNAL_NAME = Type.getInternalName(List.class);

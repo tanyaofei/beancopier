@@ -110,7 +110,14 @@ public class NormalTest extends Assertions {
     c.add(new RecursionSour().setD("10").setA(new RecursionSour().setD("1")));
     c.add(new RecursionSour().setD("20").setA(new RecursionSour().setD("2")));
     c.add(new RecursionSour().setD("30").setA(new RecursionSour().setD("3")));
-    RecursionSour sour = new RecursionSour().setA(new RecursionSour().setD("1")).setB(Arrays.asList(new RecursionSour().setD("1"), new RecursionSour().setD("2"), new RecursionSour().setD("3"))).setC(c).setD("1");
+    c.add(null);
+    c.add(null);
+    c.add(new RecursionSour().setD("40").setA(new RecursionSour().setD("4")));
+    BeanCopier.copyList(c, RecursionDest.class);
+
+    RecursionSour sour = new RecursionSour()
+        .setA(new RecursionSour().setD("1"))
+        .setB(Arrays.asList(new RecursionSour().setD("1"), new RecursionSour().setD("2"), new RecursionSour().setD("3"))).setC(c).setD("1");
 
     RecursionDest dest = BeanCopier.copy(sour, RecursionDest.class);
     assertEquals(sour.getD(), dest.getD());

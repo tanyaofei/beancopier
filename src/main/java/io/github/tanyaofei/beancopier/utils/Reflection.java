@@ -2,7 +2,6 @@ package io.github.tanyaofei.beancopier.utils;
 
 import com.google.common.collect.Iterables;
 import lombok.*;
-import org.objectweb.asm.Type;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -15,6 +14,24 @@ import java.util.Map;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Reflection {
+
+  /**
+   * 通过 internalName 获取 class 的 simpleName
+   * <pre>{@code
+   *
+   *  String simpleName = Reflection.getClassSimpleNameByInternalName(
+   *    "io/tanyaofei/beancopier/converter/TestConverter"
+   *  );
+   *  assert simpleName.equals("TestConverter")
+   * }
+   * </pre>
+   *
+   * @param internalName JAVA 内部名
+   * @return class 的 simpleName
+   */
+  public static String getClassSimpleNameByInternalName(String internalName) {
+    return internalName.substring(internalName.lastIndexOf("/") + 1);
+  }
 
   /**
    * 获取一个对象包括父类所有的 getter
