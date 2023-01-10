@@ -117,6 +117,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param <T> 拷贝目标
    * @return sc  to  tc 转换器实例
    */
+  @Contract(pure = true)
   @SuppressWarnings("unchecked")
   public <S, T> Converter<S, T> generateConverter(
       Class<S> sc, Class<T> tc
