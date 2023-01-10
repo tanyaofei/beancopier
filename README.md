@@ -299,11 +299,11 @@ public class Main {
 # 版本记录
 
 + 0.1.4
-    + 支持通过 `new BeanCopier(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
-    + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 替换为 `AppClassLoader`
-    + 修复列表递归拷贝元素包含 `null` 时会抛出异常的问题
-    + 优化拷贝效率并减少内存占用
-    + `asm` 依赖库升级到 `9.4`
+  + 支持通过 `new BeanCopierImpl(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
+  + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 修改为自动选取
+  + 修复列表递归拷贝元素包含 `null` 时会抛出异常的问题
+  + 优化拷贝效率并减少内存占用
+  + `asm` 依赖库升级到 `9.4`
 
 + 0.1.3
     + 大幅度优化批量拷贝的速度 `BeanCopier.cloneList()` 和 `BeanCopier.copyList()`, 拷贝一百万个对象由 `200ms+`

@@ -1,8 +1,8 @@
 # 更新日志
 
 + 0.1.4
-    + 支持通过 `new BeanCopier(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
-    + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 替换为 `AppClassLoader`
+    + 支持通过 `new BeanCopierImpl(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
+    + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 修改为自动选取
     + 修复列表递归拷贝元素包含 `null` 时会抛出异常的问题
     + 优化拷贝效率并减少内存占用
     + `asm` 依赖库升级到 `9.4`
