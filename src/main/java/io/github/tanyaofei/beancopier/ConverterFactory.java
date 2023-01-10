@@ -2,7 +2,6 @@ package io.github.tanyaofei.beancopier;
 
 import com.google.common.reflect.TypeToken;
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.exception.BeanCopierException;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
 import io.github.tanyaofei.beancopier.utils.Constants;
@@ -83,7 +82,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @return 类
    * @throws ConverterGenerateException 两个类没有继承关系, 则抛出磁异常
    */
-  public static Class<?> chooseClassLoaderToDefineClass(Class<?> sc, Class<?> tc, byte[] code) {
+  private static Class<?> chooseClassLoaderToDefineClass(Class<?> sc, Class<?> tc, byte[] code) {
     // 使用继承链中最下级的 classloader 加载, 这样这个 classloader 加载出来的类可以访问另外一个更上级 classloader 加载的类
     ClassLoader scl = sc.getClassLoader();
     ClassLoader tcl = tc.getClassLoader();
@@ -101,6 +100,11 @@ public class ConverterFactory implements Opcodes, MethodConstants {
               tc.getClassLoader()
           ));
     }
+
+    if (classLoader instanceof ConverterClassLoader) {
+      return ((ConverterClassLoader) classLoader).defineClass(null, code);
+    }
+
     return unsafe.defineClass(null, code, 0, code.length, classLoader, null);
   }
 
