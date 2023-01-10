@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static java.lang.reflect.Modifier.isAbstract;
 import static java.lang.reflect.Modifier.isPublic;
 
 /**
@@ -86,12 +87,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     // 使用继承链中最下级的 classloader 加载, 这样这个 classloader 加载出来的类可以访问另外一个更上级 classloader 加载的类
     ClassLoader scl = sc.getClassLoader();
     ClassLoader tcl = tc.getClassLoader();
-    ClassLoader classLoader = ClassLoaders.isAssignableFrom(scl, tcl)
+    ClassLoader cl = Reflections.isCLAssignableFrom(scl, tcl)
         ? tcl
-        : ClassLoaders.isAssignableFrom(tcl, scl)
+        : Reflections.isCLAssignableFrom(tcl, scl)
         ? scl : null;
 
-    if (classLoader == null) {
+    if (cl == null) {
       throw new ConverterGenerateException(
           String.format("Converter can not access classes that loaded by unrelated classloaders in the same time (%s was loaded by '%s' but %s was loaded by '%s')",
               sc,
@@ -101,11 +102,11 @@ public class ConverterFactory implements Opcodes, MethodConstants {
           ));
     }
 
-    if (classLoader instanceof ConverterClassLoader) {
-      return ((ConverterClassLoader) classLoader).defineClass(null, code);
+    if (cl instanceof ConverterClassLoader) {
+      return ((ConverterClassLoader) cl).defineClass(null, code);
     }
 
-    return unsafe.defineClass(null, code, 0, code.length, classLoader, null);
+    return unsafe.defineClass(null, code, 0, code.length, cl, null);
   }
 
   /**
@@ -123,8 +124,14 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       Class<S> sc, Class<T> tc
   ) {
     // 类型检查
-    checkType(sc);
-    checkType(tc);
+    checkSourceType(sc);
+    checkTargetType(tc);
+    if (!Reflections.isEnclosingClass(tc)) {
+      throw new ConverterGenerateException("'" + tc.getName() + "' is not a enclosing class");
+    }
+    if (!Reflections.hasPublicNoArgsConstructor(tc)) {
+      throw new ConverterGenerateException("'" + tc.getName() + "' missing a public no-args-constructor");
+    }
 
     // 生成类名称
     String className;
@@ -603,19 +610,58 @@ public class ConverterFactory implements Opcodes, MethodConstants {
         .getRawType();
   }
 
-  private void checkType(Class<?> c) {
-    if (!isPublic(c.getModifiers())) {
-      throw new ConverterGenerateException("Class '" + c.getName() + "' is not public");
+  private void checkSourceType(Class<?> c) {
+    int modifiers = c.getModifiers();
+
+    // 无法 import
+    if (c.isLocalClass()) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is a local class");
     }
 
-    try {
-      if (!isPublic(c.getConstructor().getModifiers())) {
-        throw new ConverterGenerateException("Class '" + c.getName() + "' non-args-constructor is not public");
-      }
-    } catch (NoSuchMethodException e) {
-      throw new ConverterGenerateException("Class '" + c.getName() + "' missing a non-args-constructor", e);
+    // 无法 import
+    if (!isPublic(modifiers)) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is not a public class");
     }
 
+  }
+
+  private void checkTargetType(Class<?> c) {
+    int modifiers = c.getModifiers();
+
+    // 无法 import
+    if (c.isLocalClass()) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is a local class");
+    }
+
+    // 无法 import
+    if (!isPublic(modifiers)) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is not a public class");
+    }
+
+    // 接口无法实例化
+    if (c.isInterface()) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is an interface");
+    }
+
+    // 抽象类无法实例化
+    if (isAbstract(modifiers)) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is an abstract class");
+    }
+
+    // 枚举不能实例化
+    if (c.isEnum()) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is an enum class");
+    }
+
+    // 非封闭类无法实例化
+    if (!Reflections.isEnclosingClass(c)) {
+      throw new ConverterGenerateException("'" + c.getName() + "' is not a enclosing class");
+    }
+
+    // 没有无参构造方法无法实例化
+    if (!Reflections.hasPublicNoArgsConstructor(c)) {
+      throw new ConverterGenerateException("'" + c.getName() + "' missing the public no-args-constructor");
+    }
   }
 
 }

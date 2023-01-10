@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.Contract;
 
 import java.util.Collection;
 import java.util.List;

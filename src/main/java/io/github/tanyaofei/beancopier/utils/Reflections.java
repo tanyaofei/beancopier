@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -142,5 +143,53 @@ public class Reflections {
 
   }
 
+  /**
+   * 判断一个类是否是封闭类, 如果一个类是成员类但是不是 static 则不是封闭类
+   *
+   * @param c 类
+   * @return 如果这个类是封闭类则返回 true，反之为 false
+   */
+  public static boolean isEnclosingClass(Class<?> c) {
+    return !c.isMemberClass() || Modifier.isStatic(c.getModifiers());
+  }
 
+  public static boolean hasPublicNoArgsConstructor(Class<?> c) {
+    try {
+      return (Modifier.isPublic(c.getConstructor().getModifiers()));
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+  }
+
+  /**
+   * 判断 superClassLoader 是否是 subClassLoader 的祖宗
+   *
+   * @param superClassLoader 可能为祖宗的 classloader
+   * @param subClassLoader   可能为子孙的 classloader
+   * @return true 表示 superClassLoader 是 subClassLoader, 反则为 false
+   */
+  public static boolean isCLAssignableFrom(ClassLoader superClassLoader, ClassLoader subClassLoader) {
+    if (superClassLoader == subClassLoader) {
+      return true;
+    }
+
+    // Object.class.getClassLoader() == null
+    if (superClassLoader == null) {
+      return true;
+    }
+    if (subClassLoader == null) {
+      return false;
+    }
+
+    ClassLoader p = subClassLoader;
+
+    while (p.getParent() != null) {
+      if (p == superClassLoader) {
+        return true;
+      }
+      p = p.getParent();
+    }
+
+    return false;
+  }
 }

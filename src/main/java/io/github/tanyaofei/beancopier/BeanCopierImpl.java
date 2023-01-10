@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.exception.CopyException;
+import org.checkerframework.dataflow.qual.Pure;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +44,7 @@ public class BeanCopierImpl {
   /**
    * @see #BeanCopierImpl(int)
    */
+  @Contract(pure = true)
   public BeanCopierImpl() {
     this(DEFAULT_CACHES_CAPACITY);
   }
@@ -117,7 +119,6 @@ public class BeanCopierImpl {
    *
    * @return BeanCopier 单例
    */
-  @Contract(pure = true)
   static BeanCopierImpl getInstance() {
     return Lazy.INSTANCE;
   }
@@ -132,7 +133,7 @@ public class BeanCopierImpl {
    * @return 拷贝结果
    * @see #copy(Object, Class, Callback)
    */
-  @Contract(value = "null, _ -> null", pure = true)
+  @Contract(value = "null, _ -> null")
   public <S, T> T copy(@Nullable S source, @NotNull Class<T> targetClass) {
     return copy(source, targetClass, null);
   }
@@ -161,7 +162,7 @@ public class BeanCopierImpl {
    * @see ConverterFactory#generateConverter(Class, Class) 动态生成 Source to Target 的转换器
    */
   @SuppressWarnings("unchecked")
-  @Contract(value = "null, _, _ -> null", pure = true)
+  @Contract(value = "null, _, _ -> null")
   public <S, T> T copy(
       @Nullable S source,
       @NotNull Class<T> targetClass,
@@ -197,7 +198,7 @@ public class BeanCopierImpl {
    * @return 克隆结果
    */
   @SuppressWarnings("unchecked")
-  @Contract(value = "null -> null", pure = true)
+  @Contract(value = "null -> null")
   public <T> T clone(@Nullable T source) {
     if (source == null) {
       return null;
@@ -215,7 +216,6 @@ public class BeanCopierImpl {
    * @see #cloneList(Collection, Callback)
    */
   @NotNull
-  @Contract(pure = true)
   public <T> List<T> cloneList(@NotNull Collection<@Nullable T> sources) {
     return cloneList(sources, null);
   }
@@ -230,7 +230,6 @@ public class BeanCopierImpl {
    * @see #copy(Object, Class, Callback)
    * @see #copyList(Collection, Class, Callback)
    */
-  @Contract(pure = true)
   @SuppressWarnings("unchecked")
   public <T> List<T> cloneList(
       @NotNull Collection<@Nullable T> objs,
@@ -289,7 +288,6 @@ public class BeanCopierImpl {
    * @param <T>         拷贝目标类
    * @return {@link ArrayList} 拷贝结果列表
    */
-  @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> sources,
       @NotNull Class<T> targetClass
@@ -309,7 +307,6 @@ public class BeanCopierImpl {
    * @throws CopyException 如果拷贝过程中发生异常
    */
   @NotNull
-  @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> source,
       @NotNull Class<T> targetClass,
