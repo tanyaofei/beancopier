@@ -1,12 +1,20 @@
 package io.github.tanyaofei.beancopier.utils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * @author tanyaofei
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StringUtils {
 
   public static boolean hasLength(String str) {
     return str != null && !str.isEmpty();
+  }
+
+  public static boolean hasNotLength(String str) {
+    return str == null || str.isEmpty();
   }
 
   public static String capitalize(String str) {
@@ -18,7 +26,7 @@ public class StringUtils {
   }
 
   private static String changeFirstCharacterCase(String str, boolean capitalize) {
-    if (!hasLength(str)) {
+    if (hasNotLength(str)) {
       return str;
     } else {
       char baseChar = str.charAt(0);

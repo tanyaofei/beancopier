@@ -1,11 +1,13 @@
 package io.github.tanyaofei.beancopier;
 
-import io.github.tanyaofei.beancopier.asserts.XAsserts;
+import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
+import io.github.tanyaofei.beancopier.util.XAsserts;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,15 +17,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.github.tanyaofei.beancopier.util.XAsserts.assertEquals;
+
 /**
  * @author tanyaofei
  */
+@ExtendWith(DumpConverterClasses.class)
 public class NormalTest extends Assertions {
-
-
-  static {
-    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
-  }
 
   @Test
   public void testClone() {
@@ -110,11 +110,29 @@ public class NormalTest extends Assertions {
     c.add(new RecursionSour().setD("10").setA(new RecursionSour().setD("1")));
     c.add(new RecursionSour().setD("20").setA(new RecursionSour().setD("2")));
     c.add(new RecursionSour().setD("30").setA(new RecursionSour().setD("3")));
-    RecursionSour sour = new RecursionSour().setA(new RecursionSour().setD("1")).setB(Arrays.asList(new RecursionSour().setD("1"), new RecursionSour().setD("2"), new RecursionSour().setD("3"))).setC(c).setD("1");
+    c.add(null);
+    c.add(null);
+    c.add(new RecursionSour().setD("40").setA(new RecursionSour().setD("4")));
+
+    RecursionSour sour = new RecursionSour()
+        .setA(new RecursionSour().setD("1"))
+        .setB(Arrays.asList(
+            new RecursionSour().setD("1"),
+            new RecursionSour().setD("2"),
+            new RecursionSour().setD("3"),
+            null,
+            null,
+            new RecursionSour().setD("4")))
+        .setC(c)
+        .setD("1");
 
     RecursionDest dest = BeanCopier.copy(sour, RecursionDest.class);
     assertEquals(sour.getD(), dest.getD());
     for (int i = 0; i < sour.getB().size(); i++) {
+      if (sour.getB().get(i) == null) {
+        assertNull(dest.getB().get(i));
+        continue;
+      }
       assertEquals(sour.getB().get(i).getD(), dest.getB().get(i).getD());
       assertEquals(sour.getC().get(i).getD(), dest.getC().get(i).getD());
       assertEquals(sour.getC().get(i).getA().getD(), dest.getC().get(i).getA().getD());

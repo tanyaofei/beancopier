@@ -23,7 +23,6 @@ public abstract class NamingPolicy {
       @NotNull Predicate<String> predicate
   );
 
-
   public static class Default extends NamingPolicy {
 
     private static final Default INSTANCE = new Default();

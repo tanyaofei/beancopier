@@ -1,18 +1,17 @@
 package io.github.tanyaofei.beancopier;
 
+import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@ExtendWith(DumpConverterClasses.class)
 public class MapTest {
-
-  static {
-    System.setProperty(BeanCopierConfiguration.PropertyNames.CONVERTER_CLASS_DUMP_PATH, "./target");
-  }
 
   @Test
   public void testMap() {

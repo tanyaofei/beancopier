@@ -1,4 +1,4 @@
-package io.github.tanyaofei.beancopier.asserts;
+package io.github.tanyaofei.beancopier.util;
 
 import org.junit.jupiter.api.Assertions;
 
@@ -14,8 +14,7 @@ public class XAsserts {
       Function<T, V> f1,
       Function<U, V> f2
   ) {
-    int size;
-    Assertions.assertEquals((size = c1.size()), c2.size());
+    Assertions.assertEquals(c1.size(), c2.size());
     Iterator<T> itr1 = c1.iterator();
     Iterator<U> itr2 = c2.iterator();
 
