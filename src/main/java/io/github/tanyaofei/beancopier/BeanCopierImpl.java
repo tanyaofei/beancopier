@@ -53,13 +53,13 @@ public class BeanCopierImpl {
    * 如果需要拷贝或拷贝到其他类加载器加载的类应当使用 {@link #BeanCopierImpl(ClassLoader)}, 同时该类加载器必须重载父类方法 {@link ClassLoader#defineClass(String, byte[], int, int)} 来自定义你的类加载逻辑
    * </p>
    * <p>
-   * <br/>
+   * <br>
    * <pre>{@code
    *  Class c = yourClassLoader.defineClass();
    *  new BeanCopierImpl().copy(new Object(), c);  // NoClassDefFoundError
    * }</pre>
    * <p>
-   * <br/><pre>{@code
+   * <br><pre>{@code
    *  Class c = yourClassLoader.defineClass();
    *  new BeanCopierImpl(yourClassLoader).copy(new Object(), c);   // ok
    * }
@@ -140,10 +140,10 @@ public class BeanCopierImpl {
   /**
    * 对象拷贝, 会将类型兼容并名称相同的字段逐一拷贝到结果中去, 以下字段可以成功拷贝
    * <ul>
-   *   <li>相同类型, 如 String -> String, Source -> Source</li>
-   *   <li>类型兼容, 如 Integer -> Number, List&lt;Integer&gt; -> List&lt;Number&gt;, ArrayList&lt;Integer&gt -> List&lt;Number&gt;</li>
-   *   <li>递归拷贝, 如 Source -> Target </li>
-   *   <li>列表递归拷贝, 如 List&lt;Source&gt; -> List&lt;Target&gt;</li>
+   *   <li>相同类型, 如 String -&gt; String, Source -&gt; Source</li>
+   *   <li>类型兼容, 如 Integer -&gt; Number, List&lt;Integer&gt; -&gt; List&lt;Number&gt;, ArrayList&lt;Integer&gt; -&gt; List&lt;Number&gt;</li>
+   *   <li>递归拷贝, 如 Source -&gt; Target </li>
+   *   <li>列表递归拷贝, 如 List&lt;Source&gt; -&gt; List&lt;Target&gt;</li>
    *   <li>父类字段拷贝</li>
    * </ul>
    *

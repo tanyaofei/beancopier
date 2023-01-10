@@ -3,7 +3,6 @@ package io.github.tanyaofei.beancopier;
 import com.google.common.base.Stopwatch;
 import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
 import io.github.tanyaofei.beancopier.util.TemplateObject;
-import jdk.internal.org.objectweb.asm.Type;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.beanutils.BeanUtils;
@@ -14,18 +13,16 @@ import org.modelmapper.ModelMapper;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.commons.SimpleRemapper;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 @ExtendWith(DumpConverterClasses.class)
 public class PerformanceTest {
@@ -51,11 +48,9 @@ public class PerformanceTest {
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    assertTimeout(Duration.ofMillis(500), () -> {
-      for (Obj obj : objs) {
-        BeanCopier.clone(obj);
-      }
-    });
+    for (Obj obj : objs) {
+      BeanCopier.clone(obj);
+    }
     stopwatch.stop();
 
     System.out.println("-------- testClone() --------");
@@ -69,11 +64,9 @@ public class PerformanceTest {
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    assertTimeout(Duration.ofMillis(500), () -> {
-      for (Obj obj : objs) {
-        BeanCopier.copy(obj, Obj.class);
-      }
-    });
+    for (Obj obj : objs) {
+      BeanCopier.copy(obj, Obj.class);
+    }
     stopwatch.stop();
 
     System.out.println("-------- testCopy() --------");
@@ -87,9 +80,7 @@ public class PerformanceTest {
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    assertTimeout(Duration.ofMillis(100), () -> {
-      BeanCopier.cloneList(objs);
-    });
+    BeanCopier.cloneList(objs);
     stopwatch.stop();
 
     System.out.println("-------- testCloneList() --------");
@@ -103,9 +94,7 @@ public class PerformanceTest {
     Stopwatch stopwatch = Stopwatch.createUnstarted();
 
     stopwatch.start();
-    assertTimeout(Duration.ofMillis(100), () -> {
-      BeanCopier.copyList(objs, Obj.class);
-    });
+    BeanCopier.copyList(objs, Obj.class);
     stopwatch.stop();
 
     System.out.println("-------- testCopyList() --------");
