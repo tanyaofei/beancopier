@@ -4,7 +4,7 @@
 
 1. [X] 相同名称相同类型拷贝: `String` -> `String`
 2. [X] 完全兼容的泛型拷贝: `StringValue` -> `Value<String>`
-3. [X] 递归拷贝
+3. [X] 嵌套拷贝，集合嵌套拷贝: `Source` -> `Source`, `List<Source>` -> `Collection<Target>`
 4. [X] 向上转型拷贝: `Integer` -> `Number`, `ArrayList<Integer>` -> `List<Number>`
 5. [X] 拷贝父类字段
 6. [X] 字段别名: `@Property(value = "aliasName")`
@@ -76,7 +76,7 @@ public class Main {
 }
 ```
 
-## 递归拷贝
+## 嵌套拷贝
 
 ```java
 import io.github.tanyaofei.beancopier.BeanCopier;
@@ -301,7 +301,7 @@ public class Main {
 + 0.1.4
   + 支持通过 `new BeanCopierImpl(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
   + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 修改为自动选取
-  + 修复列表递归拷贝元素包含 `null` 时会抛出异常的问题
+  + 修复集合嵌套拷贝元素包含 `null` 时会抛出异常的问题
   + 优化拷贝效率并减少内存占用
   + `asm` 依赖库升级到 `9.4`
 
@@ -367,9 +367,9 @@ public class StandardSourToStandardDestConverter$$GeneratedByBeanCopier$$ba69502
 ```java
 import java.util.List;
 
-public class RecursionSourToRecursionDestConverter$$GeneratedByBeanCopier$$41d66bc9 implements Converter<NormalTest.RecursionSour, NormalTest.RecursionDest> {
-  public NormalTest.RecursionDest convert(NormalTest.RecursionSour var1) {
-    NormalTest.RecursionDest var2 = new NormalTest.RecursionDest();
+public class NestedSourToNestedDestConverter$$GeneratedByBeanCopier$$41d66bc9 implements Converter<NormalTest.NestedSour, NormalTest.NestedDest> {
+  public NormalTest.NestedDest convert(NormalTest.NestedSour var1) {
+    NormalTest.NestedDest var2 = new NormalTest.NestedDest();
     if (var1.getA() != null) {
       var2.setA(this.convert(var1.getA()));
     }

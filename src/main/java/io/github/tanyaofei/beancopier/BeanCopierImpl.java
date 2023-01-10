@@ -1,7 +1,6 @@
 package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.exception.CopyException;
-import org.checkerframework.dataflow.qual.Pure;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -143,8 +142,8 @@ public class BeanCopierImpl {
    * <ul>
    *   <li>相同类型, 如 String -&gt; String, Source -&gt; Source</li>
    *   <li>类型兼容, 如 Integer -&gt; Number, List&lt;Integer&gt; -&gt; List&lt;Number&gt;, ArrayList&lt;Integer&gt; -&gt; List&lt;Number&gt;</li>
-   *   <li>递归拷贝, 如 Source -&gt; Target </li>
-   *   <li>列表递归拷贝, 如 List&lt;Source&gt; -&gt; List&lt;Target&gt;</li>
+   *   <li>嵌套拷贝, 如 Source -&gt; Target </li>
+   *   <li>集合嵌套拷贝, 如 List&lt;Source&gt; -&gt; List&lt;Target&gt;</li>
    *   <li>父类字段拷贝</li>
    * </ul>
    *

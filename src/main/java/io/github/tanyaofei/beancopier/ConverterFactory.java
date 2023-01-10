@@ -277,7 +277,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @param cw    类编写器
    * @param sc 拷贝来源类
    * @param tc 拷贝目标类
-   * @return 是否包含列表递归拷贝
+   * @return 是否包含集合嵌套拷贝
    * @see Converter#convert(Object)
    */
   private <S, T> boolean writeConvertMethod(
@@ -286,7 +286,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       Class<S> sc,
       Class<T> tc
   ) {
-    boolean hasListRecursionCopy = false;
+    boolean hasnestedCollectionCopy = false;
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC,
         CONVERTER$CONVERT.getName(),
@@ -297,19 +297,12 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
     v.visitCode();
 
-    // -- Target target = new Target()
-    // new
-    // dup
-    // invokespecial #Converter <init>()V;
-    // astore_2
     CodeEmitter.newInstanceViaNoArgsConstructor(v, tc);
     v.visitVarInsn(ASTORE, 2);
-    // -- end
 
     Label jumpHere = null;
     Iterable<BeanProperty> setters = Reflections.getBeanSetters(tc);
     Map<String, BeanProperty> getters = BeanProperty.mapIterable(Reflections.getBeanGetters(sc));
-
     for (BeanProperty tbp : setters) {
       Field tf = tbp.getField();
       Property property = Optional.ofNullable(tf.getAnnotation(Property.class)).orElse(Constants.DEFAULT_PROPERTY);
@@ -326,21 +319,21 @@ public class ConverterFactory implements Opcodes, MethodConstants {
       Method getter = sbp.getXetter();
       Method setter = tbp.getXetter();
 
-      if (isRecursionCopy(sc, sf, tc, tf)) {
-        // 单个递归
+      if (isNestedCopy(sc, sf, tc, tf)) {
+        // 单个嵌套
         if (jumpHere != null) {
           v.visitLabel(jumpHere);
         }
         jumpHere = skipFieldIfNull(v, getter);
-        recursionCopy(v, internalName, sc, getter, tc, setter);
-      } else if (isListRecursionCopy(sc, sf, tc, tf)) {
-        // 列表递归
+        nestedCopy(v, internalName, sc, getter, tc, setter);
+      } else if (isNestedCollectionCopy(sc, sf, tc, tf)) {
+        // 集合嵌套
         if (jumpHere != null) {
           v.visitLabel(jumpHere);
         }
         jumpHere = skipFieldIfNull(v, getter);
-        listRecursionCopy(v, internalName, sc, getter, tc, setter);
-        hasListRecursionCopy = true;
+        nestedCollectionCopy(v, internalName, sc, getter, tc, setter);
+        hasnestedCollectionCopy = true;
       } else if (isCompatible(sf, tf)) {
         // 正常字段
         if (jumpHere != null) {
@@ -359,7 +352,7 @@ public class ConverterFactory implements Opcodes, MethodConstants {
     v.visitInsn(ARETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
-    return hasListRecursionCopy;
+    return hasnestedCollectionCopy;
   }
 
   private void writeLambda$convert$0Method(
@@ -416,25 +409,16 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   }
 
   /**
-   * 编写拷贝递归字段的 Code
-   * <p>target.setField(convert(source.getField()))</p>
-   * <pre>
-   *   aload_2  // target
-   *   aload_0  // this
-   *   aload_1  // source
-   *   invokevirtual #Source getField()
-   *   invokevirtual #Converter convert()
-   *   invokevirtual #Target setField()
-   * </pre>
+   * 编写拷贝嵌套字段的字节码
    *
-   * @param v      方法编写器
+   * @param v            方法编写器
    * @param internalName 所属类 internalName
-   * @param sc        拷贝来源类
+   * @param sc           拷贝来源类
    * @param getter       拷贝来源字段 getter 方法
-   * @param tc        拷贝目标类
+   * @param tc           拷贝目标类
    * @param setter       拷贝目标字段 setter 方法
    */
-  private void recursionCopy(
+  private void nestedCopy(
       MethodVisitor v,
       String internalName,
       Class<?> sc, Method getter,
@@ -456,17 +440,16 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   }
 
   /**
-   * 编写拷贝递归字段(List)的 Code
-   * <p>target.setField(source.getField().stream().map(this::convert).collect(Collectors.toList()))</p>
+   * 编写列表拷贝嵌套字段的代码
    *
-   * @param v      方法编写器
+   * @param v            方法编写器
    * @param internalName 所属类 internalName
-   * @param sc        拷贝来源类
+   * @param sc           拷贝来源类
    * @param getter       拷贝来源字段 getter 方法
-   * @param tc        拷贝目标类
+   * @param tc           拷贝目标类
    * @param setter       拷贝目标字段 setter 方法
    */
-  private void listRecursionCopy(
+  private void nestedCollectionCopy(
       MethodVisitor v,
       String internalName,
       Class<?> sc, Method getter,
@@ -521,13 +504,6 @@ public class ConverterFactory implements Opcodes, MethodConstants {
 
   /**
    * 判断字段是否为 null, 如果为 null 则跳转到 label
-   * <p>if (source.getField() == null) { // skip};</p>
-   * <pre>
-   *   aload_1
-   *   invokevirtual #Conveter getField()
-   *   ifnull #label
-   * </pre>
-   *
    * @param visitor 方法编写器
    * @param getter  字段 getter
    * @return 用于跳转的 label
@@ -553,15 +529,15 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   }
 
   /**
-   * 判断是否属于递归拷贝
+   * 判断是否属于嵌套拷贝
    *
    * @param st  拷贝来源类
    * @param sf 拷贝来源字段
    * @param tc  拷贝目标类
    * @param tf 拷贝目标字段
-   * @return 是否属于递归拷贝
+   * @return 是否属于嵌套拷贝
    */
-  private boolean isRecursionCopy(Class<?> st, Field sf, Class<?> tc, Field tf) {
+  private boolean isNestedCopy(Class<?> st, Field sf, Class<?> tc, Field tf) {
     return st == sf.getType() && tc == tf.getType();
   }
 
@@ -578,22 +554,22 @@ public class ConverterFactory implements Opcodes, MethodConstants {
   }
 
   /**
-   * 判断是否是列表递归拷贝
+   * 判断是否是集合嵌套拷贝
    *
    * @param sc  拷贝来源类
    * @param sf 拷贝来源字段
    * @param tc  拷贝目标类
    * @param tf 拷贝目标字段
-   * @return 是否是列表递归拷贝
+   * @return 是否是集合嵌套拷贝
    */
-  private boolean isListRecursionCopy(Class<?> sc, Field sf, Class<?> tc, Field tf) {
-    if (!List.class.isAssignableFrom(sf.getType())) {
+  private boolean isNestedCollectionCopy(Class<?> sc, Field sf, Class<?> tc, Field tf) {
+    if (!Collection.class.isAssignableFrom(sf.getType())) {
       return false;
     }
-    if (!List.class.isAssignableFrom(tf.getType())) {
+    if (!Collection.class.isAssignableFrom(tf.getType())) {
       return false;
     }
-    return getListElementType(sf) == sc && getListElementType(tf) == tc;
+    return getCollectionElementType(sf) == sc && getCollectionElementType(tf) == tc;
   }
 
   /**
@@ -603,10 +579,10 @@ public class ConverterFactory implements Opcodes, MethodConstants {
    * @return 列表字段元素范型
    */
   @SuppressWarnings("unchecked")
-  private Class<?> getListElementType(Field f) {
-    return ((TypeToken<? extends List<?>>) TypeToken.of(f.getGenericType()))
-        .getSupertype(List.class)
-        .resolveType(List.class.getTypeParameters()[0])
+  private Class<?> getCollectionElementType(Field f) {
+    return ((TypeToken<? extends Collection<?>>) TypeToken.of(f.getGenericType()))
+        .getSupertype(Collection.class)
+        .resolveType(Collection.class.getTypeParameters()[0])
         .getRawType();
   }
 
