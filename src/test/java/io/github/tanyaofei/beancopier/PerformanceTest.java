@@ -190,9 +190,7 @@ public class PerformanceTest {
     }
 
     ConverterFactory converterFactory = new ConverterFactory(
-        new DefaultClassLoader(this.getClass().getClassLoader()),
-        NamingPolicy.getDefault(),
-        null
+        builder -> builder.classLoader(new DefaultClassLoader(this.getClass().getClassLoader()))
     );
     TemplateObject o = new TemplateObject();
 

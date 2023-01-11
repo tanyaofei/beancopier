@@ -2,7 +2,6 @@ package io.github.tanyaofei.beancopier;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.Contract;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,8 +9,9 @@ import java.util.List;
 /**
  * 对象拷贝器
  * <p>
- * 为了方便简单使用, 此类维护着一个{@link BeanCopierImpl} 的默认实例 {@link BeanCopierImpl#getInstance()}. 可以使用这个类定义的静态方法进行对象拷贝, 也可以通过 {@code new BeanCopierImpl()} 自行创建.
- * 如果在项目中使用有类卸载需求, 则应该自行创建 {@link BeanCopierImpl}, 那么类卸载的流程应当如下:
+ * 为了方便简单使用，此类维护着一个{@link BeanCopierImpl} 的默认实例 {@link BeanCopierImpl#getInstance()}。 可以使用这个类定义的静态方法进行对象拷贝, 这些静态方法都是对 {@link BeanCopierImpl} 的调用。
+ * 也可以通过 {@code new BeanCopierImpl()} 自行创建对象拷贝器，如果在项目中使用有类卸载需求, 则应该自行创建 {@link BeanCopierImpl},
+ * 那么类卸载的流程应当如下:
  * </p>
  * <ol>
  *   <li>{@link BeanCopierImpl} 实例不再引用并被 GC 掉</li>
@@ -30,55 +30,106 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class BeanCopier {
 
-  private final static BeanCopierImpl IMPL = BeanCopierImpl.getInstance();
+  private final static BeanCopierImpl theCopier = BeanCopierImpl.getInstance();
+
 
   /**
-   * {@link BeanCopierImpl#copy(Object, Class)}
+   * 拷贝对象, 实例化一个 target 并将 source 的字段拷贝到 target
+   *
+   * @param source      拷贝来源
+   * @param target 拷贝目标类
+   * @param <S>         拷贝来源类型
+   * @param <T>         拷贝目标类型
+   * @return 拷贝目标
+   * @see BeanCopierImpl#copy(Object, Class)
    */
-  public static <S, T> T copy(S source, Class<T> targetClass) {
-    return IMPL.copy(source, targetClass, null);
+  public static <S, T> T copy(S source, Class<T> target) {
+    return theCopier.copy(source, target, null);
+  }
+
+
+  /**
+   * 拷贝对象, 在拷贝完之后将会调用 callback 进行回调操作
+   * <pre>{@code
+   * Source source = new Source();
+   * source.setVal("val);
+   * Target target = BeanCopier.copy(s, Target.class, (s, t) -> t.setVal2("val2"));
+   * }</pre>
+   *
+   * @param source   拷贝来源
+   * @param target   拷贝目标类
+   * @param callback 回调动作
+   * @param <S>      拷贝来源类
+   * @param <T>      拷贝目标类
+   * @return 拷贝目标
+   * @see BeanCopierImpl#copy(Object, Class, Callback)
+   */
+  public static <S, T> T copy(S source, Class<T> target, Callback<S, T> callback) {
+    return theCopier.copy(source, target, callback);
   }
 
   /**
-   * {@link BeanCopierImpl#copy(Object, Class, Callback)}
-   */
-  public static <S, T> T copy(S source, Class<T> targetClass, Callback<S, T> callback) {
-    return IMPL.copy(source, targetClass, callback);
-  }
-
-  /**
-   * {@link BeanCopierImpl#clone(Object)}
+   * 克隆对象
+   *
+   * @param source 克隆对象
+   * @param <T>    克隆对象类
+   * @return 克隆出来的对象
+   * @see BeanCopierImpl#clone(Object)
    */
   public static <T> T clone(T source) {
-    return IMPL.clone(source);
+    return theCopier.clone(source);
   }
 
   /**
-   * {@link BeanCopierImpl#cloneList(Collection)}
+   * 批量克隆对象
+   *
+   * @param sources 克隆对象集合，不能为 null。如果元素为 null 则拷贝出来的元素也为 null
+   * @param <T>     克隆对象类
+   * @return 被克隆出来的对象集合
    */
   public static <T> List<T> cloneList(Collection<T> sources) {
-    return IMPL.cloneList(sources, null);
+    return theCopier.cloneList(sources, null);
   }
 
   /**
-   * {@link BeanCopierImpl#cloneList(Collection, Callback)}
+   * 批量克隆对象
+   *
+   * @param sources  克隆对象集合, 不能为 null。如果元素为 null 则拷贝出来的元素也为 null
+   * @param callback 每克隆一次对象都会调用一次 callback，要注意如果元素为 null 则 callback 中的参数也为 null
+   * @return 被克隆出来的对象集合
+   * @see BeanCopierImpl#cloneList(Collection, Callback)
    */
   public static <T> List<T> cloneList(Collection<T> sources, Callback<T, T> callback) {
-    return IMPL.cloneList(sources, callback);
+    return theCopier.cloneList(sources, callback);
   }
 
   /**
-   * {@link BeanCopierImpl#copyList(Collection, Class)}
+   * 批量拷贝对象
+   *
+   * @param sources 拷贝来源集合，不可以为 null。如果元素为 null 则拷贝出来的元素也为 null
+   * @param target  拷贝目标类
+   * @param <S>     拷贝来源类型
+   * @param <T>     拷贝目标类型
+   * @return 拷贝目标集合
+   * @see BeanCopierImpl#copyList(Collection, Class)
    */
-  public static <S, T> List<T> copyList(Collection<S> sources, Class<T> targetClass) {
-    return IMPL.copyList(sources, targetClass);
+  public static <S, T> List<T> copyList(Collection<S> sources, Class<T> target) {
+    return theCopier.copyList(sources, target);
   }
 
   /**
-   * {@link BeanCopierImpl#copyList(Collection, Class, Callback)}
-   */
-  public static <S, T> List<T> copyList(Collection<S> source, Class<T> targetClass, Callback<S, T> callback) {
-    return IMPL.copyList(source, targetClass, callback);
+   * 批量拷贝对象，每一个对象拷贝完之后都会调用 callback
+   *
+   * @param source      拷贝来源集合，不可以为 null。如果元素为 null 则拷贝出来的元素也为 null
+   * @param target 拷贝目标类
+   * @param callback    回调
+   * @param <S>         拷贝来源类型
+   * @param <T>         拷贝目标类型
+   * @return 拷贝目标集合
+   * @see BeanCopierImpl#copyList(Collection, Class, Callback)
+   **/
+  public static <S, T> List<T> copyList(Collection<S> source, Class<T> target, Callback<S, T> callback) {
+    return theCopier.copyList(source, target, callback);
   }
 
 

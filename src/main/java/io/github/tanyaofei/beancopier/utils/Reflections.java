@@ -43,7 +43,7 @@ public class Reflections {
    * @param c 类
    * @return 该类包括父类的所有 getter 集合迭代器
    */
-  public static Iterable<BeanProperty> getBeanGetters(Class<?> c) {
+  public static Iterable<BeanProperty> getBeanGetters(Class<?> c, boolean includingSuper) {
     Field[] fields = c.getDeclaredFields();
     ArrayList<BeanProperty> properties = new ArrayList<>(fields.length);
     for (Field f : fields) {
@@ -66,8 +66,8 @@ public class Reflections {
     }
 
     Class<?> sc = c.getSuperclass();
-    if (sc != null && sc != Object.class) {
-      return Iterables.concat(properties, getBeanGetters(sc));
+    if (sc != null && sc != Object.class && includingSuper) {
+      return Iterables.concat(properties, getBeanGetters(sc, true));
     }
 
     return properties;
@@ -82,7 +82,7 @@ public class Reflections {
    * @param c 类
    * @return 该类包括父类的所有 setter 集合迭代器
    */
-  public static Iterable<BeanProperty> getBeanSetters(Class<?> c) {
+  public static Iterable<BeanProperty> getBeanSetters(Class<?> c, boolean includingSuper) {
     Field[] fields = c.getDeclaredFields();
     ArrayList<BeanProperty> properties = new ArrayList<>(fields.length);
     for (Field f : fields) {
@@ -101,8 +101,8 @@ public class Reflections {
     }
 
     Class<?> sc = c.getSuperclass();
-    if (sc != null && sc != Object.class) {
-      return Iterables.concat(properties, getBeanSetters(sc));
+    if (sc != null && sc != Object.class && includingSuper) {
+      return Iterables.concat(properties, getBeanSetters(sc, true));
     }
 
     return properties;
@@ -127,8 +127,8 @@ public class Reflections {
     /**
      * getter or setter
      *
-     * @see #getBeanGetters(Class)
-     * @see #getBeanSetters(Class)
+     * @see #getBeanGetters(Class, boolean)
+     * @see #getBeanSetters(Class, boolean)
      */
     private Method xetter;
 

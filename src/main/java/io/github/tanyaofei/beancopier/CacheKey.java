@@ -2,7 +2,6 @@ package io.github.tanyaofei.beancopier;
 
 
 import lombok.AllArgsConstructor;
-import sun.misc.Unsafe;
 
 import java.util.Objects;
 
@@ -12,7 +11,7 @@ import java.util.Objects;
  * @since 0.1.4 用这个比拼接 String 要快，并且更节省内存
  */
 @AllArgsConstructor
-public class CacheKey {
+class CacheKey {
 
   final Class<?> sc;
   final Class<?> tc;

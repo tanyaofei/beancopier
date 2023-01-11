@@ -13,10 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author tanyaofei
@@ -127,16 +124,30 @@ public class NormalTest extends Assertions {
         .setD("1");
 
     NestedDest dest = BeanCopier.copy(sour, NestedDest.class);
-    assertEquals(sour.getD(), dest.getD());
-    for (int i = 0; i < sour.getB().size(); i++) {
+
+    assertEquals(sour.getA().getD(), dest.getA().getD());
+    for(int i = 0; i < sour.getB().size(); i++) {
       if (sour.getB().get(i) == null) {
         assertNull(dest.getB().get(i));
-        continue;
+      } else {
+        assertEquals(sour.getB().get(i).getD(), dest.getB().get(i).getD());
       }
-      assertEquals(sour.getB().get(i).getD(), dest.getB().get(i).getD());
-      assertEquals(sour.getC().get(i).getD(), ((List<NestedDest>) dest.getC()).get(i).getD());
-      assertEquals(sour.getC().get(i).getA().getD(), ((List<NestedDest>) dest.getC()).get(i).getA().getD());
     }
+
+    Iterator<NestedSour> itr1 = sour.getC().iterator();
+    Iterator<NestedDest> itr2 = dest.getC().iterator();
+    while(itr1.hasNext()) {
+      NestedSour s = itr1.next();
+      NestedDest d = itr2.next();
+      if (s == null) {
+        assertNull(d);
+      } else {
+        assertEquals(s.getA().getD(), d.getA().getD());
+        assertEquals(s.getD(), d.getD());
+      }
+    }
+
+    assertEquals(sour.getD(), dest.getD());
   }
 
   @Test
