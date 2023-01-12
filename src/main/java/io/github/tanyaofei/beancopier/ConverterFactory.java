@@ -36,7 +36,7 @@ class ConverterFactory implements Opcodes, MethodConstants {
   /**
    * 每个 classloader 已经注册的类名
    */
-  private final static WeakHashMap<ClassLoader, Set<String>> classNames = new WeakHashMap<>(4);
+  private final static WeakHashMap<ClassLoader, Set<String>> classLoaderReservedClassNames = new WeakHashMap<>(4, 1.0F);
 
   private final ConverterConfiguration configuration;
 
@@ -80,7 +80,6 @@ class ConverterFactory implements Opcodes, MethodConstants {
           ? scl : null;
     }
 
-
     if (cl == null) {
       throw new ConverterGenerateException(
           String.format("Converter can not access classes that loaded by unrelated classloaders in the same time (%s was loaded by '%s' but %s was loaded by '%s')",
@@ -122,10 +121,10 @@ class ConverterFactory implements Opcodes, MethodConstants {
     ClassLoader cl = Optional.ofNullable(configuration.getClassLoader()).orElse(chooseClassLoader(sc, tc));
     // 生成类名称
     String className;
-    Set<String> reservedClassNames = getClassLoaderReversedNames(cl);
-    synchronized (reservedClassNames) {
-      className = configuration.getNamingPolicy().getClassName(sc, tc, reservedClassNames::contains);
-      reservedClassNames.add(className);
+    Set<String> reservedClassnames = getReservedClassNames(cl);
+    synchronized (reservedClassnames) {
+      className = configuration.getNamingPolicy().getClassName(sc, tc, reservedClassnames::contains);
+      reservedClassnames.add(className);
     }
 
     Class<Converter<S, T>> c;
@@ -142,8 +141,8 @@ class ConverterFactory implements Opcodes, MethodConstants {
         c = (Class<Converter<S, T>>) unsafe.defineClass(null, code, 0, code.length, cl, null);
       }
     } catch (Exception e) {
-      synchronized (reservedClassNames) {
-        reservedClassNames.remove(className);
+      synchronized (reservedClassnames) {
+        reservedClassnames.remove(className);
       }
       throw new ConverterGenerateException(sc, tc, e);
     }
@@ -170,12 +169,12 @@ class ConverterFactory implements Opcodes, MethodConstants {
     }
   }
 
-  private Set<String> getClassLoaderReversedNames(ClassLoader cl) {
-    Set<String> names = classNames.get(cl);
+  private static Set<String> getReservedClassNames(ClassLoader cl) {
+    Set<String> names = classLoaderReservedClassNames.get(cl);
     if (names == null) {
-      synchronized (classNames) {
+      synchronized (classLoaderReservedClassNames) {
         names = new HashSet<>(32);
-        classNames.put(cl, names);
+        classLoaderReservedClassNames.put(cl, names);
       }
     }
     return names;
