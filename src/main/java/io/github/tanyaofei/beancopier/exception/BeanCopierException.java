@@ -8,6 +8,8 @@ package io.github.tanyaofei.beancopier.exception;
  * @see ConverterGenerateException
  * @see CopyException
  * @see ConverterNewInstanceException
+ * @author tanyaofei
+ * @since 0.0.1
  */
 public class BeanCopierException extends RuntimeException {
 

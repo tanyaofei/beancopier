@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 /**
  * @author tanyaofei
+ * @since 0.0.1
  */
 public interface MethodConstants {
 

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
 
 /**
  * BeanCopier 的实现
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentMap;
  * @see io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException
  * @see CopyException
  * @see ConverterFactory
+ * @since 0.1.0
  */
 public class BeanCopierImpl {
 
@@ -43,6 +45,7 @@ public class BeanCopierImpl {
   /**
    * @see #BeanCopierImpl(int)
    */
+  @Contract(pure = true)
   public BeanCopierImpl() {
     this(DEFAULT_CACHES_CAPACITY);
   }
@@ -50,7 +53,7 @@ public class BeanCopierImpl {
   /**
    * 创建一个指定初始容量的实例, 该实例将使用 {@link DefaultClassLoader} 类加载器加载创建的类, 因此该实例无法访问当前以外的类加载器加载的类.
    * <p>
-   * 如果需要拷贝或拷贝到其他类加载器加载的类应当使用 {@link #BeanCopierImpl(ClassLoader)}, 同时该类加载器必须重载父类方法 {@link ClassLoader#defineClass(String, byte[], int, int)} 来自定义你的类加载逻辑
+   * 如果需要拷贝或拷贝到其他类加载器加载的类应当使用 {@link BeanCopierImpl#BeanCopierImpl(Consumer)}, 同时该类加载器必须重载父类方法 {@link ClassLoader#defineClass(String, byte[], int, int)} 来自定义你的类加载逻辑
    * </p>
    * <p>
    * <br>
@@ -61,7 +64,9 @@ public class BeanCopierImpl {
    * <p>
    * <br><pre>{@code
    *  Class c = yourClassLoader.defineClass();
-   *  new BeanCopierImpl(yourClassLoader).copy(new Object(), c);   // ok
+   *  new BeanCopierImpl(
+   *    builder -> builder.classloader(yourClassLoader)
+   *  ).copy(new Object(), c);   // ok
    * }
    *
    * </pre>
@@ -72,19 +77,20 @@ public class BeanCopierImpl {
   public BeanCopierImpl(int cachesInitialCapacity) {
     this(
         cachesInitialCapacity,
-        new DefaultClassLoader(BeanCopierImpl.class.getClassLoader())
+        builder -> builder.classLoader(new DefaultClassLoader(BeanCopierImpl.class.getClassLoader()))
     );
   }
 
   /**
-   * @param classLoader 类加载器
-   * @see #BeanCopierImpl(int, ClassLoader)
+   * @param classloader 类加载器
+   * @deprecated since 0.1.5, remove at 0.2.0, use {@link #BeanCopierImpl(int, Consumer)} instead
    */
+  @Deprecated
   @Contract(pure = true)
-  public BeanCopierImpl(@NotNull ClassLoader classLoader) {
+  public BeanCopierImpl(@NotNull ClassLoader classloader) {
     this(
         DEFAULT_CACHES_CAPACITY,
-        classLoader
+        builder -> builder.classLoader(classloader)
     );
   }
 
@@ -92,17 +98,21 @@ public class BeanCopierImpl {
    * 创建一个指定缓存初始容量和类加载器的实例, 之后生成的转换器类都将会使用该类加载器进行加载
    *
    * @param cachesInitialCapacity 缓存初始容量
-   * @param classLoader           类加载器
+   * @param classloader           类加载器
+   * @deprecated since 0.1.5, remove at 0.2.0, use {@link #BeanCopierImpl(int, Consumer)} instead
    */
+  @Deprecated
   @Contract(pure = true)
-  public BeanCopierImpl(int cachesInitialCapacity, @NotNull ClassLoader classLoader) {
+  public BeanCopierImpl(int cachesInitialCapacity, @NotNull ClassLoader classloader) {
     this(
         cachesInitialCapacity,
-        new ConverterFactory(classLoader, NamingPolicy.getDefault(), BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH)
+        new ConverterFactory(builder -> builder.classLoader(classloader))
     );
   }
 
   /**
+   * 创建实例
+   *
    * @param cachesInitialCapacity 初始缓存容量 {@link ConcurrentHashMap#ConcurrentHashMap(int)}
    * @param converterFactory      转换器工厂
    */
@@ -113,11 +123,41 @@ public class BeanCopierImpl {
   }
 
   /**
+   * 创建实例
+   * <pre>{@code
+   *  BeanCopierImpl beanCopier = new BeanCopierImpl(
+   *    builder -> builder.classLoader(this.getClassLoader())
+   *  );
+   * }
+   * </pre>
+   *
+   * @param builder 转换器配置
+   */
+  @Contract(pure = true)
+  public BeanCopierImpl(Consumer<ConverterConfiguration.ConverterConfigurationBuilder> builder) {
+    this(DEFAULT_CACHES_CAPACITY, new ConverterFactory(builder));
+  }
+
+  /**
+   * 创建实例
+   * <pre>{@code
+   *  BeanCopierImpl beanCopier = new BeanCopierImpl(builder -> builder.classLoader(this.getClassLoader()));
+   * }
+   * </pre>
+   *
+   * @param cachesInitialCapacity 缓存初始容量
+   * @param builder               转换器配置
+   */
+  @Contract(pure = true)
+  public BeanCopierImpl(int cachesInitialCapacity, Consumer<ConverterConfiguration.ConverterConfigurationBuilder> builder) {
+    this(cachesInitialCapacity, new ConverterFactory(builder));
+  }
+
+  /**
    * 获取一个单例, 该单例使用 app classloader 来加载转换器类, 所以加载的类是不会释放
    *
    * @return BeanCopier 单例
    */
-  @Contract(pure = true)
   static BeanCopierImpl getInstance() {
     return Lazy.INSTANCE;
   }
@@ -125,16 +165,16 @@ public class BeanCopierImpl {
   /**
    * 拷贝对象
    *
-   * @param source      拷贝来源, 如果该参数为 null 则返回 null
-   * @param targetClass 拷贝目标类
-   * @param <S>         拷贝来源类
-   * @param <T>         拷贝目标类
+   * @param source 拷贝来源, 如果该参数为 null 则返回 null
+   * @param target 拷贝目标类
+   * @param <S>    拷贝来源类
+   * @param <T>    拷贝目标类
    * @return 拷贝结果
    * @see #copy(Object, Class, Callback)
    */
-  @Contract(value = "null, _ -> null", pure = true)
-  public <S, T> T copy(@Nullable S source, @NotNull Class<T> targetClass) {
-    return copy(source, targetClass, null);
+  @Contract(value = "null, _ -> null")
+  public <S, T> T copy(@Nullable S source, @NotNull Class<T> target) {
+    return copy(source, target, null);
   }
 
   /**
@@ -142,8 +182,8 @@ public class BeanCopierImpl {
    * <ul>
    *   <li>相同类型, 如 String -&gt; String, Source -&gt; Source</li>
    *   <li>类型兼容, 如 Integer -&gt; Number, List&lt;Integer&gt; -&gt; List&lt;Number&gt;, ArrayList&lt;Integer&gt; -&gt; List&lt;Number&gt;</li>
-   *   <li>递归拷贝, 如 Source -&gt; Target </li>
-   *   <li>列表递归拷贝, 如 List&lt;Source&gt; -&gt; List&lt;Target&gt;</li>
+   *   <li>嵌套拷贝, 如 Source -&gt; Target </li>
+   *   <li>集合嵌套拷贝, 如 List&lt;Source&gt; -&gt; List&lt;Target&gt;</li>
    *   <li>父类字段拷贝</li>
    * </ul>
    *
@@ -151,7 +191,7 @@ public class BeanCopierImpl {
    * <p>如果需要批量拷贝对象, 使用 {@link #copyList(Collection, Class)} 可以提供更好的性能</p>
    *
    * @param source      拷贝来源
-   * @param targetClass 拷贝目标类
+   * @param target 拷贝目标类
    * @param <S>         拷贝来源
    * @param <T>         拷贝目标
    * @param callback    拷贝完之后进行的操作
@@ -161,10 +201,10 @@ public class BeanCopierImpl {
    * @see ConverterFactory#generateConverter(Class, Class) 动态生成 Source to Target 的转换器
    */
   @SuppressWarnings("unchecked")
-  @Contract(value = "null, _, _ -> null", pure = true)
+  @Contract(value = "null, _, _ -> null")
   public <S, T> T copy(
       @Nullable S source,
-      @NotNull Class<T> targetClass,
+      @NotNull Class<T> target,
       @Nullable Callback<S, T> callback
   ) {
     if (source == null) {
@@ -172,7 +212,7 @@ public class BeanCopierImpl {
     }
 
     Class<S> sc = (Class<S>) source.getClass();
-    Converter<S, T> converter = generateConverter(new CacheKey(sc, targetClass), sc, targetClass);
+    Converter<S, T> converter = generateConverter(new CacheKey(sc, target), sc, target);
 
     // init a t, and copy fields from source
     T t;
@@ -197,7 +237,7 @@ public class BeanCopierImpl {
    * @return 克隆结果
    */
   @SuppressWarnings("unchecked")
-  @Contract(value = "null -> null", pure = true)
+  @Contract(value = "null -> null")
   public <T> T clone(@Nullable T source) {
     if (source == null) {
       return null;
@@ -215,7 +255,6 @@ public class BeanCopierImpl {
    * @see #cloneList(Collection, Callback)
    */
   @NotNull
-  @Contract(pure = true)
   public <T> List<T> cloneList(@NotNull Collection<@Nullable T> sources) {
     return cloneList(sources, null);
   }
@@ -230,7 +269,6 @@ public class BeanCopierImpl {
    * @see #copy(Object, Class, Callback)
    * @see #copyList(Collection, Class, Callback)
    */
-  @Contract(pure = true)
   @SuppressWarnings("unchecked")
   public <T> List<T> cloneList(
       @NotNull Collection<@Nullable T> objs,
@@ -283,39 +321,37 @@ public class BeanCopierImpl {
   /**
    * 批量对象拷贝
    *
-   * @param sources     拷贝来源集合
-   * @param targetClass 拷贝目标类
-   * @param <S>         拷贝来源类
-   * @param <T>         拷贝目标类
+   * @param sources 拷贝来源集合
+   * @param target  拷贝目标类
+   * @param <S>     拷贝来源类
+   * @param <T>     拷贝目标类
    * @return {@link ArrayList} 拷贝结果列表
    */
-  @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> sources,
-      @NotNull Class<T> targetClass
+      @NotNull Class<T> target
   ) {
-    return copyList(sources, targetClass, null);
+    return copyList(sources, target, null);
   }
 
   /**
    * 批量对象拷贝
    *
-   * @param source      拷贝来源
-   * @param targetClass 拷贝目标类
-   * @param callback    列表里每个对象拷贝完之后进行的回调操作
-   * @param <S>         拷贝来源类
-   * @param <T>         拷贝目标类
+   * @param source   拷贝来源
+   * @param target   拷贝目标类
+   * @param callback 列表里每个对象拷贝完之后进行的回调操作
+   * @param <S>      拷贝来源类
+   * @param <T>      拷贝目标类
    * @return {@link ArrayList} 拷贝结果列表
    * @throws CopyException 如果拷贝过程中发生异常
    */
   @NotNull
-  @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> source,
-      @NotNull Class<T> targetClass,
+      @NotNull Class<T> target,
       @Nullable Callback<S, T> callback
   ) {
-    return copyList(source.iterator(), targetClass, callback, source.size());
+    return copyList(source.iterator(), target, callback, source.size());
   }
 
   private static class Lazy {
@@ -325,9 +361,7 @@ public class BeanCopierImpl {
      */
     private final static BeanCopierImpl INSTANCE = new BeanCopierImpl(
         DEFAULT_CACHES_CAPACITY,
-        new ConverterFactory(null,
-            NamingPolicy.getDefault(),
-            BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH)
+        new ConverterFactory(builder -> builder.classDumpPath(BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH))
     );
   }
 

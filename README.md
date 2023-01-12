@@ -4,7 +4,7 @@
 
 1. [X] 相同名称相同类型拷贝: `String` -> `String`
 2. [X] 完全兼容的泛型拷贝: `StringValue` -> `Value<String>`
-3. [X] 递归拷贝
+3. [X] 嵌套拷贝，集合嵌套拷贝: `Source` -> `Source`, `List<Source>` -> `Collection<Target>`
 4. [X] 向上转型拷贝: `Integer` -> `Number`, `ArrayList<Integer>` -> `List<Number>`
 5. [X] 拷贝父类字段
 6. [X] 字段别名: `@Property(value = "aliasName")`
@@ -21,7 +21,7 @@
     <!-- https://mvnrepository.com/artifact/io.github.tanyaofei/beancopier -->
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
 </dependency>
 ```
 
@@ -76,7 +76,7 @@ public class Main {
 }
 ```
 
-## 递归拷贝
+## 嵌套拷贝
 
 ```java
 import io.github.tanyaofei.beancopier.BeanCopier;
@@ -243,6 +243,42 @@ public class Target {
 }
 ```
 
+# 可选配置项
+
+通过以下方法可以创建一个自定义配置的 `BeanCopierImpl` 实例
+
+```java
+import io.github.tanyaofei.beancopier.BeanCopierImpl;
+import io.github.tanyaofei.beancopier.NamingPolicy;
+
+public class Test {
+  public static void main(String[] args) {
+    BeanCopierImpl beanCopier = new BeanCopierImpl(builder ->
+            builder
+                    .preferNested(true)
+                    .includingSuper(true)
+                    .skipNull(false)
+                    .propertySupported(true)
+                    .classLoader(ClassLoader.getSystemClassLoader())
+                    .namingPolicy(NamingPolicy.getDefault())
+                    .fullTypeMatching(false)
+                    .classDumpPath("./target")
+    );
+  }
+}
+```
+
+以下是可选的配置项
+
+| 配置项                 | 默认值     | 作用                                           |
+|---------------------|---------|----------------------------------------------|
+| `preferNested`      | `true`  | 是否进行嵌套拷贝，如果嵌套拷贝包含循环引用，请勿使用                   |
+| `skipNull`          | `false` | 是否跳过来源字段为 `null` 的字段，`false` 意味着目标字段的默认值不会生效 |
+| `propertySupported` | `true`  | 是否启用对 `@Property` 注解的支持                      |
+| `classloader`       | `null`  | 指定使用特定的类加载器对生成出来的转换器类进行加载                    |
+| `fullTypeMatching`  | `false` | 是否严格完整匹配类型，为 `ture` 表示关闭向上转型、泛型兼容等字段的拷贝      |
+| `classDumpPath`     | `null`  | 生成的转换器 class 文件导出位置                          |
+
 # 选择 ClassLoader
 
 在 Java 中，不同的类加载器加载出来的类无法相互访问，但是具继承关系的类加载器可以访问父加载器加载的类。在 `beancopier`
@@ -261,7 +297,7 @@ graph
 1. `MyClassLoader1` 无法访问 `DefaultClassLoader` 和 `MyClassLoader2`
 2. `DefaultClassLoader` 无法访问 `MyClassLoader1` 和 `MyClassLoader2`
 3. `MyClassLoader2` 可以访问 `MyClassLoader1`
-4. 所有 `MyClassLoader` 都可以访问 `AppClassLoader`、`ExtClassLoader`、`BootstrapClassLoader`
+4.  `MyClassLoader`、`MyClassLoader2`, `DefaultClassLoader` 都可以访问 `AppClassLoader`、`ExtClassLoader`、`BootstrapClassLoader`
 
 `beancopier` 具有三种情况使用不同的 `ClassLoader`
 
@@ -298,12 +334,17 @@ public class Main {
 
 # 版本记录
 
++ 0.1.5
+  + 新增 `new BeanCopierImpl(builder -> builder.preferNested)` 等更多配置
+  + **修复生成转换器时生成类名可能出现死循环的问题**
+  + 更多预检测
+
 + 0.1.4
-    + 支持通过 `new BeanCopier(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
-    + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 替换为 `AppClassLoader`
-    + 修复列表递归拷贝元素包含 `null` 时会抛出异常的问题
-    + 优化拷贝效率并减少内存占用
-    + `asm` 依赖库升级到 `9.4`
+  + 支持通过 `new BeanCopierImpl(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
+  + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 修改为自动选取
+  + 修复集合嵌套拷贝元素包含 `null` 时会抛出异常的问题
+  + 优化拷贝效率并减少内存占用
+  + `asm` 依赖库升级到 `9.4`
 
 + 0.1.3
     + 大幅度优化批量拷贝的速度 `BeanCopier.cloneList()` 和 `BeanCopier.copyList()`, 拷贝一百万个对象由 `200ms+`
@@ -367,9 +408,9 @@ public class StandardSourToStandardDestConverter$$GeneratedByBeanCopier$$ba69502
 ```java
 import java.util.List;
 
-public class RecursionSourToRecursionDestConverter$$GeneratedByBeanCopier$$41d66bc9 implements Converter<NormalTest.RecursionSour, NormalTest.RecursionDest> {
-  public NormalTest.RecursionDest convert(NormalTest.RecursionSour var1) {
-    NormalTest.RecursionDest var2 = new NormalTest.RecursionDest();
+public class NestedSourToNestedDestConverter$$GeneratedByBeanCopier$$41d66bc9 implements Converter<NormalTest.NestedSour, NormalTest.NestedDest> {
+  public NormalTest.NestedDest convert(NormalTest.NestedSour var1) {
+    NormalTest.NestedDest var2 = new NormalTest.NestedDest();
     if (var1.getA() != null) {
       var2.setA(this.convert(var1.getA()));
     }

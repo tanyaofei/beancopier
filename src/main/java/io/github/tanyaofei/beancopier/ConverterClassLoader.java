@@ -3,6 +3,12 @@ package io.github.tanyaofei.beancopier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * BeanCopier 转换器 ClassLoader 接口
+ *
+ * @author tanyaofei
+ * @since 0.1.4
+ */
 public interface ConverterClassLoader {
 
   /**

@@ -4,6 +4,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
+/**
+ * 转换器类名命名策略
+ *
+ * @author tanyaofei
+ * @since 0.1.2
+ */
 public abstract class NamingPolicy {
 
   private static final String DEFAULT_PACKAGE = "io.github.tanyaofei.beancopier.converter";
@@ -44,7 +50,7 @@ public abstract class NamingPolicy {
           + Integer.toHexString((sourceClass.getName() + targetClass.getName()).hashCode());
 
       String attempt = base;
-      for (int i = 2; predicate.test(attempt); attempt = base + "_" + i) {
+      for (int i = 2; predicate.test(attempt); attempt = base + "_" + i++) {
 
       }
       return attempt;

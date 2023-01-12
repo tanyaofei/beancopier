@@ -4,8 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * @author tanyaofei
+ * @since 0.0.1
  */
-public class DefaultClassLoader extends ClassLoader implements ConverterClassLoader {
+class DefaultClassLoader extends ClassLoader implements ConverterClassLoader {
 
   public DefaultClassLoader(ClassLoader parent) {
     super(parent);

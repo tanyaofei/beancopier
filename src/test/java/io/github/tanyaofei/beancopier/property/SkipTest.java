@@ -3,6 +3,7 @@ package io.github.tanyaofei.beancopier.property;
 import io.github.tanyaofei.beancopier.BeanCopier;
 import io.github.tanyaofei.beancopier.BeanCopierConfiguration;
 import io.github.tanyaofei.beancopier.annotation.Property;
+import io.github.tanyaofei.beancopier.exception.ExceptionTest;
 import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
 import lombok.Data;
 import lombok.experimental.Accessors;

@@ -1,8 +1,8 @@
 package io.github.tanyaofei.beancopier;
 
-import com.google.common.base.Stopwatch;
 import io.github.tanyaofei.beancopier.util.DumpConverterClasses;
 import io.github.tanyaofei.beancopier.util.TemplateObject;
+import io.github.tanyaofei.guava.common.base.Stopwatch;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.beanutils.BeanUtils;
@@ -190,9 +190,7 @@ public class PerformanceTest {
     }
 
     ConverterFactory converterFactory = new ConverterFactory(
-        new DefaultClassLoader(this.getClass().getClassLoader()),
-        NamingPolicy.getDefault(),
-        null
+        builder -> builder.classLoader(new DefaultClassLoader(this.getClass().getClassLoader()))
     );
     TemplateObject o = new TemplateObject();
 

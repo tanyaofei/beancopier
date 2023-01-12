@@ -13,11 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static io.github.tanyaofei.beancopier.util.XAsserts.assertEquals;
+import java.util.*;
 
 /**
  * @author tanyaofei
@@ -105,38 +101,53 @@ public class NormalTest extends Assertions {
   }
 
   @Test
-  public void testRecursion() {
-    ArrayList<RecursionSour> c = new ArrayList<>();
-    c.add(new RecursionSour().setD("10").setA(new RecursionSour().setD("1")));
-    c.add(new RecursionSour().setD("20").setA(new RecursionSour().setD("2")));
-    c.add(new RecursionSour().setD("30").setA(new RecursionSour().setD("3")));
+  public void testNested() {
+    ArrayList<NestedSour> c = new ArrayList<>();
+    c.add(null);
+    c.add(new NestedSour().setD("10").setA(new NestedSour().setD("1")));
+    c.add(new NestedSour().setD("20").setA(new NestedSour().setD("2")));
+    c.add(new NestedSour().setD("30").setA(new NestedSour().setD("3")));
     c.add(null);
     c.add(null);
-    c.add(new RecursionSour().setD("40").setA(new RecursionSour().setD("4")));
+    c.add(new NestedSour().setD("40").setA(new NestedSour().setD("4")));
 
-    RecursionSour sour = new RecursionSour()
-        .setA(new RecursionSour().setD("1"))
+    NestedSour sour = new NestedSour()
+        .setA(new NestedSour().setD("1"))
         .setB(Arrays.asList(
-            new RecursionSour().setD("1"),
-            new RecursionSour().setD("2"),
-            new RecursionSour().setD("3"),
+            new NestedSour().setD("1"),
+            new NestedSour().setD("2"),
+            new NestedSour().setD("3"),
             null,
             null,
-            new RecursionSour().setD("4")))
+            new NestedSour().setD("4")))
         .setC(c)
         .setD("1");
 
-    RecursionDest dest = BeanCopier.copy(sour, RecursionDest.class);
-    assertEquals(sour.getD(), dest.getD());
-    for (int i = 0; i < sour.getB().size(); i++) {
+    NestedDest dest = BeanCopier.copy(sour, NestedDest.class);
+
+    assertEquals(sour.getA().getD(), dest.getA().getD());
+    for(int i = 0; i < sour.getB().size(); i++) {
       if (sour.getB().get(i) == null) {
         assertNull(dest.getB().get(i));
-        continue;
+      } else {
+        assertEquals(sour.getB().get(i).getD(), dest.getB().get(i).getD());
       }
-      assertEquals(sour.getB().get(i).getD(), dest.getB().get(i).getD());
-      assertEquals(sour.getC().get(i).getD(), dest.getC().get(i).getD());
-      assertEquals(sour.getC().get(i).getA().getD(), dest.getC().get(i).getA().getD());
     }
+
+    Iterator<NestedSour> itr1 = sour.getC().iterator();
+    Iterator<NestedDest> itr2 = dest.getC().iterator();
+    while(itr1.hasNext()) {
+      NestedSour s = itr1.next();
+      NestedDest d = itr2.next();
+      if (s == null) {
+        assertNull(d);
+      } else {
+        assertEquals(s.getA().getD(), d.getA().getD());
+        assertEquals(s.getD(), d.getD());
+      }
+    }
+
+    assertEquals(sour.getD(), dest.getD());
   }
 
   @Test
@@ -199,19 +210,19 @@ public class NormalTest extends Assertions {
 
   @Data
   @Accessors(chain = true)
-  public static class RecursionSour {
-    private RecursionSour a;
-    private List<RecursionSour> b;
-    private ArrayList<RecursionSour> c;
+  public static class NestedSour {
+    private NestedSour a;
+    private List<NestedSour> b;
+    private ArrayList<NestedSour> c;
     private String d;
   }
 
   @Data
   @Accessors(chain = true)
-  public static class RecursionDest {
-    private RecursionDest a;
-    private List<RecursionDest> b;
-    private List<RecursionSour> c;
+  public static class NestedDest {
+    private NestedDest a;
+    private List<NestedDest> b;
+    private Collection<NestedDest> c;
     private String d;
   }
 

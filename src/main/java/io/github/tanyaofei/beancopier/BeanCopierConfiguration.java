@@ -1,6 +1,12 @@
 package io.github.tanyaofei.beancopier;
 
 
+/**
+ * BeanCopier 全局配置
+ *
+ * @author tanyaofei
+ * @since 0.0.8
+ */
 public interface BeanCopierConfiguration {
 
   /**

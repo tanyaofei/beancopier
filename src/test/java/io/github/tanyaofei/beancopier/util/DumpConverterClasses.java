@@ -10,9 +10,12 @@ import java.io.File;
 public class DumpConverterClasses implements BeforeAllCallback {
 
 
+  public static final String dumpPath = "./target/generated-test-classes/" + NamingPolicy.getDefault().getPackage().replace(".", "/");
+
+
   @Override
   public void beforeAll(ExtensionContext extensionContext) throws Exception {
-    File dumpPath = new File("./target/generated-test-classes/" + NamingPolicy.getDefault().getPackage().replace(".", "/"));
+    File dumpPath = new File(DumpConverterClasses.dumpPath);
     if (!dumpPath.exists()) {
       if (!dumpPath.mkdirs()) {
         throw new IllegalStateException("Failed to make directories: " + dumpPath.getPath());
