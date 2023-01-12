@@ -93,47 +93,6 @@ class ConverterFactory implements Opcodes, MethodConstants {
     return cl;
   }
 
-  /**
-   * 加载类, 在加载时会选用两个类加载器继承链更下级的类加载器来进行加载
-   *
-   * @param sc   拷贝来源类
-   * @param tc   拷贝结果类
-   * @param code 字节码
-   * @return 类
-   * @throws ConverterGenerateException 两个类没有继承关系, 则抛出磁异常
-   */
-  private static Class<?> chooseClassLoaderToDefineClass(Class<?> sc, Class<?> tc, byte[] code) {
-    // 使用继承链中最下级的 classloader 加载, 这样这个 classloader 加载出来的类可以访问另外一个更上级 classloader 加载的类
-    ClassLoader scl = sc.getClassLoader();
-    ClassLoader tcl = tc.getClassLoader();
-
-    ClassLoader cl;
-    if (scl == null && tcl == null) {
-      cl = ClassLoader.getSystemClassLoader();
-    } else {
-      cl = Reflections.isCLAssignableFrom(scl, tcl)
-          ? tcl
-          : Reflections.isCLAssignableFrom(tcl, scl)
-          ? scl : null;
-    }
-
-    if (cl == null) {
-      throw new ConverterGenerateException(
-          String.format("Converter can not access classes that loaded by unrelated classloaders in the same time (%s was loaded by '%s' but %s was loaded by '%s')",
-              sc,
-              sc.getClassLoader(),
-              tc,
-              tc.getClassLoader()
-          ));
-    }
-
-    if (cl instanceof ConverterClassLoader) {
-      return ((ConverterClassLoader) cl).defineClass(null, code);
-    }
-
-    return unsafe.defineClass(null, code, 0, code.length, cl, null);
-  }
-
   private static void dumpClass(byte[] code, String filename) {
     try (FileOutputStream out = new FileOutputStream(filename)) {
       out.write(code);
@@ -159,12 +118,6 @@ class ConverterFactory implements Opcodes, MethodConstants {
     // 类型检查
     checkSourceType(sc);
     checkTargetType(tc);
-    if (!Reflections.isEnclosingClass(tc)) {
-      throw new ConverterGenerateException("'" + tc.getName() + "' is not a enclosing class");
-    }
-    if (!Reflections.hasPublicNoArgsConstructor(tc)) {
-      throw new ConverterGenerateException("'" + tc.getName() + "' missing a public no-args-constructor");
-    }
 
     ClassLoader cl = Optional.ofNullable(configuration.getClassLoader()).orElse(chooseClassLoader(sc, tc));
     // 生成类名称
