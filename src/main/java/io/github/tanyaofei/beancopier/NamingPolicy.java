@@ -44,7 +44,7 @@ public abstract class NamingPolicy {
           + Integer.toHexString((sourceClass.getName() + targetClass.getName()).hashCode());
 
       String attempt = base;
-      for (int i = 2; predicate.test(attempt); attempt = base + "_" + i) {
+      for (int i = 2; predicate.test(attempt); attempt = base + "_" + i++) {
 
       }
       return attempt;

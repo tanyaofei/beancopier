@@ -71,7 +71,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.guava</groupId>
+            <groupId>io.github.tanyaofei</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
         </dependency>

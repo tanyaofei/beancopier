@@ -1,10 +1,10 @@
 package io.github.tanyaofei.beancopier;
 
-import com.google.common.reflect.TypeToken;
 import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.utils.Constants;
 import io.github.tanyaofei.beancopier.utils.*;
 import io.github.tanyaofei.beancopier.utils.Reflections.BeanProperty;
+import io.github.tanyaofei.guava.common.reflect.TypeToken;
 import org.objectweb.asm.*;
 
 import java.lang.reflect.Field;

@@ -14,7 +14,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
 
 import static java.lang.reflect.Modifier.isAbstract;
@@ -31,9 +33,9 @@ class ConverterFactory implements Opcodes, MethodConstants {
   private final static Unsafe unsafe = UnsafeUtils.getUnsafe();
 
   /**
-   * 已使用的类名, 因为在生成过程中, 有可能出现重复的类名, 因此维护一个类名集来保证类名唯一
+   * 每个 classloader 已经注册的类名
    */
-  private final Set<String> reservedClassNames = new HashSet<>(64);
+  private final static WeakHashMap<ClassLoader, Set<String>> classNames = new WeakHashMap<>(4);
 
   private final ConverterConfiguration configuration;
 
@@ -63,6 +65,33 @@ class ConverterFactory implements Opcodes, MethodConstants {
     this.configuration = builder.build();
   }
 
+  private static ClassLoader chooseClassLoader(Class<?> sc, Class<?> tc) {
+    ClassLoader scl = sc.getClassLoader();
+    ClassLoader tcl = tc.getClassLoader();
+
+    ClassLoader cl;
+    if (scl == null && tcl == null) {
+      cl = ClassLoader.getSystemClassLoader();
+    } else {
+      cl = Reflections.isCLAssignableFrom(scl, tcl)
+          ? tcl
+          : Reflections.isCLAssignableFrom(tcl, scl)
+          ? scl : null;
+    }
+
+
+    if (cl == null) {
+      throw new ConverterGenerateException(
+          String.format("Converter can not access classes that loaded by unrelated classloaders in the same time (%s was loaded by '%s' but %s was loaded by '%s')",
+              sc,
+              sc.getClassLoader(),
+              tc,
+              tc.getClassLoader()
+          ));
+    }
+    return cl;
+  }
+
   /**
    * 加载类, 在加载时会选用两个类加载器继承链更下级的类加载器来进行加载
    *
@@ -76,10 +105,16 @@ class ConverterFactory implements Opcodes, MethodConstants {
     // 使用继承链中最下级的 classloader 加载, 这样这个 classloader 加载出来的类可以访问另外一个更上级 classloader 加载的类
     ClassLoader scl = sc.getClassLoader();
     ClassLoader tcl = tc.getClassLoader();
-    ClassLoader cl = Reflections.isCLAssignableFrom(scl, tcl)
-        ? tcl
-        : Reflections.isCLAssignableFrom(tcl, scl)
-        ? scl : null;
+
+    ClassLoader cl;
+    if (scl == null && tcl == null) {
+      cl = ClassLoader.getSystemClassLoader();
+    } else {
+      cl = Reflections.isCLAssignableFrom(scl, tcl)
+          ? tcl
+          : Reflections.isCLAssignableFrom(tcl, scl)
+          ? scl : null;
+    }
 
     if (cl == null) {
       throw new ConverterGenerateException(
@@ -130,8 +165,10 @@ class ConverterFactory implements Opcodes, MethodConstants {
       throw new ConverterGenerateException("'" + tc.getName() + "' missing a public no-args-constructor");
     }
 
+    ClassLoader cl = Optional.ofNullable(configuration.getClassLoader()).orElse(chooseClassLoader(sc, tc));
     // 生成类名称
     String className;
+    Set<String> reservedClassNames = getClassLoaderReversedNames(cl);
     synchronized (reservedClassNames) {
       className = configuration.getNamingPolicy().getClassName(sc, tc, reservedClassNames::contains);
       reservedClassNames.add(className);
@@ -145,13 +182,10 @@ class ConverterFactory implements Opcodes, MethodConstants {
         dumpClass(code, configuration.getClassDumpPath() + File.separatorChar + Reflections.getClassSimpleNameByInternalName(internalName) + ".class");
       }
 
-      ClassLoader classLoader = configuration.getClassLoader();
-      if (classLoader == null) {
-        c = (Class<Converter<S, T>>) chooseClassLoaderToDefineClass(sc, tc, code);
-      } else if (classLoader instanceof ConverterClassLoader) {
-        c = (Class<Converter<S, T>>) ((ConverterClassLoader) classLoader).defineClass(null, code);
+      if (cl instanceof ConverterClassLoader) {
+        c = (Class<Converter<S, T>>) ((ConverterClassLoader) cl).defineClass(null, code);
       } else {
-        c = (Class<Converter<S, T>>) unsafe.defineClass(null, code, 0, code.length, classLoader, null);
+        c = (Class<Converter<S, T>>) unsafe.defineClass(null, code, 0, code.length, cl, null);
       }
     } catch (Exception e) {
       synchronized (reservedClassNames) {
@@ -180,7 +214,17 @@ class ConverterFactory implements Opcodes, MethodConstants {
     if (!isPublic(modifiers)) {
       throw new ConverterGenerateException("'" + c.getName() + "' is not a public class");
     }
+  }
 
+  private Set<String> getClassLoaderReversedNames(ClassLoader cl) {
+    Set<String> names = classNames.get(cl);
+    if (names == null) {
+      synchronized (classNames) {
+        names = new HashSet<>(32);
+        classNames.put(cl, names);
+      }
+    }
+    return names;
   }
 
   private void checkTargetType(Class<?> c) {

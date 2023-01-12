@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.utils;
 
-import com.google.common.collect.Iterables;
+import io.github.tanyaofei.guava.common.collect.Iterables;
 import lombok.*;
 
 import java.lang.reflect.Field;

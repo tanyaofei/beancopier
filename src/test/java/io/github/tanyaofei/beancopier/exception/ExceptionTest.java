@@ -46,7 +46,7 @@ public class ExceptionTest {
   public void testPrimitive() {
     assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(new Object(), int.class)).printStackTrace();
     assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(1, int.class)).printStackTrace();
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(2, String.class)).printStackTrace();
+    assertDoesNotThrow(() -> BeanCopier.copy(2, String.class));
   }
 
   @Test
