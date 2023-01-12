@@ -96,6 +96,7 @@ public final class BeanCopier {
    *
    * @param sources  克隆对象集合, 不能为 null。如果元素为 null 则拷贝出来的元素也为 null
    * @param callback 每克隆一次对象都会调用一次 callback，要注意如果元素为 null 则 callback 中的参数也为 null
+   * @param <T>      克隆对象类型
    * @return 被克隆出来的对象集合
    * @see BeanCopierImpl#cloneList(Collection, Callback)
    */

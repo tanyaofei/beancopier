@@ -41,7 +41,8 @@ public class Reflections {
    * 如果某个字段没有 getter 或者 getter 没有对应的字段, 则不会在返回值
    * </p>
    *
-   * @param c 类
+   * @param c              类
+   * @param includingSuper 是否包含父类 getters
    * @return 该类包括父类的所有 getter 集合迭代器
    */
   public static Iterable<BeanProperty> getBeanGetters(Class<?> c, boolean includingSuper) {
@@ -80,7 +81,8 @@ public class Reflections {
    * 如果某个字段没有 setter 或者 setter 没有对应的字段, 则不会在返回值
    * </p>
    *
-   * @param c 类
+   * @param c              类
+   * @param includingSuper 是否包含父类 setters
    * @return 该类包括父类的所有 setter 集合迭代器
    */
   public static Iterable<BeanProperty> getBeanSetters(Class<?> c, boolean includingSuper) {

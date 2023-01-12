@@ -143,6 +143,7 @@ public class BeanCopierImpl {
    * <pre>{@code
    *  BeanCopierImpl beanCopier = new BeanCopierImpl(builder -> builder.classLoader(this.getClassLoader()));
    * }
+   * </pre>
    *
    * @param cachesInitialCapacity 缓存初始容量
    * @param builder               转换器配置
