@@ -21,7 +21,7 @@
     <!-- https://mvnrepository.com/artifact/io.github.tanyaofei/beancopier -->
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
 </dependency>
 ```
 
