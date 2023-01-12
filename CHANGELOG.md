@@ -1,5 +1,10 @@
 # 更新日志
 
++ 0.1.5
+  + 新增 `new BeanCopierImpl(builder -> builder.preferNested)` 等更多配置
+  + **修复生成转换器时生成类名可能出现死循环的问题**
+  + 更多预检测
+
 + 0.1.4
   + 支持通过 `new BeanCopierImpl(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
   + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 修改为自动选取

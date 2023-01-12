@@ -7,6 +7,7 @@ import java.lang.annotation.*;
 /**
  * 字段配置
  *
+ * @author tanyaofei
  * @since 0.1.0
  */
 @Retention(RetentionPolicy.RUNTIME)

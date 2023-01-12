@@ -4,6 +4,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
+/**
+ * 转换器配置
+ *
+ * @author tanyaofei
+ * @since 0.1.5
+ */
 @Getter
 @Builder
 @ToString

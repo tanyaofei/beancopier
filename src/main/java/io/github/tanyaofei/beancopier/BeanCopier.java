@@ -23,7 +23,7 @@ import java.util.List;
  *   这个 BeanCopier 生成的转换器将会由 app classloader 进行加载, 因此基本上不可能进行类卸载
  * </p>
  * <p><i>注意: 类的卸载依赖垃圾回收器具有类卸载能力</i></p>
- *
+ * @since 0.0.1
  * @author tanyaofei
  * @see BeanCopierImpl
  */

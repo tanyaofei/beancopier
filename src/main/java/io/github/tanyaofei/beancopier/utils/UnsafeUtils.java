@@ -4,6 +4,12 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 
+/**
+ * Util for getting {@link Unsafe}
+ *
+ * @author tanyaofei
+ * @since 0.1.4
+ */
 public class UnsafeUtils {
 
   public static Unsafe getUnsafe() {

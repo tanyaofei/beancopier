@@ -22,6 +22,7 @@ import java.util.function.Consumer;
  * @see io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException
  * @see CopyException
  * @see ConverterFactory
+ * @since 0.1.0
  */
 public class BeanCopierImpl {
 

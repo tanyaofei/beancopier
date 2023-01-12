@@ -13,6 +13,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * 转换器字节码编写工具
+ *
+ * @since 0.1.5
+ */
 class ConverterCodeWriter implements Opcodes, MethodConstants {
 
   private final Class<?> sc;

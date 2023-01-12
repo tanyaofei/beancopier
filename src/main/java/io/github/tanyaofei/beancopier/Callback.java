@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier;
 
 /**
  * @author tanyaofei
+ * @since 0.0.1
  */
 @FunctionalInterface
 public interface Callback<S, T> {

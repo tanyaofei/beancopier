@@ -4,6 +4,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
 
+/**
+ * 转换器类名命名策略
+ *
+ * @author tanyaofei
+ * @since 0.1.2
+ */
 public abstract class NamingPolicy {
 
   private static final String DEFAULT_PACKAGE = "io.github.tanyaofei.beancopier.converter";

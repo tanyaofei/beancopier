@@ -8,6 +8,11 @@ import java.lang.invoke.LambdaMetafactory;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * 常量
+ * @author tanyaofei
+ * @since 0.1.3
+ */
 public interface Constants {
 
   String SOURCE_FILE = "<generated>";
