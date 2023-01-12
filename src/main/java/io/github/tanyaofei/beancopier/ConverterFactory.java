@@ -36,7 +36,7 @@ class ConverterFactory implements Opcodes, MethodConstants {
   /**
    * 每个 classloader 已经注册的类名
    */
-  private final static WeakHashMap<ClassLoader, Set<String>> classNames = new WeakHashMap<>(4);
+  private final static WeakHashMap<ClassLoader, Set<String>> reservedClassNames = new WeakHashMap<>(4);
 
   private final ConverterConfiguration configuration;
 
@@ -101,6 +101,16 @@ class ConverterFactory implements Opcodes, MethodConstants {
     }
   }
 
+  private static Set<String> getReservedClassNames(ClassLoader cl) {
+    Set<String> names = reservedClassNames.get(cl);
+    if (names == null) {
+      synchronized (reservedClassNames) {
+        names = reservedClassNames.computeIfAbsent(cl, k -> new HashSet<>(32));
+      }
+    }
+    return names;
+  }
+
   /**
    * 创建 sc 拷贝为 tc 的转换器并加载到运行时内存中并创建实例
    *
@@ -108,7 +118,9 @@ class ConverterFactory implements Opcodes, MethodConstants {
    * @param tc  拷贝目标类
    * @param <S> 拷贝来源
    * @param <T> 拷贝目标
-   * @return sc  to  tc 转换器实例
+   * @return 将来源拷贝到目标的转换器
+   * @throws ConverterGenerateException    生成转换器字节码时发生异常
+   * @throws ConverterNewInstanceException 初始化转换器发生异常
    */
   @Contract(pure = true)
   @SuppressWarnings("unchecked")
@@ -122,10 +134,10 @@ class ConverterFactory implements Opcodes, MethodConstants {
     ClassLoader cl = Optional.ofNullable(configuration.getClassLoader()).orElse(chooseClassLoader(sc, tc));
     // 生成类名称
     String className;
-    Set<String> reservedClassNames = getClassLoaderReversedNames(cl);
-    synchronized (reservedClassNames) {
-      className = configuration.getNamingPolicy().getClassName(sc, tc, reservedClassNames::contains);
-      reservedClassNames.add(className);
+    Set<String> classNames = getReservedClassNames(cl);
+    synchronized (classNames) {
+      className = configuration.getNamingPolicy().getClassName(sc, tc, classNames::contains);
+      classNames.add(className);
     }
 
     Class<Converter<S, T>> c;
@@ -142,8 +154,8 @@ class ConverterFactory implements Opcodes, MethodConstants {
         c = (Class<Converter<S, T>>) unsafe.defineClass(null, code, 0, code.length, cl, null);
       }
     } catch (Exception e) {
-      synchronized (reservedClassNames) {
-        reservedClassNames.remove(className);
+      synchronized (classNames) {
+        classNames.remove(className);
       }
       throw new ConverterGenerateException(sc, tc, e);
     }
@@ -168,17 +180,6 @@ class ConverterFactory implements Opcodes, MethodConstants {
     if (!isPublic(modifiers)) {
       throw new ConverterGenerateException("'" + c.getName() + "' is not a public class");
     }
-  }
-
-  private Set<String> getClassLoaderReversedNames(ClassLoader cl) {
-    Set<String> names = classNames.get(cl);
-    if (names == null) {
-      synchronized (classNames) {
-        names = new HashSet<>(32);
-        classNames.put(cl, names);
-      }
-    }
-    return names;
   }
 
   private void checkTargetType(Class<?> c) {

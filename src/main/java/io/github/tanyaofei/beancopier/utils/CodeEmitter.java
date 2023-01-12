@@ -111,7 +111,7 @@ public class CodeEmitter implements Opcodes {
     v.visitTypeInsn(NEW, Type.getInternalName(objType));
   }
 
-  public static void newInstanceViaNoArgsConstructor(MethodVisitor v, Class<?> objType) {
+  public static void newInstance(MethodVisitor v, Class<?> objType) {
     newObject(v, objType);
     v.visitInsn(DUP);
     invokeNoArgsConstructor(v, objType);

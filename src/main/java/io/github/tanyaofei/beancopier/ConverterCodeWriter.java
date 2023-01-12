@@ -95,7 +95,7 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
 
     v.visitCode();
 
-    CodeEmitter.newInstanceViaNoArgsConstructor(v, tc);
+    CodeEmitter.newInstance(v, tc);
     v.visitVarInsn(ASTORE, 2);
     Label jumpHere = null;
     Iterable<BeanProperty> setters = Reflections.getBeanSetters(tc, configuration.isIncludingSuper());
@@ -133,7 +133,7 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
         jumpHere = skipNull(v, getter);
         nestedCollectionCopy(v, getter, setter);
         hasNestedCollectionCopy = true;
-      } else if (isCompatible(sf, tf)) {
+      } else if (configuration.isFullTypeMatching() ? isTypeEquals(sf, tf) : isCompatible(sf, tf)) {
         if (jumpHere != null) {
           v.visitLabel(jumpHere);
         }
@@ -188,7 +188,7 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
   /**
    * 编写用于集合嵌套拷贝避免空指针错误的 lambda 方法
    * <pre>{@code
-   * (Function)(varx1) -> {return varx1 == null ? null : this.convert(varx1);};
+   * (Function)(v) -> {return v == null ? null : this.convert(v);};
    * }</pre>
    *
    * @param cw ClassWriter
@@ -229,12 +229,21 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    *
    * @param sf 来源字段
    * @param tf 目标字段
-   * @return 如果配置了全类型匹配，则严格判断两者的类型是否完全一致；否则会根据 JAVA 的规范判断是否兼容
+   * @return 两个字段类型是否兼容
    */
   private boolean isCompatible(Field sf, Field tf) {
-    return configuration.isFullTypeMatching()
-        ? sf.getGenericType().equals(tf.getGenericType())
-        : TypeToken.of(sf.getGenericType()).isSubtypeOf(tf.getGenericType());
+    return TypeToken.of(sf.getGenericType()).isSubtypeOf(tf.getGenericType());
+  }
+
+  /**
+   * 判断类型是否相同
+   *
+   * @param sf 来源字段
+   * @param tf 目标字段
+   * @return 两个字段的类型是否相同
+   */
+  private boolean isTypeEquals(Field sf, Field tf) {
+    return sf.getGenericType().equals(tf.getGenericType());
   }
 
   /**
@@ -262,6 +271,9 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
 
   /**
    * 集合嵌套拷贝
+   * <pre>{@code
+   * target.setValue(source.getValue().stream(v -> v == null ? null : this.convert(v)));
+   * }</pre>
    *
    * @param v      MethodVisitor
    * @param getter 来源字段的 getter 方法
@@ -275,14 +287,14 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
     String methodDescriptor = CodeEmitter.getMethodDescriptor(tc, sc);
     v.visitVarInsn(ALOAD, 2);
 
-    // this.getField()
+    // this.getValue()
     v.visitVarInsn(ALOAD, 1);
     CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
 
     // list.stream()
     CodeEmitter.invokeMethod(v, INVOKEINTERFACE, LIST$STREAM);
 
-    // (o) -> o == null ? null : this.convert(o)
+    // (v) -> v == null ? null : this.convert(v)
     v.visitVarInsn(ALOAD, 0);
     v.visitInvokeDynamicInsn(
         FUNCTION$APPLY.getName(),
@@ -322,7 +334,7 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
   /**
    * 类型兼容拷贝
    * <pre>{@code
-   * var2.setValue(var1.getValue());
+   * target.setValue(source.getValue());
    * }</pre>
    *
    * @param v      MethodVisit
@@ -372,13 +384,15 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
 
   /**
    * 嵌套拷贝
+   * <pre>{@code
+   * target.setValue(this.convert(source.getValue()));
+   * }</pre>
    *
    * @param v      MethodVisitor
    * @param getter 来源字段的 getter 方法
    * @param setter 来源字段的 setter 方法
    */
   private void nestedCopy(MethodVisitor v, Method getter, Method setter) {
-    // target.setField(convert(source.getField()))
     v.visitVarInsn(ALOAD, 2);
     v.visitVarInsn(ALOAD, 0);
     v.visitVarInsn(ALOAD, 1);
