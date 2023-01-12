@@ -243,6 +243,42 @@ public class Target {
 }
 ```
 
+# 可选配置项
+
+通过以下方法可以创建一个自定义配置的 `BeanCopierImpl` 实例
+
+```java
+import io.github.tanyaofei.beancopier.BeanCopierImpl;
+import io.github.tanyaofei.beancopier.NamingPolicy;
+
+public class Test {
+  public static void main(String[] args) {
+    BeanCopierImpl beanCopier = new BeanCopierImpl(builder ->
+            builder
+                    .preferNested(true)
+                    .includingSuper(true)
+                    .skipNull(false)
+                    .propertySupported(true)
+                    .classLoader(ClassLoader.getSystemClassLoader())
+                    .namingPolicy(NamingPolicy.getDefault())
+                    .fullTypeMatching(false)
+                    .classDumpPath("./target")
+    );
+  }
+}
+```
+
+以下是可选的配置项
+
+| 配置项                 | 默认值     | 作用                                           |
+|---------------------|---------|----------------------------------------------|
+| `preferNested`      | `true`  | 是否进行嵌套拷贝，如果嵌套拷贝包含循环引用，请勿使用                   |
+| `skipNull`          | `false` | 是否跳过来源字段为 `null` 的字段，`false` 意味着目标字段的默认值不会生效 |
+| `propertySupported` | `true`  | 是否启用对 `@Property` 注解的支持                      |
+| `classloader`       | `null`  | 指定使用特定的类加载器对生成出来的转换器类进行加载                    |
+| `fullTypeMatching`  | `false` | 是否严格完整匹配类型，为 `ture` 表示关闭向上转型、泛型兼容等字段的拷贝      |
+| `classDumpPath`     | `null`  | 生成的转换器 class 文件导出位置                          |
+
 # 选择 ClassLoader
 
 在 Java 中，不同的类加载器加载出来的类无法相互访问，但是具继承关系的类加载器可以访问父加载器加载的类。在 `beancopier`
@@ -261,7 +297,7 @@ graph
 1. `MyClassLoader1` 无法访问 `DefaultClassLoader` 和 `MyClassLoader2`
 2. `DefaultClassLoader` 无法访问 `MyClassLoader1` 和 `MyClassLoader2`
 3. `MyClassLoader2` 可以访问 `MyClassLoader1`
-4. 所有 `MyClassLoader` 都可以访问 `AppClassLoader`、`ExtClassLoader`、`BootstrapClassLoader`
+4.  `MyClassLoader`、`MyClassLoader2`, `DefaultClassLoader` 都可以访问 `AppClassLoader`、`ExtClassLoader`、`BootstrapClassLoader`
 
 `beancopier` 具有三种情况使用不同的 `ClassLoader`
 
