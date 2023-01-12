@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 反射工具
+ *
  * @author tanyaofei
  * @since 0.0.1
  */
@@ -33,6 +35,10 @@ public class Reflections {
    */
   public static String getClassSimpleNameByInternalName(String internalName) {
     return internalName.substring(internalName.lastIndexOf("/") + 1);
+  }
+
+  public static String getInternalNameByClassName(String className) {
+    return className.replace(".", "/");
   }
 
   /**

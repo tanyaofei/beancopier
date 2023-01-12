@@ -22,8 +22,7 @@ public class ConverterGenerateException extends BeanCopierException {
   }
 
   public ConverterGenerateException(Class<?> sc, Class<?> tc, Throwable cause) {
-    super("Failed to generate converter class: " + sc + " -> " + tc, cause);
+    super("Failed to generate converter class: " + sc.getName() + " -> " + tc.getName(), cause);
   }
-
 
 }

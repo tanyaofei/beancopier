@@ -2,7 +2,9 @@ package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
-import io.github.tanyaofei.beancopier.utils.*;
+import io.github.tanyaofei.beancopier.utils.Reflections;
+import io.github.tanyaofei.beancopier.utils.StringUtils;
+import io.github.tanyaofei.beancopier.utils.UnsafeUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +31,7 @@ import static java.lang.reflect.Modifier.isPublic;
  * @see DefaultClassLoader
  * @since 0.0.1
  */
-class ConverterFactory implements Opcodes, MethodConstants {
+class ConverterFactory implements Opcodes, Methods {
 
   private final static Unsafe unsafe = UnsafeUtils.getUnsafe();
 
@@ -128,7 +130,7 @@ class ConverterFactory implements Opcodes, MethodConstants {
     }
 
     Class<Converter<S, T>> c;
-    String internalName = CodeEmitter.classNameToInternalName(className);
+    String internalName = Reflections.getInternalNameByClassName(className);
     try {
       final byte[] code = new ConverterCodeWriter(internalName, sc, tc, configuration).write();
       if (StringUtils.hasLength(configuration.getClassDumpPath())) {

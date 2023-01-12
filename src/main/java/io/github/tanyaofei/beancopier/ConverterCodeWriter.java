@@ -1,14 +1,14 @@
 package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.utils.Constants;
-import io.github.tanyaofei.beancopier.utils.*;
+import io.github.tanyaofei.beancopier.utils.ClassSignature;
+import io.github.tanyaofei.beancopier.utils.ClassSignature.ClassInfo;
+import io.github.tanyaofei.beancopier.utils.Reflections;
 import io.github.tanyaofei.beancopier.utils.Reflections.BeanProperty;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
 import org.objectweb.asm.*;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -18,19 +18,21 @@ import java.util.Optional;
  *
  * @since 0.1.5
  */
-class ConverterCodeWriter implements Opcodes, MethodConstants {
+class ConverterCodeWriter implements Opcodes, Methods {
 
   private final Class<?> sc;
   private final Class<?> tc;
   private final ConverterConfiguration configuration;
   private final String internalName;
-  private boolean hasNestedCollectionCopy = false;
+  private boolean containsCollectionNestedCopies = false;
+  private final String methodDescriptor;
 
   public ConverterCodeWriter(String internalName, Class<?> sc, Class<?> tc, ConverterConfiguration configuration) {
     this.sc = sc;
     this.tc = tc;
     this.configuration = configuration;
     this.internalName = internalName;
+    this.methodDescriptor = Type.getMethodDescriptor(Type.getType(tc), Type.getType(sc));
   }
 
   /**
@@ -44,17 +46,17 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
         V1_8,
         ACC_PUBLIC | ACC_SYNTHETIC,
         internalName,
-        CodeEmitter.getClassSignature(
-            Constants.CLASS_INFO_OBJECT,
+        ClassSignature.getClassSignature(
+            ClassInfos.Object,
             ClassInfo.of(Converter.class, sc, tc)
         ),
-        Constants.INTERNAL_NAME_OBJECT,
-        Constants.INTERNAL_NAME_ARRAY_CONVERTER
+        InternalNames.Object,
+        InternalNames.aConverter
     );
-    cw.visitSource(Constants.SOURCE_FILE, null);
+    cw.visitSource("<generated>", null);
     writeNoArgsConstructor(cw);
     writeConvertMethod(cw);
-    if (hasNestedCollectionCopy) {
+    if (containsCollectionNestedCopies) {
       writeLambda$convert$0Method(cw);
     }
     if (sc != Object.class || tc != Object.class) {
@@ -70,10 +72,10 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    * @param cw ClassWriter
    */
   private void writeNoArgsConstructor(ClassWriter cw) {
-    MethodVisitor v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, "<init>", "()V", null, null);
+    MethodVisitor v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, MethodNames.Object$init, MethodDescriptors.Object$init, null, null);
     v.visitCode();
     v.visitVarInsn(ALOAD, 0);
-    CodeEmitter.invokeNoArgsConstructor(v, Object.class);
+    v.visitMethodInsn(INVOKESPECIAL, InternalNames.Object, MethodNames.Object$init, MethodDescriptors.Object$init, false);
     v.visitInsn(RETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
@@ -87,15 +89,15 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
   private void writeConvertMethod(ClassWriter cw) {
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC,
-        CONVERTER$CONVERT.getName(),
-        CodeEmitter.getMethodDescriptor(tc, sc),
+        MethodNames.Converter$convert,
+        methodDescriptor,
         null,
         null
     );
 
     v.visitCode();
 
-    CodeEmitter.newInstanceViaNoArgsConstructor(v, tc);
+    MethodInvoker.constructorInvoker(tc).invoke(v);
     v.visitVarInsn(ASTORE, 2);
     Label jumpHere = null;
     Iterable<BeanProperty> setters = Reflections.getBeanSetters(tc, configuration.isIncludingSuper());
@@ -104,8 +106,8 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
     for (BeanProperty tbp : setters) {
       Field tf = tbp.getField();
       Property property = configuration.isPropertySupported()
-          ? Optional.ofNullable(tf.getAnnotation(Property.class)).orElse(Constants.DEFAULT_PROPERTY)
-          : Constants.DEFAULT_PROPERTY;
+          ? Optional.ofNullable(tf.getAnnotation(Property.class)).orElse(Property.DEFAULT)
+          : Property.DEFAULT;
       if (property.skip()) {
         continue;
       }
@@ -117,8 +119,8 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
       }
 
       Field sf = sbp.getField();
-      Method getter = sbp.getXetter();
-      Method setter = tbp.getXetter();
+      MethodInvoker getter = MethodInvoker.methodInvoker(sbp.getXetter());
+      MethodInvoker setter = MethodInvoker.methodInvoker(tbp.getXetter());
 
       if (configuration.isPreferNested() && isNestedCopy(sf, tf)) {
         if (jumpHere != null) {
@@ -126,13 +128,13 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
         }
         jumpHere = skipNull(v, getter);
         nestedCopy(v, getter, setter);
-      } else if (configuration.isPreferNested() && isNestedCollectionCopy(sf, tf)) {
+      } else if (configuration.isPreferNested() && isCollectionNestedCopy(sf, tf)) {
         if (jumpHere != null) {
           v.visitLabel(jumpHere);
         }
         jumpHere = skipNull(v, getter);
         nestedCollectionCopy(v, getter, setter);
-        hasNestedCollectionCopy = true;
+        containsCollectionNestedCopies = true;
       } else if (isCompatible(sf, tf)) {
         if (jumpHere != null) {
           v.visitLabel(jumpHere);
@@ -166,8 +168,8 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
   ) {
     MethodVisitor v = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
-        CONVERTER$CONVERT.getName(),
-        Constants.METHOD_DESCRIPTOR_CONVERTER_CONVERT,
+        MethodNames.Converter$convert,
+        MethodDescriptors.Converter$convert,
         null,
         null);
     v.visitCode();
@@ -177,8 +179,8 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
     v.visitMethodInsn(
         INVOKEVIRTUAL,
         internalName,
-        CONVERTER$CONVERT.getName(),
-        CodeEmitter.getMethodDescriptor(tc, sc),
+        MethodNames.Converter$convert,
+        methodDescriptor,
         false);
     v.visitInsn(ARETURN);
     v.visitMaxs(-1, -1);
@@ -198,8 +200,8 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
   ) {
     MethodVisitor v = cw.visitMethod(
         ACC_PRIVATE | ACC_SYNTHETIC,
-        Constants.METHOD_NAME_LAMBDA$CONVERT$0,
-        CodeEmitter.getMethodDescriptor(tc, sc),
+        MethodNames.lambda$convert$0,
+        methodDescriptor,
         null,
         null
     );
@@ -216,7 +218,7 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
     v.visitLabel(ifnonnullLabel);
     v.visitVarInsn(ALOAD, 0);
     v.visitVarInsn(ALOAD, 1);
-    v.visitMethodInsn(INVOKEVIRTUAL, internalName, CONVERTER$CONVERT.getName(), CodeEmitter.getMethodDescriptor(tc, sc), false);
+    v.visitMethodInsn(INVOKEVIRTUAL, internalName, MethodNames.Converter$convert, methodDescriptor, false);
     v.visitLabel(gotoLabel);
     v.visitInsn(ARETURN);
 
@@ -244,12 +246,12 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    * @param tf 目标字段
    * @return 如果配置了全类型匹配，则严格判断两者的类型是否完全一致；否则根据 JAVA 的规范判断是否兼容
    */
-  private boolean isNestedCollectionCopy(Field sf, Field tf) {
+  private boolean isCollectionNestedCopy(Field sf, Field tf) {
     Class<?> sfc = sf.getType();
     Class<?> tfc = tf.getType();
     if (configuration.isFullTypeMatching()) {
-      return Collection.class.isAssignableFrom(sfc)
-          && sfc == tfc
+      return sfc == tfc
+          && Collection.class.isAssignableFrom(tfc)
           && getCollectionElementType(sf) == sc
           && getCollectionElementType(tf) == tc;
     } else {
@@ -269,33 +271,32 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    */
   private void nestedCollectionCopy(
       MethodVisitor v,
-      Method getter,
-      Method setter
+      MethodInvoker getter,
+      MethodInvoker setter
   ) {
-    String methodDescriptor = CodeEmitter.getMethodDescriptor(tc, sc);
     v.visitVarInsn(ALOAD, 2);
 
     // this.getField()
     v.visitVarInsn(ALOAD, 1);
-    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
+    getter.invoke(v);
 
     // list.stream()
-    CodeEmitter.invokeMethod(v, INVOKEINTERFACE, LIST$STREAM);
+    MethodInvokers.List$stream.invoke(v);
 
     // (o) -> o == null ? null : this.convert(o)
     v.visitVarInsn(ALOAD, 0);
     v.visitInvokeDynamicInsn(
-        FUNCTION$APPLY.getName(),
-        "(L" + internalName + ";)" + Constants.TYPE_DESCRIPTOR_FUNCTION,
+        MethodNames.Function$apply,
+        "(L" + internalName + ";)" + TypeDescriptors.Function,
         new Handle(H_INVOKESTATIC,
-            Constants.INTERNAL_NAME_LAMBDA_METAFACTORY,
-            LAMBDA_META_FACTORY$METAFACOTRY.getName(),
-            Constants.METHOD_DESCRIPTOR_LAMBDA_META_FACTORY_METAFACTORY,
+            InternalNames.LambdaMetafactory,
+            MethodNames.Lambda$MetaFactory$metafactory,
+            MethodDescriptors.LambdaMetafactory$metafactory,
             false),
-        Constants.METHOD_TYPE_CONVERTER,
+        MethodTypes.Converter$convert,
         new Handle(H_INVOKESPECIAL,
             internalName,
-            Constants.METHOD_NAME_LAMBDA$CONVERT$0,
+            MethodNames.lambda$convert$0,
             methodDescriptor,
             false
         ),
@@ -303,20 +304,19 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
     );
 
     // stream.map()
-    CodeEmitter.invokeMethod(v, INVOKEINTERFACE, STREAM$MAP);
+    MethodInvokers.Stream$map.invoke(v);
 
     // collector.toList()
-    CodeEmitter.invokeMethod(v, INVOKESTATIC, COLLECTORS$TO_LIST);
+    MethodInvokers.Collector$toList.invoke(v);
 
     // stream.collect()
-    CodeEmitter.invokeMethod(v, INVOKEINTERFACE, STREAM$COLLECT);
+    MethodInvokers.Stream$collect.invoke(v);
 
     // (List) .....
-    v.visitTypeInsn(CHECKCAST, Constants.INTERNAL_NAME_LIST);
+    v.visitTypeInsn(CHECKCAST, InternalNames.List);
 
     // target.setField()
-    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, setter);
-    dropSetterReturnVal(v, setter);
+    setter.invoke(v, true);
   }
 
   /**
@@ -331,14 +331,13 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    */
   private void compatibleCopy(
       MethodVisitor v,
-      Method getter,
-      Method setter
+      MethodInvoker getter,
+      MethodInvoker setter
   ) {
     v.visitVarInsn(ALOAD, 2);
     v.visitVarInsn(ALOAD, 1);
-    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
-    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, setter);
-    dropSetterReturnVal(v, setter);
+    getter.invoke(v);
+    setter.invoke(v, true);
   }
 
   /**
@@ -362,10 +361,10 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    * @param getter 来源字段的 getter 方法
    * @return 用于 ifnull 跳转的 Label
    */
-  private Label skipNull(MethodVisitor v, Method getter) {
+  private Label skipNull(MethodVisitor v, MethodInvoker getter) {
     Label label = new Label();
     v.visitVarInsn(ALOAD, 1);
-    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
+    getter.invoke(v);
     v.visitJumpInsn(IFNULL, label);
     return label;
   }
@@ -377,20 +376,19 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    * @param getter 来源字段的 getter 方法
    * @param setter 来源字段的 setter 方法
    */
-  private void nestedCopy(MethodVisitor v, Method getter, Method setter) {
+  private void nestedCopy(MethodVisitor v, MethodInvoker getter, MethodInvoker setter) {
     // target.setField(convert(source.getField()))
     v.visitVarInsn(ALOAD, 2);
     v.visitVarInsn(ALOAD, 0);
     v.visitVarInsn(ALOAD, 1);
-    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, getter);
+    getter.invoke(v);
     v.visitMethodInsn(
         INVOKEVIRTUAL,
         internalName,
-        CONVERTER$CONVERT.getName(),
-        CodeEmitter.getMethodDescriptor(tc, sc),
+        MethodNames.Converter$convert,
+        methodDescriptor,
         false);
-    CodeEmitter.invokeMethod(v, INVOKEVIRTUAL, setter);
-    dropSetterReturnVal(v, setter);
+    setter.invoke(v, true);
   }
 
   /**
@@ -402,18 +400,6 @@ class ConverterCodeWriter implements Opcodes, MethodConstants {
    */
   private boolean isNestedCopy(Field sf, Field tf) {
     return sc == sf.getType() && tc == tf.getType();
-  }
-
-  /**
-   * 如果目标字段的 setter 方法具有返回值，则将这个局部变量从操作数栈中移除以保证兼容；如果没有返回值，则不做任何事情
-   *
-   * @param v      MethodVisitor
-   * @param setter 目标字段的 setter 方法
-   */
-  private void dropSetterReturnVal(MethodVisitor v, Method setter) {
-    if (!setter.getReturnType().equals(Void.TYPE)) {
-      v.visitInsn(POP);
-    }
   }
 
 }

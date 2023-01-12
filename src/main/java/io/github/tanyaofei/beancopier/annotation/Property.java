@@ -1,7 +1,6 @@
 package io.github.tanyaofei.beancopier.annotation;
 
 
-
 import java.lang.annotation.*;
 
 /**
@@ -42,5 +41,7 @@ public @interface Property {
    * @return 是否跳过此字段; 为 {@code true} 时不拷贝到此字段
    */
   boolean skip() default false;
+
+  Property DEFAULT = PropertyProxy.DEFAULT;
 
 }

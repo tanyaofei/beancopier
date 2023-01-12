@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.exception.CopyException;
+import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +23,7 @@ import java.util.function.Consumer;
  * @see io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException
  * @see CopyException
  * @see ConverterFactory
+ * @author tanyaofei
  * @since 0.1.0
  */
 public class BeanCopierImpl {
@@ -437,4 +439,35 @@ public class BeanCopierImpl {
     );
   }
 
+  /**
+   * 缓存 Key 对象, 用这个比拼接 String 要快，并且更节省内存
+   *
+   * @author tanyaofei
+   * @since 0.1.4
+   */
+  @AllArgsConstructor
+  static class CacheKey {
+
+    final Class<?> sc;
+    final Class<?> tc;
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(sc, tc);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (!(obj instanceof CacheKey)) {
+        return false;
+      }
+
+      CacheKey o = (CacheKey) obj;
+      return o.sc.equals(sc) && o.tc.equals(tc);
+    }
+
+  }
 }
