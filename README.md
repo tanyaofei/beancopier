@@ -2,254 +2,94 @@
 
 参考 cglib BeanCopier 编写出来的对象拷贝工具，相比 cglib BeanCopier，提供以下更多特性：
 
-1. [X] 相同名称相同类型拷贝: `String` -> `String`
-2. [X] 完全兼容的泛型拷贝: `StringValue` -> `Value<String>`
+1. [X] 相同名称相同类型拷贝
+2. [X] 完全兼容的泛型拷贝: `StringValue` -> `Value<String>`, `Integer` -> `Number`, `List<Integer>` -> `Collection<? extends Number>`
 3. [X] 嵌套拷贝，集合嵌套拷贝: `Source` -> `Source`, `List<Source>` -> `Collection<Target>`
-4. [X] 向上转型拷贝: `Integer` -> `Number`, `ArrayList<Integer>` -> `List<Number>`
-5. [X] 拷贝父类字段
-6. [X] 字段别名: `@Property(value = "aliasName")`
-7. [X] 忽略字段: `@Property(skip = true)`
+4. [X] 拷贝父类字段
+5. [X] 字段别名: `@Property(value = "aliasName")`
+6. [X] 忽略字段: `@Property(skip = true)`
+7. [X] **支持 JDK16 record** (包括 `POJO -> record`, `record -> POJO`, `record -> record`)
 
 **相比 cglib，本项目提供的对象拷贝工具可以拷贝 `setter` 返回值不是 `void` 的字段，因此兼容 `lombok`
 的 `@Accessors(chain = true)`**
 
-# 使用方式
 
+# 引入到你的项目
+**从 0.2.0 版本开始要求 JDK 最低为 17，如果低于此版本可使用 0.1.x 版本最低支持 JDK8**
 ```xml
 
 <dependency>
     <!-- https://mvnrepository.com/artifact/io.github.tanyaofei/beancopier -->
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier</artifactId>
-    <version>0.1.5</version>
+    <version>x</version>
 </dependency>
 ```
 
 # 性能对比
 
+
 | 拷贝工具             | 拷贝一百万个对象耗时 |
 |------------------|------------|
-| **BeanCopier**   | **17ms**   |
+| **BeanCopier**   | **27ms**   |
 | cglib BeanCopier | 20ms       |
 | BeanUtils        | 1387ms     |
 | ModelMapper      | 4262ms     |
 
+_注意：这个数据并不包含生成字节码的时间_
+
 # 使用
 
-## 简单使用
-
+### Source Bean
 ```java
-import io.github.tanyaofei.beancopier.BeanCopier;
-import lombok.Data;
-import lombok.experimental.Accessors;
-
-@Data
-@Accessors(chain = true)
-public class A {
-   private String a;
-   private Integer b;
-   private Long c;
-   private String d;
-}
-
-@Data
-@Accessors(chain = true)
-public class B {
-   private String a;
-   private Integer b;
-   private Long c;
-   private String d;
-}
-
-public class Main {
-
-   public static void main(String[] args) {
-      A a = new A();
-      // ... set fields
-      B b = BeanCopier.copy(a, B.class);
-      assertEquals(a.getA(), b.getA());
-      assertEquals(a.getB(), b.getB());
-      assertEquals(a.getC(), b.getC());
-      assertEquals(a.getD(), b.getD());
-   }
-
+class Menu {
+  private Long id;
+  private String name;
+  private Menu parent;
+  private List<Menu> sub;
 }
 ```
 
-## 嵌套拷贝
+### Target Bean
 
 ```java
-import io.github.tanyaofei.beancopier.BeanCopier;
-import lombok.Data;
-import lombok.experimental.Accessors;
+import java.time.LocalDateTime;
 
+record MenuDTO(
+        Number id,                  // 类型兼容拷贝
+        String name,                // 同名同类型拷贝
+        MenuDTO parent,             // 嵌套拷贝
+        Collection<MenuDTO> sub,    // 集合嵌套拷贝
+        long createdAtTimestamp,    // 无同名字段, 不拷贝; 原始类型为零值
+        LocalDateTime lastModified  // 无同名字段，不拷贝; 对象类型为 null
+) {
 
-@Data
-@Accessors(chain = true)
-public class Node {
-   private Node child;
-   private List<Node> children;
-   private String string;
 }
 
-@Data
-@Accessors(chain = true)
-public class Node2 {
-   private Node2 child;
-   private List<Node2> children;
-   private String string;
-}
-
-public class Main {
-
-   public static void main(String[] args) {
-      Node n1 = new Node();
-      // ... set fields
-      Node2 n2 = BeanCopier.copy(n1, Node2.class);
-      assertEquals(n1.getChild().getString(), n2.getChild().getString());
-      for (int i = 0; i < n1.getChildren().size(); i++) {
-         assertEquals(n1.getChildren().get(i).getString(), n2.getChildren().get(i).getString());
-      }
-   }
-
+```
+接下来我们使用 `BeanCopier` 进行拷贝
+```java
+public class Test {
+  public static void main(String[] args) {
+    MenuDTO menuDTO = BeanCopier.copy(menu, MenuDTO.class);
+    assertEquals(menu.getId(), menuDTO.id());
+    assertEquals(menu.getName(), menuDTO.name());
+    assertNotNull(menuDTO.parent());
+    assertNoNull(menuDTO.sub());
+    
+    assertEquals(menuDTO.layer(), 0);
+  }
 }
 ```
 
-## 向上转型拷贝
-
-在这个例子中
-
-+ `Integer` -> `Number`
-+ `ArrayList<String>` -> `List<String>`
-+ `List<Integer>` -> `List<? extends Number>`
-
-```java
-import io.github.tanyaofei.beancopier.BeanCopier;
-import lombok.Data;
-import lombok.experimental.Accessors;
-
-import java.util.ArrayList;
-
-@Data
-@Accessors(chain = true)
-public class A {
-   private Integer a;
-   private ArrayList<String> b;
-   private List<Integer> c;
-}
-
-@Data
-@Accessors(chain = true)
-public class B {
-   private Number a;
-   private List<String> b;
-   private List<? extends Number> c;
-}
-
-public class Main {
-   public static void main(String[] args) {
-      A a = new A();
-      // ... set fields
-      B b = BeanCopier.copy(a, B.class);
-      assertEquals(a.getA(), b.getA());
-      assertEquals(a.getB(), b.getB());
-      assertEquals(a.getC(), b.getC());
-   }
-}
-```
-
-## 继承字段拷贝
-
-```java
-import io.github.tanyaofei.beancopier.BeanCopier;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
-
-
-@Data
-@Accessors(chain = true)
-public class Parent {
-   private String a;
-}
-
-@Data
-@Accessors(chain = true)
-@EqualsAndHashCode(callSuper = true)
-public class Child extends Parent {
-   private String b;
-}
-
-@Data
-@Accessors(chain = true)
-@EqualsAndHashCode(callSuper = true)
-public class Child2 extends Parent {
-   private String b;
-}
-
-public class Main {
-   public static void main(String[] args) {
-      Child child = new Child();
-      // ... set fields
-      Child2 child2 = BeanCopier.copy(child, Child2.class);
-      assertEquals(child.getA(), child2.getA());
-      assertEquals(child.getB(), child2.getB());
-   }
-}
-```
-
-## 字段别名
-
-使用 `@Property(value = "xxx")` 为字段指定别名
-<p><b>当使用别名时，在拷贝时不再拷贝同字段名称的同类型字段，而是拷贝字段名称为别名的同类型字段</b></p>
-
-```java
-import io.github.tanyaofei.beancopier.annotation.Property;
-import lombok.experimental.Accessors;
-import lombok.Data;
-
-public class Source {
-  private String value;
-}
-
-public class Target {
-  @Property("value")   // 从 Source 拷贝时使用 value 字段
-  private String val;
-}
-```
-
-## 跳过/不拷贝字段
-
-使用 `@Property(skip = true)` 表示该字段不需要拷贝
-
-```java
-import io.github.tanyaofei.beancopier.annotation.Property;
-import lombok.experimental.Accessors;
-import lombok.Data;
-
-@Data
-@Accessors(chain = true)
-public class Source {
-  private String value1;
-  private String value2;
-}
-
-@Data
-@Accessors(chain = true)
-public class Target {
-  private String value1;
-  @Property(skip = true) // 拷贝时跳过此字段, 因此为 null
-  private String value2;
-}
-```
 
 # 可选配置项
 
 通过以下方法可以创建一个自定义配置的 `BeanCopierImpl` 实例
 
 ```java
-import io.github.tanyaofei.beancopier.BeanCopierImpl;
-import io.github.tanyaofei.beancopier.NamingPolicy;
+import io.github.tanyaofei.io.github.tanyaofei.beancopier.BeanCopierImpl;
+import io.github.tanyaofei.io.github.tanyaofei.beancopier.NamingPolicy;
 
 public class Test {
   public static void main(String[] args) {
@@ -317,7 +157,7 @@ graph
 当 `BeanCopierImpl` 实例被释放时，使用该实例生成的转换器对象，转换器类都会被 GC 掉。
 
 ```java
-import io.github.tanyaofei.beancopier.BeanCopierImpl;
+import io.github.tanyaofei.io.github.tanyaofei.beancopier.BeanCopierImpl;
 
 public class Main {
   public static void main(String[] args) {
@@ -334,34 +174,18 @@ public class Main {
 
 # 版本记录
 
++ 0.2.0
+  + 从这个版本开始要求最低版本为 JDK17
+  + 添加对 JDK16 record 的支持
+  + 添加 `module-info.java` 以支持 JDK9+ 的模块化
+  + <b>BreakingChanges: </b> 
+    + `@Property("aliasName")` 不会在拷贝来源和拷贝目标时同一个类时生效（这将会被认定是克隆对象）
+    + 回调动作不再使用 `Callback` 而是使用 JDK 提供的 `BiConsumer`
+
 + 0.1.5
   + 新增 `new BeanCopierImpl(builder -> builder.preferNested)` 等更多配置
   + **修复生成转换器时生成类名可能出现死循环的问题**
   + 更多预检测
-
-+ 0.1.4
-  + 支持通过 `new BeanCopierImpl(new MyClassLoader())` 创建指定类加载器的 `BeanCopierImpl`
-  + `BeanCopier` 的类加载器由原来的 `ConverterClassLoader` 修改为自动选取
-  + 修复集合嵌套拷贝元素包含 `null` 时会抛出异常的问题
-  + 优化拷贝效率并减少内存占用
-  + `asm` 依赖库升级到 `9.4`
-
-+ 0.1.3
-    + 大幅度优化批量拷贝的速度 `BeanCopier.cloneList()` 和 `BeanCopier.copyList()`, 拷贝一百万个对象由 `200ms+`
-      缩减到 `20ms+`
-    + 修复 `BeanCopier.cloneList` 第一个元素为 null 时会出现 `NullPointerException` 的 bug
-
-+ 0.1.2
-    + 除了提供 `BeanCopier` 的静态方法以外，现在可 `new BeanCopierImpl()` 来创建拷贝对象，适用于有类卸载需求的场景
-    + 更多测试用例
-
-+ 0.1.1
-    + 修正一些 bug
-    + 完全的泛型兼容, `List<Integer>` 现在可以拷贝到 `List<? extends Number>`, `IntegerBox extends Box<Integer>`
-      现在可以拷贝到 `Box<Integer>`
-
-+ 0.1.0
-    + 新增 `@Property` 注解支持字段别名和跳过字段选项
 
 [点击这里查看更多](./CHANGELOG.md)
 
@@ -385,46 +209,66 @@ get/set 拷贝
 ## 一些生成出来的 class 文件反编译后的源码
 
 ```java
-public class StandardSourToStandardDestConverter$$GeneratedByBeanCopier$$ba69502d implements Converter<NormalTest.StandardSour, NormalTest.StandardDest> {
-   public NormalTest.StandardDest convert(NormalTest.StandardSour var1) {
-      NormalTest.StandardDest var2 = new NormalTest.StandardDest();
-      var2.setA(var1.getA());
-      var2.setB(var1.getB());
-      var2.setC(var1.getC());
-      var2.setD(var1.getD());
-      var2.setE(var1.getE());
-      var2.setF(var1.getF());
-      var2.setG(var1.getG());
-      var2.setH(var1.getH());
-      var2.setI(var1.getI());
-      var2.setJ(var1.getJ());
-      var2.setK(var1.getK());
-      var2.setL(var1.getL());
-      return var2;
-   }
+package io.github.tanyaofei.beancopier.converter;
+
+import io.github.tanyaofei.beancopier.converter.Converter;
+import io.github.tanyaofei.beancopier.test.simple.SimplePOJO;
+import java.time.LocalDateTime;
+
+// $FF: synthetic class
+public class SimpleObjectToSimpleObjectConverter$$GeneratedByBeanCopier$$5de41a00 implements Converter<SimpleObject, SimpleObject> {
+  public SimpleObject convert(SimpleObject var1) {
+    if (var1 == null) {
+      return null;
+    } else {
+      Boolean var2 = var1.getBooleanVal();
+      Byte var3 = var1.getByteVal();
+      Short var4 = var1.getShortVal();
+      Integer var5 = var1.getIntVal();
+      Long var6 = var1.getLongVal();
+      Float var7 = var1.getFloatVal();
+      Double var8 = var1.getDoubleVal();
+      Character var9 = var1.getCharVal();
+      String var10 = var1.getStringVal();
+      LocalDateTime var11 = var1.getLocalDateTimeVal();
+      SimpleObject var12 = new SimpleObject();
+      var12.setBooleanVal(var2);
+      var12.setByteVal(var3);
+      var12.setShortVal(var4);
+      var12.setIntVal(var5);
+      var12.setLongVal(var6);
+      var12.setFloatVal(var7);
+      var12.setDoubleVal(var8);
+      var12.setCharVal(var9);
+      var12.setStringVal(var10);
+      var12.setLocalDateTimeVal(var11);
+      return var12;
+    }
+  }
 }
 ```
 
 ```java
+package io.github.tanyaofei.beancopier.converter;
+
+import io.github.tanyaofei.beancopier.converter.Converter;
+import io.github.tanyaofei.beancopier.test.nested.NestedRecord;
 import java.util.List;
 
-public class NestedSourToNestedDestConverter$$GeneratedByBeanCopier$$41d66bc9 implements Converter<NormalTest.NestedSour, NormalTest.NestedDest> {
-  public NormalTest.NestedDest convert(NormalTest.NestedSour var1) {
-    NormalTest.NestedDest var2 = new NormalTest.NestedDest();
-    if (var1.getA() != null) {
-      var2.setA(this.convert(var1.getA()));
+// $FF: synthetic class
+public class NestedRecordToNestedRecordConverter$$GeneratedByBeanCopier$$6888e1c0 implements Converter<NestedRecord, NestedRecord> {
+  public NestedRecord convert(NestedRecord var1) {
+    if (var1 == null) {
+      return null;
+    } else {
+      int var2 = var1.seniority();
+      NestedRecord var3 = var1.child();
+      List var4 = var1.children();
+      NestedRecord var5 = new NestedRecord(var2, var3, var4);
+      return var5;
     }
-
-    if (var1.getB() != null) {
-      var2.setB((List)var1.getB().stream().map((var1x) -> {
-        return var1x == null ? null : this.convert(var1x);
-      }).collect(Collectors.toList()));
-    }
-
-    var2.setC(var1.getC());
-    var2.setD(var1.getD());
-    return var2;
   }
 }
+
 ```
 
