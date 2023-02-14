@@ -12,9 +12,12 @@ import org.objectweb.asm.Opcodes;
 import java.util.Set;
 
 /**
+ * This instancer will instantiate the target using no-args-constructor,
+ * and then use setters to assign values for all fields that need to be copied.
+ *
  * @author tanyaofei
  */
-public class NoArgsTargetInstancer implements TargetInstancer {
+public class NoArgsConstructorInstancer implements TargetInstancer {
 
   private final MethodVisitor v;
   private final ConverterDefinition definition;
@@ -23,7 +26,7 @@ public class NoArgsTargetInstancer implements TargetInstancer {
   private final int firstLocalStore;
   private final Set<BeanMember> skippedMembers;
 
-  public NoArgsTargetInstancer(
+  public NoArgsConstructorInstancer(
       MethodVisitor v,
       ConverterDefinition definition,
       int targetStore,
@@ -40,7 +43,7 @@ public class NoArgsTargetInstancer implements TargetInstancer {
   }
 
   @Override
-  public void newInstance() {
+  public void instantiate() {
     ConstructorInvoker.fromNoArgsConstructor(definition.getTargetType()).invoke(v);
     v.visitVarInsn(Opcodes.ASTORE, targetStore);
     int store = firstLocalStore;
@@ -57,6 +60,8 @@ public class NoArgsTargetInstancer implements TargetInstancer {
   private int setValue(BeanMember member, int localStore) {
     var os = LocalOpcode.ofType(member.getType());
     if (definition.getConfiguration().isSkipNull() && !member.getType().isPrimitive()) {
+      // If skipNull is configured as true, a null check will be performed before calling the setter.
+      // The setter method will only be called if the value is not null.
       new IfNonNull(
           v,
           () -> {

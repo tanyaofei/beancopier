@@ -8,9 +8,12 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
+ * This instancer will instantiate the target using the all-args-constructor,
+ * and the fields to be copied will be assigned values during the construction process.
+ *
  * @author tanyaofei
  */
-public class AllArgsTargetInstancer implements TargetInstancer {
+public class AllArgsConstructorInstancer implements TargetInstancer {
 
   private final MethodVisitor v;
   private final ConverterDefinition definition;
@@ -18,7 +21,7 @@ public class AllArgsTargetInstancer implements TargetInstancer {
   private final Iterable<BeanMember> targetMembers;
   private final int firstLocalStore;
 
-  public AllArgsTargetInstancer(MethodVisitor v, ConverterDefinition definition, int targetStore, Iterable<BeanMember> targetMembers, int firstLocalStore) {
+  public AllArgsConstructorInstancer(MethodVisitor v, ConverterDefinition definition, int targetStore, Iterable<BeanMember> targetMembers, int firstLocalStore) {
     this.v = v;
     this.definition = definition;
     this.targetStore = targetStore;
@@ -28,7 +31,7 @@ public class AllArgsTargetInstancer implements TargetInstancer {
 
 
   @Override
-  public void newInstance() {
+  public void instantiate() {
     ExecutableInvoker.invoker(definition.getTargetType().getConstructors()[0]).invoke(
         v,
         () -> {

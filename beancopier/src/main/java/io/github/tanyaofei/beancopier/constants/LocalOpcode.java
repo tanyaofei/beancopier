@@ -45,6 +45,12 @@ public enum LocalOpcode {
   public final int zeroOpcode;
   public final int slots;
 
+  /**
+   * Return a LocalOpcode value of the specified type
+   *
+   * @param type any type
+   * @return a LocalOpcode value, should not be null
+   */
   public static LocalOpcode ofType(Class<?> type) {
     if (map == null) {
       synchronized (LocalOpcode.class) {
@@ -59,9 +65,16 @@ public enum LocalOpcode {
       return opcode;
     }
 
-    return type.isArray() ? REFERENCE_ARRAY : REFERENCE;
+    return type.isArray()
+           ? REFERENCE_ARRAY
+           : REFERENCE;
   }
 
+  /**
+   * Const a zero value in method
+   *
+   * @param v Method writer
+   */
   public void constZero(MethodVisitor v) {
     v.visitInsn(this.zeroOpcode);
   }

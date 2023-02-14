@@ -7,20 +7,20 @@ import lombok.experimental.Accessors;
 import java.util.Map;
 
 /**
- * 局部变量定义上下文
+ * The context of locals definition
  */
 @Data
 @Accessors(chain = true)
 public class LocalsDefinitionContext {
 
   /**
-   * 拷贝来源属性
+   * The bean members map of source
    */
   private Map<String, BeanMember> sourceMembers;
 
   /**
-   * 下一个局部变量存放到局部变量表中的位置
-   * <p>因为 dstore, lstore 需要占用两个局部变量槽, 因此需要定义器去定义下一个的位置</p>
+   * The index where the next local variable will be stored.
+   * This field is maintained because some variables occupy two slots such as long, double.
    */
   int nextStore;
 

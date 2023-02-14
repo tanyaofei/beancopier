@@ -8,48 +8,48 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 /**
- * 方法调用字节码编写工具
+ * A tool for generating bytecode to call a method
  *
  * @author tanyaofei
+ * @see Method
  * @since 0.2.0
  */
 public class MethodInvoker implements ExecutableInvoker {
 
   /**
-   * 方法名称
+   * The name of method
    */
   private final String name;
 
   /**
-   * 定义该方法的类的内部名
+   * Thw owner class name of method
    */
   private final String owner;
 
   /**
-   * 方法描述符
+   * The method descriptor
    */
   private final String descriptor;
 
   /**
-   * 方法调用字节码指令
+   * The opcode to invoke this method
+   * {@link Opcodes#INVOKESPECIAL}
+   * {@link Opcodes#INVOKEVIRTUAL}
+   * {@link Opcodes#INVOKESTATIC}
+   * {@link Opcodes#INVOKEINTERFACE}
    */
   private final int opcode;
 
   /**
-   * 定义该方法的类是否时一个接口
+   * Whether the declaring class is an interface
    */
   private final boolean isInterface;
 
   /**
-   * 该方法是否具有返回值
+   * Whether the method have return value
    */
   private final boolean hasReturnValue;
 
-  /**
-   * 创建一个方法调用字节码编写工具
-   *
-   * @param method 方法
-   */
   public MethodInvoker(Method method) {
     this.name = method.getName();
     this.owner = Type.getInternalName(method.getDeclaringClass());

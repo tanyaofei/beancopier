@@ -4,7 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * BeanCopier 转换器 ClassLoader 接口
+ * Converter ClassLoader.
+ * Using the implementations class of this interface can be faster to define class.
  *
  * @author tanyaofei
  * @since 0.1.4

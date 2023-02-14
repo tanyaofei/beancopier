@@ -11,9 +11,13 @@ import org.objectweb.asm.MethodVisitor;
 import java.lang.reflect.Type;
 
 /**
- * 类型兼容变量定义器
+ * A definer for defining a local variable which is compatible.
+ * If `fullTypeMatching` is true, it will strictly compare whether two types are equals,
+ * otherwise it will compare whether they are compatible.
+ * If the judgment indicates that the field can be copied,
+ * then the value of field will be retrieved from `Source` and stored in local variable table.
+ *
  * @author tanyaofei
- * @since 0.2.0
  */
 public class CompatibleLocalDefiner extends LocalDefiner {
 
@@ -46,12 +50,22 @@ public class CompatibleLocalDefiner extends LocalDefiner {
     return true;
   }
 
-  protected boolean isFullTypeMatched(Type fromType, Type toType) {
-    return fromType.equals(toType);
+  /**
+   * @param type1 type 1
+   * @param type2 type 2
+   * @return true if two types are equals
+   */
+  protected boolean isFullTypeMatched(Type type1, Type type2) {
+    return type1.equals(type2);
   }
 
-  protected boolean isTypeCompatible(Type fromType, Type toType) {
-    return TypeToken.of(fromType).isSubtypeOf(toType);
+  /**
+   * @param sourceType type of field from source
+   * @param targetType type of field from target
+   * @return true if `targetType` is a subtype of source type
+   */
+  protected boolean isTypeCompatible(Type sourceType, Type targetType) {
+    return TypeToken.of(sourceType).isSubtypeOf(targetType);
   }
 
 }

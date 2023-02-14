@@ -8,7 +8,7 @@ import org.objectweb.asm.MethodVisitor;
 public class SkippedLocalDefiner extends ZeroValueLocalDefiner {
 
   /**
-   * 如果该字段设置为 skip=true, 则定义一个零值
+   * If the field is set to skip=true, define a zero value.
    * {@inheritDoc}
    */
   @Override

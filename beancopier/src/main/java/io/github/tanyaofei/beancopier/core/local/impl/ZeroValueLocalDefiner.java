@@ -8,7 +8,7 @@ import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import org.objectweb.asm.MethodVisitor;
 
 /**
- * 零值局部变量定义器
+ * A definer for defining a zero value for specified type
  *
  * @author tanyaofei
  * @since 0.2.0
@@ -16,8 +16,7 @@ import org.objectweb.asm.MethodVisitor;
 public class ZeroValueLocalDefiner extends LocalDefiner {
 
   /**
-   * 定义一个零值
-   * {@inheritDoc}
+   * Define a zero value.
    */
   @Override
   protected boolean defineInternal(

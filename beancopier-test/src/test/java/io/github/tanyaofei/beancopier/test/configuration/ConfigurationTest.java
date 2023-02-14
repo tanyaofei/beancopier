@@ -49,7 +49,7 @@ public class ConfigurationTest extends BeanCopierTest {
   public void testNamingPolicy() {
     var beancopier = new BeanCopierImpl(config -> config.namingPolicy(new NamingPolicy() {
       @Override
-      public @NotNull String getClassName(@NotNull Class<?> sourceClass, @NotNull Class<?> targetClass, @NotNull Predicate<String> predicate) {
+      public @NotNull String getClassName(@NotNull Class<?> sourceType, @NotNull Class<?> targetType, @NotNull Predicate<String> predicate) {
         return "MyNamingPolicy";
       }
     }));

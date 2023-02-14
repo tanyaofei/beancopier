@@ -2,8 +2,8 @@ package io.github.tanyaofei.beancopier.core;
 
 import io.github.tanyaofei.beancopier.constants.*;
 import io.github.tanyaofei.beancopier.converter.Converter;
-import io.github.tanyaofei.beancopier.core.instancer.AllArgsTargetInstancer;
-import io.github.tanyaofei.beancopier.core.instancer.NoArgsTargetInstancer;
+import io.github.tanyaofei.beancopier.core.instancer.AllArgsConstructorInstancer;
+import io.github.tanyaofei.beancopier.core.instancer.NoArgsConstructorInstancer;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiners;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
@@ -168,15 +168,15 @@ public class ConverterCodeWriter implements Opcodes, Methods {
     }
 
     int targetStore = context.getNextStore();
-    var instancer = switch (definition.getNewInstanceMode()) {
-      case ALL_ARGS_CONSTRUCTOR -> new AllArgsTargetInstancer(
+    var instancer = switch (definition.getInstantiateMode()) {
+      case ALL_ARGS_CONSTRUCTOR -> new AllArgsConstructorInstancer(
           v,
           definition,
           targetStore,
           targetMembers,
           firstLocalStore
       );
-      case NO_ARGS_CONSTRUCTOR_THEN_GET_SET -> new NoArgsTargetInstancer(
+      case NO_ARGS_CONSTRUCTOR_THEN_GET_SET -> new NoArgsConstructorInstancer(
           v,
           definition,
           targetStore,
@@ -188,7 +188,7 @@ public class ConverterCodeWriter implements Opcodes, Methods {
           firstLocalStore
       );
     };
-    instancer.newInstance();
+    instancer.instantiate();
 
     v.visitVarInsn(ALOAD, targetStore);
     v.visitInsn(ARETURN);

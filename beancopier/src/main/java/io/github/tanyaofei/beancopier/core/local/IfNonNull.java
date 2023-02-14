@@ -5,39 +5,54 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
+ * A tool for generating bytecode for the "if null" condition
+ *
  * @author tanyaofei
  */
 public class IfNonNull {
 
   /**
-   * 方法编写器
+   * Method writer
    */
   private final MethodVisitor v;
 
 
+  /**
+   * The label of IFNUll
+   */
   private final Label ifNull = new Label();
 
   /**
-   * 定义一个变量的方法
+   * A runnable for generating bytecode to get a value that used to check if it is null or not
    */
-  private final Runnable localDefiner;
+  private final Runnable who;
 
   /**
-   * 如果 {@link #localDefiner} 不为 null 时的操作
+   * A runnable for generating bytecode for the case when the value({@link #who}) is not null
    */
   private final Runnable onNonNull;
 
 
-  public IfNonNull(MethodVisitor v, Runnable localDefiner, Runnable onNonNull) {
+  /**
+   * Return an instance
+   *
+   * @param v         Method writer
+   * @param who       A runnable for generating bytecode to get a value that used to check if it is null or not
+   * @param onNonNull A runnable for generating bytecode for the case when the value({@link #who}) is not null
+   */
+  public IfNonNull(MethodVisitor v, Runnable who, Runnable onNonNull) {
     this.v = v;
-    this.localDefiner = localDefiner;
+    this.who = who;
     this.onNonNull = onNonNull;
   }
 
+  /**
+   * Generating bytecode for the "if null" condition
+   */
   public void write() {
-    localDefiner.run();
+    who.run();
     v.visitJumpInsn(Opcodes.IFNULL, ifNull);
-    localDefiner.run();
+    who.run();
     onNonNull.run();
     v.visitLabel(ifNull);
   }

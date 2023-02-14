@@ -16,10 +16,23 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 
 /**
- * 集合嵌套变量定义器
+ * A definer for define a nested field variable.
+ * <pre>{@code
+ *  public record Source(List<Source> nested) {}
+ *  public record Target(List<Target> nested) {}
+ * }</pre>
+ * In this case, the field named "nested" is a Collection Nested Field,
+ * which means that a recursive bytecode will be generated to complete the local variable definition.
+ *
+ * <pre>{@code
+ *  List<Target> nested = source.nested() == null
+ *    ? null
+ *    : source.nested().map(this::convert).collect(Collector.toList());
+ * }
+ * </pre>
  *
  * @author tanyaofei
- * @since 0.2.0
+ * @see NestedLocalDefiner
  */
 public class CollectionNestedLocalDefiner extends LocalDefiner {
 

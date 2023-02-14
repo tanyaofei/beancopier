@@ -8,8 +8,7 @@ import org.objectweb.asm.MethodVisitor;
 public class NoNameMatchLocalDefiner extends ZeroValueLocalDefiner {
 
   /**
-   * 如果 source 不存在需要名称的字段，则定义一个零值
-   * {@inheritDoc}
+   * If the source does not have a field with the given name, define a zero value.
    */
   @Override
   public boolean defineInternal(

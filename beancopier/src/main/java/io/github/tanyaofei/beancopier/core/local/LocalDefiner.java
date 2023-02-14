@@ -6,32 +6,31 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
- * 局部变量定义器
+ * A tool for generating bytecode to define a local variable
  */
 public abstract class LocalDefiner implements Opcodes {
 
   /**
-   * 下游委托定义器
+   * Fallback definer. If the definer cannot handle the variable definition,
+   * it will be passed to the fallback definer for definition.
    */
   protected LocalDefiner fallback;
 
   /**
-   * 将局部变量表中的 source 对象加载到栈帧中
+   * Pushing the source object from the local variable to stack
    *
-   * @param v 方法编写器
-   * @since 0.2.0
+   * @param v Method writer
    */
   protected static void loadSource(MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 1);
   }
 
   /**
-   * 将栈帧中第一个值到局部变量表
+   * Storing a variable from the stack to the local variable table
    *
-   * @param v       方法编写器
-   * @param type    值类型
-   * @param context 变量定义上下文
-   * @since 0.2.0
+   * @param v       Method writer
+   * @param type    The type of this variable
+   * @param context The context of the definition
    */
   protected static void storeLocal(MethodVisitor v, Class<?> type, LocalsDefinitionContext context) {
     var store = context.getNextStore();
@@ -41,10 +40,10 @@ public abstract class LocalDefiner implements Opcodes {
   }
 
   /**
-   * 将栈帧中第一个值到局部变量表
+   * Storing a variable from the stack to the local variable table
    *
-   * @param v          方法编写器
-   * @param definition 局部变量定义
+   * @param v          Method writer
+   * @param definition The definition of local variable
    * @since 0.2.0
    */
   protected static void storeLocal(MethodVisitor v, LocalDefinition definition, LocalsDefinitionContext context) {
@@ -55,35 +54,35 @@ public abstract class LocalDefiner implements Opcodes {
   }
 
   /**
-   * 将局部变量表中指定下标的值加载到栈帧
+   * Pushing a variable at specified index from the local variable table to the stack
    *
    * @param v     方法编写器
    * @param type  值类型
    * @param store 该值位于局部变量表中的下标
-   * @since 0.2.0
    */
-  protected static void loadStack(MethodVisitor v, Class type, int store) {
+  protected static void loadStack(MethodVisitor v, Class<?> type, int store) {
     v.visitVarInsn(LocalOpcode.ofType(type).loadOpcode, store);
   }
 
   /**
-   * 将局部变量表中的 this 对象加载到栈帧
+   * Pushing the reference to <b>{@code this}</b>  from the local variable to the stack
    *
-   * @param v 方法编写器
-   * @since 0.2.0
+   * @param v Method writer
    */
   protected static void loadThis(MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 0);
   }
 
   /**
-   * 定义局部变量
+   * Defining a variable as expected.
+   * The implementer should define a variable as expected in this method.
+   * If the implementer can not handle, return {@code false} otherwise it should return {@code true}.
    *
-   * @param v                   方法编写器
-   * @param converterDefinition 转换器定义
-   * @param localDefinition     局部变量定义
-   * @param context             定义上下文
-   * @return 是否成功定义, true 表示该变量的定义已经结束, false 表示当前实现类无法对该变量定义并交给 {@link #fallback} 去定义
+   * @param v                   Method writer
+   * @param converterDefinition The definition of converter
+   * @param localDefinition     The definition of the local variable expected
+   * @param context             The definition context of all the local variables needed
+   * @return true if the local defined as expected, otherwise false.
    * @since 0.2.0
    */
   protected abstract boolean defineInternal(
@@ -94,11 +93,10 @@ public abstract class LocalDefiner implements Opcodes {
   );
 
   /**
-   * 定义当前定义器无法定义式委托的定义器
+   * Set the fallback definer to delegate to when current cannot handle it.
    *
-   * @param definer 委托定义器
-   * @return 委托定义器
-   * @since 0.2.0
+   * @param definer fallback definer
+   * @return fallback definer, for chain set
    */
   public LocalDefiner fallbackTo(LocalDefiner definer) {
     this.fallback = definer;
@@ -106,13 +104,13 @@ public abstract class LocalDefiner implements Opcodes {
   }
 
   /**
-   * 定义局部变量
+   * Defining a local variable
    *
-   * @param v                   方法编写器
-   * @param converterDefinition 转换器定义
-   * @param localDefinition     局部变量定义
-   * @param context             定义上下文
-   * @throws IllegalStateException 如果所有委托定义器都无法将其定义
+   * @param v                   Method Writer
+   * @param converterDefinition The definition of converter
+   * @param localDefinition     The definition of the local variable expected
+   * @param context             The definition context of all the local variables needed
+   * @throws IllegalStateException if none of definers can handle in it's chain
    * @since 0.2.0
    */
   public final void define(
@@ -132,9 +130,7 @@ public abstract class LocalDefiner implements Opcodes {
   }
 
   /**
-   * 根定义器, 不进行任何操作, 将委托给下游定义器
-   *
-   * @since 0.2.0
+   * Root definer, can not handle any definition
    */
   static class RootLocalDefiner extends LocalDefiner {
 

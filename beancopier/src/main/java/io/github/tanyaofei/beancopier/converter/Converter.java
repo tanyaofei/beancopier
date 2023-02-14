@@ -1,21 +1,28 @@
 package io.github.tanyaofei.beancopier.converter;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
- * 对象拷贝器
- * <p>该类的实现类使用 ASM 技术动态生成</p>
+ * A converter the used to copy properties of source to target.
+ * The implementations class will be dynamically generated at runtime by {@link io.github.tanyaofei.beancopier.core.ConverterFactory} using ASM technology.
  *
- * @since 0.0.1
+ * @param <S> The type of source
+ * @param <T> The type of target
  * @author tanyaofei
+ * @since 0.0.1
  */
 public interface Converter<S, T> {
 
   /**
-   * 拷贝对象
-   * <p>该方法的具体实现由 asm 字节码生成, 内容为所有 target.setXX(source.getXX)</p>
+   * <ol>
+   *   <li>Return null if source is null</li>
+   *   <li>Return a target instance that has copied fields from source</li>
+   * </ol>
    *
-   * @param source 拷贝来源
-   * @return T
+   * @param source An object that used to copy
+   * @return T The type of target
    */
-  T convert(S source);
+  @Nullable
+  T convert(@Nullable S source);
 
 }

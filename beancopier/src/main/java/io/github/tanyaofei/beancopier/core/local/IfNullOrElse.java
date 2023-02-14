@@ -5,45 +5,66 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 /**
- * 用于编写 if null or else 的字节码工具
+ * A tool for generating bytecode for the "if null" or "else" condition
  */
 public class IfNullOrElse {
 
+  /**
+   * Method writer
+   */
   private final MethodVisitor v;
+
+  /**
+   * The label of IFNONNULL
+   */
   private final Label ifNonNull = new Label();
+
+  /**
+   * The label of GOTO
+   */
   private final Label elseGoto = new Label();
-  private final Runnable localDefiner;
+
+  /**
+   * A runnable for generating bytecode to get a value that used to check if it is null or not
+   */
+  private final Runnable who;
+
+  /**
+   * A runnable for generating bytecode for the case when the value({@link #who}) is null
+   */
   private final Runnable onNull;
+
+  /**
+   * A runnable for generating bytecode for the case when the value({@link #who}) is not null
+   */
   private final Runnable onNonnull;
 
   /**
-   * 创建一个 if null or else 字节码工具
+   * Return an instance
    *
-   * @param v            方法编写其
-   * @param localDefiner 定义一个变量的方法
-   * @param onNull       如果 {@link #localDefiner} 为 null 时的操作
-   * @param onNonnull    如果 {@link #localDefiner} 不为 null 时的操作
-   * @since 0.2.0
+   * @param v         Method writer
+   * @param who       A runnable for generating bytecode to get a value that used to check if it is null or not
+   * @param onNull    A runnable for generating bytecode for the case when the value({@link #who}) is null
+   * @param onNonnull A runnable for generating bytecode for the case when the value({@link #who}) is not null
    */
-  public IfNullOrElse(MethodVisitor v, Runnable localDefiner, Runnable onNull, Runnable onNonnull) {
+  public IfNullOrElse(MethodVisitor v, Runnable who, Runnable onNull, Runnable onNonnull) {
     this.v = v;
-    this.localDefiner = localDefiner;
+    this.who = who;
     this.onNull = onNull;
     this.onNonnull = onNonnull;
   }
 
   /**
-   * 编写字节码
-   * @since 0.2.0
+   * Generating bytecode for the "if null" or "else" condition
    */
   public void write() {
-    localDefiner.run();
+    who.run();
     v.visitJumpInsn(Opcodes.IFNONNULL, ifNonNull);
     onNull.run();
     v.visitJumpInsn(Opcodes.GOTO, elseGoto);
     v.visitLabel(ifNonNull);
 
-    localDefiner.run();
+    who.run();
     onNonnull.run();
     v.visitLabel(elseGoto);
   }

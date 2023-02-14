@@ -2,7 +2,7 @@ package io.github.tanyaofei.beancopier;
 
 
 /**
- * BeanCopier 全局配置
+ * Global configuration for <b>beancopier</b>
  *
  * @author tanyaofei
  * @since 0.0.8
@@ -10,14 +10,14 @@ package io.github.tanyaofei.beancopier;
 public abstract class BeanCopierConfiguration {
 
   /**
-   * 生成转换器时将 class 文件写入指定位置
+   * When generating the converter, write the class file to the specified location.
    *
    * @since 0.0.8
    */
   public static String CONVERTER_CLASS_DUMP_PATH = System.getProperty(PropertyNames.CONVERTER_CLASS_DUMP_PATH, "");
 
   /**
-   * BeanCopier 配置名称
+   * <b>beancopier</b> configuration names.
    *
    * @since 0.0.8
    */

@@ -4,7 +4,7 @@ import io.github.tanyaofei.beancopier.core.local.LocalDefiner.RootLocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.impl.*;
 
 /**
- * 组织好顺序的局部变量定义器实例获取工具
+ * A tool for obtaining an ordered list of {@link LocalDefiner} instances.
  */
 public abstract class LocalDefiners {
 
@@ -18,13 +18,12 @@ public abstract class LocalDefiners {
         .fallbackTo(new NestedLocalDefiner())
         .fallbackTo(new CollectionNestedLocalDefiner())
         .fallbackTo(new ZeroValueLocalDefiner())
-        .fallbackTo(new NoMoreFallbackLocalDefiner());
   }
 
   /**
-   * 获取已经组织好定义顺序的局部变量定义器
+   * Return an ordered list of local definer instances.
    *
-   * @return 局部变量定义器
+   * @return LocalDefiner instance
    */
   public static LocalDefiner getDefiner() {
     return theDefiner;

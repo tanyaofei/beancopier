@@ -1,6 +1,5 @@
 package io.github.tanyaofei.beancopier.core.local;
 
-import io.github.tanyaofei.beancopier.annotation.Property;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -8,7 +7,7 @@ import lombok.ToString;
 import java.lang.reflect.Type;
 
 /**
- * 局部变量定义
+ * Local variable definition
  *
  * @author tanyaofei
  * @since 0.2.0
@@ -19,23 +18,22 @@ import java.lang.reflect.Type;
 public class LocalDefinition {
 
   /**
-   * 字段名称
-   * <p>如果使用了 {@link Property#value()} 为该值</p>
+   * The name of the field to be copied.
    */
   private final String name;
 
   /**
-   * 字段类型
+   * The generic type of this local variable
    */
   private final Type genericType;
 
   /**
-   * 字段类
+   * The class of this local variable
    */
   private final Class<?> type;
 
   /**
-   * 是否跳过此字段
+   * Whether this local variable should be skipped
    */
   private final boolean skip;
 

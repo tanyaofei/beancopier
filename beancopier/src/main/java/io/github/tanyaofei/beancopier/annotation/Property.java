@@ -15,7 +15,6 @@ import java.lang.annotation.*;
 public @interface Property {
 
   /**
-   * 字段别名
    * <pre>
    *  public class Source {
    *      private String val;
@@ -32,17 +31,15 @@ public @interface Property {
    *  assert source.getVal().equals(target.getValue());
    * </pre>
    *
-   * <p>在拷贝目标字段上使用, 会在拷贝来源中查找同类型的指定名称字段</p>
-   * <p>这个配置对拷贝来源和拷贝目标是同一个类时不生效</p>
-   * @return 字段别名
+   * <p>it will not take effect when the class of source and the class of target is the same one</p>
+   *
+   * @return property alias
    * @since 0.1.0
    */
   String value() default "";
 
   /**
-   * 为 {@code true} 时不对此字段进行 set, 该字段将使用构造函数里指定默认值
-   *
-   * @return 是否跳过此字段;
+   * @return skip This field will not be initial by converter if true
    * @since 0.1.0
    */
   boolean skip() default false;

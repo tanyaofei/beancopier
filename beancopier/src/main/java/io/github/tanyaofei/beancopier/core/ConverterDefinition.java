@@ -1,7 +1,8 @@
 package io.github.tanyaofei.beancopier.core;
 
 import io.github.tanyaofei.beancopier.ConverterConfiguration;
-import io.github.tanyaofei.beancopier.constants.NewInstanceMode;
+import io.github.tanyaofei.beancopier.annotation.Property;
+import io.github.tanyaofei.beancopier.constants.InstantiateMode;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -12,53 +13,56 @@ import org.objectweb.asm.Type;
 public class ConverterDefinition {
 
   /**
-   * Converter 的内部名
+   * The internal of converter class
    */
   private final String internalName;
 
   /**
-   * 拷贝来源类
+   * The class of source
    */
   private final Class<?> sourceType;
 
   /**
-   * 拷贝目标类
+   * The class of target
    */
   private final Class<?> targetType;
 
   /**
-   * {@link Converter#convert(Object)} 实现类方法
+   * The method descriptor of {@link Converter#convert(Object)} implementer
    */
   private final String convertMethodDescriptor;
 
   /**
-   * 转换器配置
+   * The configuration of the converter that is about to be generated
    */
   private final ConverterConfiguration configuration;
 
   /**
-   * 是否是克隆
+   * Whether it is a clone copy. {@code true} if {@link #sourceType} is equals to {@link #targetType}
+   *
+   * @see Property#value()
    */
   private final boolean clone;
 
   /**
-   * 实例化对象的方式
+   * The instantiate mode of target
    */
-  private final NewInstanceMode newInstanceMode;
+  private final InstantiateMode instantiateMode;
 
   public ConverterDefinition(
       String internalName,
       Class<?> sourceType,
       Class<?> targetType,
       ConverterConfiguration configuration,
-      NewInstanceMode newInstanceMode) {
+      InstantiateMode instantiateMode
+  ) {
     this.internalName = internalName;
     this.sourceType = sourceType;
     this.targetType = targetType;
     this.configuration = configuration;
     this.convertMethodDescriptor = Type.getMethodDescriptor(Type.getType(targetType), Type.getType(sourceType));
     this.clone = sourceType.equals(targetType);
-    this.newInstanceMode = newInstanceMode;
+    this.instantiateMode = instantiateMode;
   }
 
 }

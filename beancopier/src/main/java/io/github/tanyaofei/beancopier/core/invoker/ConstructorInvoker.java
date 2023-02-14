@@ -7,38 +7,35 @@ import org.objectweb.asm.Type;
 import java.lang.reflect.Constructor;
 
 /**
- * 构造器调用字节码调用编写工具
+ * A tool for generating bytecode to call a constructor
  *
  * @author tanyaofei
+ * @see Constructor
  * @since 0.2.0
  */
 public class ConstructorInvoker implements ExecutableInvoker {
 
   /**
-   * 定义该构造器的类的内部名
+   * The internal name of the class that defining the constructor
    */
   private final String owner;
 
   /**
-   * 构造器描述符
+   * The method descriptor of the constructor
    */
   private final String descriptor;
 
-  /**
-   * @param constructor 构造器
-   * @since 0.2.0
-   */
   public ConstructorInvoker(Constructor<?> constructor) {
     this.owner = Type.getInternalName(constructor.getDeclaringClass());
     this.descriptor = Type.getConstructorDescriptor(constructor);
   }
 
   /**
-   * 创建一个无参构造器调用字节码编写工具
+   * Return an instance from the no-args-constructor of the specified class
    *
-   * @param type 类
-   * @return 构造器调用字节码编写工具
-   * @throws IllegalArgumentException 如果该类不存在无参构造函数
+   * @param type class
+   * @return An instance of ConstructorInvoker
+   * @throws IllegalArgumentException if the specified hasn't no-args-constructor
    */
   public static ConstructorInvoker fromNoArgsConstructor(Class<?> type) {
     Constructor<?> constructor;
@@ -56,21 +53,21 @@ public class ConstructorInvoker implements ExecutableInvoker {
   }
 
   /**
-   * 编写调用字节码
+   * Write the bytecode
    *
-   * @param v          方法编写器
-   * @param beforeInit 执行 init 方法前做的事情
+   * @param v          Method writer
+   * @param beforeInit Runnable function after between calling NEW and calling &lt;init&gt;
    */
   public void invoke(MethodVisitor v, Runnable beforeInit) {
     invoke(v, false, beforeInit);
   }
 
   /**
-   * 编写调用字节码
+   * Write the bytecode
    *
-   * @param v              方法编写器
-   * @param popReturnValue 是否将调用构造器后返回的变量从栈中弹出
-   * @param beforeInit     执行 init 方法前做的事情
+   * @param v              Method writer
+   * @param popReturnValue Whether pop the return value from stack if it has one
+   * @param beforeInit     Runnable function after between calling NEW and calling &lt;init&gt;
    */
   public void invoke(MethodVisitor v, boolean popReturnValue, Runnable beforeInit) {
     v.visitTypeInsn(Opcodes.NEW, owner);
