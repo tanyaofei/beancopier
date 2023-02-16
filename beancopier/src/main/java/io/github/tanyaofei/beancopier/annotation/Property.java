@@ -15,28 +15,42 @@ import java.lang.annotation.*;
 public @interface Property {
 
   /**
-   * <pre>
+   * <pre>{@code
    *  public class Source {
    *      private String val;
    *  }
    *
    *  public class Target {
-   *     {@literal @}Property(value = "val")
+   *      @Property(value = "val")
    *      private String value;
    *  }
-   *
-   *  Source source = new Source();
-   *  source.setVal("string");
-   *  Target target = BeanCopier.copy(source);
-   *  assert source.getVal().equals(target.getValue());
+   * }
    * </pre>
    *
-   * <p>it will not take effect when the class of source and the class of target is the same one</p>
+   * <p>It will <b>NOT</b> take effect when the class of source and the class of target is the same one</p>
    *
    * @return property alias
    * @since 0.1.0
    */
   String value() default "";
+
+  /**
+   * <pre>{@code
+   *  public class Source {
+   *    private String val;
+   *  }
+   *
+   *  public class Target {
+   *    @Property(alias = @Alias(value = "val", forType=Source.class))
+   *    private String val2;
+   *  }
+   * }</pre>
+   * <p>It will <b>NOT</b> take effect when the class of source and the class of target is the same one</p>
+   *
+   * @return property alias for specified source classes
+   * @since 0.2.0
+   */
+  Alias[] alias() default {};
 
   /**
    * @return skip This field will not be initial by converter if true

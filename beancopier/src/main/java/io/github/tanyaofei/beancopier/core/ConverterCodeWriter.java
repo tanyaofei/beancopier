@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier.core;
 
+import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.constants.*;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.core.instanter.AllArgsConstructorInstanter;
@@ -157,8 +158,7 @@ public class ConverterCodeWriter implements Opcodes, Methods {
           definition,
           LocalDefinition
               .builder()
-              // use filed name if it is cloning other while use value() of @Property and fallback to field name if it's empty
-              .name(definition.isClone() ? tm.getName() : property.value().isEmpty() ? tm.getName() : property.value())
+              .name(getLocalDefinitionName(property, tm.getName()))
               .type(tm.getType())
               .genericType(tm.getGenericType())
               .skip(property.skip())
@@ -194,6 +194,33 @@ public class ConverterCodeWriter implements Opcodes, Methods {
     v.visitInsn(ARETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
+  }
+
+  /**
+   * Return a local definition name
+   *
+   * @param property    The {@link Property} annotated on POJO field or Record component
+   * @param defaultName Default name when {@link Property} hasn't alias
+   * @return local definition name
+   */
+  private String getLocalDefinitionName(Property property, String defaultName) {
+    if (definition.isClone()) {
+      return defaultName;
+    }
+
+    for (var alias : property.alias()) {
+      for (var type : alias.forType()) {
+        if (definition.getSourceType() == type) {
+          return alias.value();
+        }
+      }
+    }
+
+    if (property.value().length() > 0) {
+      return property.value();
+    }
+
+    return defaultName;
   }
 
   /**
