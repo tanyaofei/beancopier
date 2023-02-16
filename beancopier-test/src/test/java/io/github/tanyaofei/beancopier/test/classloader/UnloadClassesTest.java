@@ -40,7 +40,7 @@ public class UnloadClassesTest {
 
   @SuppressWarnings("unchecked")
   private Map<String, ? super Converter<?, ?>> getCaches(BeanCopierImpl copier) throws NoSuchFieldException, IllegalAccessException {
-    Field cacheField = copier.getClass().getDeclaredField("caches");
+    Field cacheField = copier.getClass().getDeclaredField("cache");
     cacheField.setAccessible(true);
     return (Map<String, ? super Converter<?, ?>>) cacheField.get(copier);
   }
