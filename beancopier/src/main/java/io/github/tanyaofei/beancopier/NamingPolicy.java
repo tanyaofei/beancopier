@@ -17,7 +17,7 @@ public abstract class NamingPolicy {
   /**
    * The default package for converter classes are about to be generated at runtime
    */
-  private static final String DEFAULT_PACKAGE = Converter.class.getPackageName();
+  private static final String DEFAULT_PACKAGE = Converter.class.getPackage().getName();
 
   public static Default getDefault() {
     return Default.INSTANCE;

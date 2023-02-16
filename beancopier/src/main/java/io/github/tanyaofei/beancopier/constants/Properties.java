@@ -16,7 +16,7 @@ public interface Properties {
   Property defaultProperty = defaultProperty();
 
   @SneakyThrows
-  private static Property defaultProperty() {
+  static Property defaultProperty() {
     return PropertyProxy.class.getField("b").getAnnotation(Property.class);
   }
 

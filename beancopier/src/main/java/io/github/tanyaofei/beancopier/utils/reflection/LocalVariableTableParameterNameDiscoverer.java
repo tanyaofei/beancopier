@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier.utils.reflection;
 
+import lombok.var;
 import org.objectweb.asm.*;
 
 import java.io.IOException;

@@ -6,6 +6,7 @@ import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
+import lombok.var;
 import org.objectweb.asm.MethodVisitor;
 
 import java.lang.reflect.Type;

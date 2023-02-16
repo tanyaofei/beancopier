@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public class ConfigurationObject extends ConfigurationParent {
 
   private int intVal = 1;
 
-  private List<ConfigurationObject> nestedList = List.of();
+  private List<ConfigurationObject> nestedList = new ArrayList<>();
 
   private ConfigurationObject nested = null;
 

@@ -17,7 +17,7 @@ public abstract class LocalDefiners {
         .fallbackTo(new CompatibleLocalDefiner())
         .fallbackTo(new NestedLocalDefiner())
         .fallbackTo(new CollectionNestedLocalDefiner())
-        .fallbackTo(new ZeroValueLocalDefiner())
+        .fallbackTo(new ZeroValueLocalDefiner());
   }
 
   /**

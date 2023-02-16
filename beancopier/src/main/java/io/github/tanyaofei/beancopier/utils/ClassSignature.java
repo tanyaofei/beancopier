@@ -3,6 +3,7 @@ package io.github.tanyaofei.beancopier.utils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.var;
 import org.objectweb.asm.Type;
 
 /**

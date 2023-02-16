@@ -7,11 +7,9 @@ import io.github.tanyaofei.beancopier.constants.Methods;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
-import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import io.github.tanyaofei.beancopier.utils.StringUtils;
-import io.github.tanyaofei.beancopier.utils.breakout.HackerClassLoader;
-import io.github.tanyaofei.beancopier.utils.breakout.Injector;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
+import lombok.var;
 import org.jetbrains.annotations.Contract;
 import org.objectweb.asm.Opcodes;
 
@@ -21,7 +19,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -53,7 +50,6 @@ public class ConverterFactory implements Opcodes, Methods {
   // breakup module protection and initial "defineClass" field
   static {
     try {
-      breakupJDK9ModuleProtection();
       var field = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
       field.setAccessible(true);
       var truestedLookup = (MethodHandles.Lookup) field.get(MethodHandles.Lookup.class);
@@ -68,20 +64,6 @@ public class ConverterFactory implements Opcodes, Methods {
     }
   }
 
-  /**
-   * Break up JDK9+ module protection
-   */
-  @SuppressWarnings("all")
-  private static void breakupJDK9ModuleProtection() throws ClassNotFoundException {
-    var cl = new HackerClassLoader();
-    var proxy = Proxy.newProxyInstance(
-        cl,
-        new Class[]{Class.forName("jdk.internal.access.JavaLangAccess")},
-        (proxy0, method, args) -> null
-    );
-    var injectorClass = cl.define(BytecodeUtils.repackage(Injector.class, "com.sun.proxy.jdk.proxy3"));
-    Class.forName(injectorClass.getName(), true, cl);
-  }
 
   private final ConverterConfiguration configuration;
 
@@ -151,7 +133,8 @@ public class ConverterFactory implements Opcodes, Methods {
    */
   @SuppressWarnings("unchecked")
   private static <T> Class<T> defineClass(byte[] code, ClassLoader cl) {
-    if (cl instanceof ConverterClassLoader ccl) {
+    if (cl instanceof ConverterClassLoader) {
+      var ccl = (ConverterClassLoader) cl;
       return (Class<T>) ccl.defineClass(null, code);
     }
 

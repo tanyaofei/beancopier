@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier.core.local;
 
 import io.github.tanyaofei.beancopier.constants.LocalOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
+import lombok.var;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 

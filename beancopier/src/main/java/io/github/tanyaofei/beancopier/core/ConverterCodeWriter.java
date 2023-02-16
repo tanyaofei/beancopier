@@ -4,6 +4,7 @@ import io.github.tanyaofei.beancopier.constants.*;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.core.instancer.AllArgsConstructorInstancer;
 import io.github.tanyaofei.beancopier.core.instancer.NoArgsConstructorInstancer;
+import io.github.tanyaofei.beancopier.core.instancer.TargetInstancer;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiners;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
@@ -11,6 +12,7 @@ import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.ClassSignature;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
+import lombok.var;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -168,26 +170,33 @@ public class ConverterCodeWriter implements Opcodes, Methods {
     }
 
     int targetStore = context.getNextStore();
-    var instancer = switch (definition.getInstantiateMode()) {
-      case ALL_ARGS_CONSTRUCTOR -> new AllArgsConstructorInstancer(
-          v,
-          definition,
-          targetStore,
-          targetMembers,
-          firstLocalStore
-      );
-      case NO_ARGS_CONSTRUCTOR_THEN_GET_SET -> new NoArgsConstructorInstancer(
-          v,
-          definition,
-          targetStore,
-          targetMembers,
-          StreamSupport
-              .stream(targetMembers.spliterator(), true)
-              .filter(m -> (configuration.isPropertySupported() ? Properties.getOrDefault(m) : Properties.defaultProperty).skip())
-              .collect(Collectors.toSet()),
-          firstLocalStore
-      );
-    };
+    TargetInstancer instancer;
+    switch (definition.getInstantiateMode()) {
+      case ALL_ARGS_CONSTRUCTOR:
+        instancer = new AllArgsConstructorInstancer(
+            v,
+            definition,
+            targetStore,
+            targetMembers,
+            firstLocalStore
+        );
+        break;
+      case NO_ARGS_CONSTRUCTOR_THEN_GET_SET:
+        instancer = new NoArgsConstructorInstancer(
+            v,
+            definition,
+            targetStore,
+            targetMembers,
+            StreamSupport
+                .stream(targetMembers.spliterator(), true)
+                .filter(m -> (configuration.isPropertySupported() ? Properties.getOrDefault(m) : Properties.defaultProperty).skip())
+                .collect(Collectors.toSet()),
+            firstLocalStore
+        );
+        break;
+      default:
+        throw new UnsupportedOperationException();
+    }
     instancer.instantiate();
 
     v.visitVarInsn(ALOAD, targetStore);

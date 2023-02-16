@@ -4,6 +4,9 @@ import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.core.ConverterFactory;
 import io.github.tanyaofei.beancopier.core.DefaultClassLoader;
 import io.github.tanyaofei.beancopier.exception.CopyException;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.var;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -180,7 +183,8 @@ public final class BeanCopierImpl {
     int remains = objs.size();
     var ret = new ArrayList<T>(remains);
 
-    if (objs instanceof List<T> objList) {
+    if (objs instanceof List) {
+      var objList = (List<T>) objs;
       var itr = objList.listIterator();
       while (itr.hasNext()) {
         T t = itr.next();
@@ -307,19 +311,20 @@ public final class BeanCopierImpl {
    * @author tanyaofei
    * @since 0.1.4
    */
-  record CacheKey(Class<?> sc, Class<?> tc) {
+  @AllArgsConstructor
+  @EqualsAndHashCode
+  public static final class CacheKey {
+    private final Class<?> sc;
+    private final Class<?> tc;
 
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof CacheKey o)) {
-        return false;
-      }
+    public Class<?> sc() {
+      return sc;
+    }
 
-      return o.sc.equals(sc) && o.tc.equals(tc);
+    public Class<?> tc() {
+      return tc;
     }
 
   }
+
 }

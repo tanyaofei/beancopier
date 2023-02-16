@@ -6,6 +6,7 @@ import io.github.tanyaofei.beancopier.core.invoker.ConstructorInvoker;
 import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
 import io.github.tanyaofei.beancopier.core.local.IfNonNull;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
+import lombok.var;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 

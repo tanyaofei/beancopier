@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier.utils.reflection.member;
 
+import lombok.var;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;

@@ -11,7 +11,7 @@ import io.github.tanyaofei.beancopier.BeanCopier;
  * @see ConverterNewInstanceException
  * @since 0.0.1
  */
-public sealed class BeanCopierException extends RuntimeException permits ConverterGenerateException, ConverterNewInstanceException, CopyException {
+public class BeanCopierException extends RuntimeException {
 
   public BeanCopierException(Throwable cause) {
     super(cause);

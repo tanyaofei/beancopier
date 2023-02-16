@@ -3,11 +3,10 @@ package io.github.tanyaofei.beancopier.utils.reflection;
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import io.github.tanyaofei.beancopier.utils.reflection.member.ClassBeanMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.RecordBeanMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.RecordBeanWithSetterMember;
 import io.github.tanyaofei.guava.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.var;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -15,7 +14,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /**
  * 反射工具
@@ -59,10 +57,6 @@ public class Reflections {
    * @return 该类包括父类的所有 getter 集合迭代器
    */
   public static Iterable<BeanMember> getMembersWithGetter(Class<?> c, boolean includingSuper) {
-    if (c.isRecord()) {
-      return getRecordMembersWithGetter(c);
-    }
-
     var fields = c.getDeclaredFields();
     var properties = new ArrayList<BeanMember>(fields.length);
     for (var field : fields) {
@@ -92,29 +86,6 @@ public class Reflections {
     return properties;
   }
 
-  /**
-   * 获取 record 类的 getter
-   *
-   * @param c record 类
-   * @return record 类的 getter 可迭代对象
-   * @since 2.0.0
-   */
-  private static Iterable<BeanMember> getRecordMembersWithGetter(Class<?> c) {
-    if (!c.isRecord()) {
-      throw new IllegalArgumentException(c.getName() + " is not a record class");
-    }
-
-    var properties = new ArrayList<BeanMember>(c.getRecordComponents().length);
-    for (var rc : c.getRecordComponents()) {
-      try {
-        properties.add(new RecordBeanMember(rc, c.getMethod(rc.getName())));
-      } catch (NoSuchMethodException e) {
-        throw new IllegalStateException(c + " missing a getter for property: " + rc.getName());
-      }
-    }
-
-    return properties;
-  }
 
   /**
    * 获取一个对象包括父类所有的 setter
@@ -127,10 +98,6 @@ public class Reflections {
    * @return 该类包括父类的所有 setter 集合迭代器
    */
   public static Iterable<BeanMember> getMembersWithSetter(Class<?> c, boolean includingSuper) {
-    if (c.isRecord()) {
-      return getRecordMembersWithSetter(c);
-    }
-
     var fields = c.getDeclaredFields();
     var properties = new ArrayList<BeanMember>(fields.length);
     for (var f : fields) {
@@ -153,16 +120,6 @@ public class Reflections {
     }
 
     return properties;
-  }
-
-  private static Iterable<BeanMember> getRecordMembersWithSetter(Class<?> c) {
-    if (!c.isRecord()) {
-      throw new IllegalArgumentException(c.getName() + " is not a record class");
-    }
-    return Arrays
-        .stream(c.getRecordComponents())
-        .map(RecordBeanWithSetterMember::new)
-        .collect(Collectors.toList());
   }
 
   /**
@@ -213,9 +170,6 @@ public class Reflections {
    * @return 是否有一个 public 的无参构造函数
    */
   public static boolean hasPublicNoArgsConstructor(Class<?> c) {
-    if (c.isRecord()) {
-      return false;
-    }
     try {
       c.getConstructor();
       return true;
@@ -232,9 +186,6 @@ public class Reflections {
    * @return 是否包含一个与其所有字段相匹配（同名同顺序）的构造器
    */
   public static boolean hasMatchedPublicAllArgsConstructor(Class<?> c) {
-    if (c.isRecord()) {
-      return true;
-    }
     if (c.getSuperclass() != Object.class && c.getSuperclass() != null) {
       return false;
     }

@@ -6,7 +6,7 @@
 
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier-parent</artifactId>
-    <version>0.2.0-M1</version>
+    <version>0.1.6-M1</version>
     <packaging>pom</packaging>
     <name>beancopier-parent</name>
 
@@ -43,8 +43,8 @@
     </licenses>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <asm.version>9.4</asm.version>
         <lombok.version>1.18.26</lombok.version>
@@ -134,10 +134,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <compilerArgs>
-                        <arg>--add-exports</arg>
-                        <arg>java.base/jdk.internal.access=io.github.tanyaofei.beancopier</arg>
-                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -197,10 +193,8 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <sourcepath>${basedir}/beancopier/src/main/java</sourcepath>
-                            <sourceFileExcludes>
-                                <sourceFileExclude>**/breakout/Injector.java</sourceFileExclude>
-                            </sourceFileExcludes>
+                            <failOnError>false</failOnError>
+                            <doclint>none</doclint>
                         </configuration>
                     </plugin>
                     <plugin>

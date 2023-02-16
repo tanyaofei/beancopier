@@ -4,6 +4,7 @@ import io.github.tanyaofei.beancopier.BeanCopierImpl;
 import io.github.tanyaofei.beancopier.NamingPolicy;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.test.BeanCopierTest;
+import lombok.var;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 

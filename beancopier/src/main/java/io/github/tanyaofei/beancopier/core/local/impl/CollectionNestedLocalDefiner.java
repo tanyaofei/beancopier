@@ -9,6 +9,7 @@ import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
+import lombok.var;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 

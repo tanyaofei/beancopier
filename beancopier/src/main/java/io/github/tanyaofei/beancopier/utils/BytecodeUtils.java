@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier.utils;
 
 import lombok.SneakyThrows;
+import lombok.var;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
