@@ -13,10 +13,10 @@
 </dependency>
 ```
 
-_Starting from version 0.2.x, the minimun required JDK version is 17. If you are using a lower version, please use version 0.1.x._
+_Starting from version 0.2.x, the minimum required JDK version is 17. If you are using a lower version, please use version 0.1.x._
 
 
-## What can this tool provide:
+## What can it provide:
 
 1. Support copying fields of the same type
 2. Support copying fields of compatible types: `Integer -> Number`, `List<Integer> -> Collection<? extends Number>`
@@ -39,7 +39,7 @@ _Starting from version 0.2.x, the minimun required JDK version is 17. If you are
 
 
 
-## Hot to use it
+## How to use it
 
 ### Source
 
@@ -56,7 +56,7 @@ class Menu {
 
 ```java
 record MenuDTO(
-	Number id,
+    Number id,
     String name,
     MenuDTO parent,
     Collection<MenuDTO> sub,
@@ -116,7 +116,7 @@ public class Example {
 
 
 
-## Principle
+## How it works
 
 Analyze the field relationships between two classes and use ASM to dynamically generate bytecode at runtime.
 
