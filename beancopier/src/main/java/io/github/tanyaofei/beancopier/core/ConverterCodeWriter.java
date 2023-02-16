@@ -2,8 +2,8 @@ package io.github.tanyaofei.beancopier.core;
 
 import io.github.tanyaofei.beancopier.constants.*;
 import io.github.tanyaofei.beancopier.converter.Converter;
-import io.github.tanyaofei.beancopier.core.instancer.AllArgsConstructorInstancer;
-import io.github.tanyaofei.beancopier.core.instancer.NoArgsConstructorInstancer;
+import io.github.tanyaofei.beancopier.core.instanter.AllArgsConstructorInstanter;
+import io.github.tanyaofei.beancopier.core.instanter.NoArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiners;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
@@ -169,14 +169,14 @@ public class ConverterCodeWriter implements Opcodes, Methods {
 
     int targetStore = context.getNextStore();
     var instancer = switch (definition.getInstantiateMode()) {
-      case ALL_ARGS_CONSTRUCTOR -> new AllArgsConstructorInstancer(
+      case ALL_ARGS_CONSTRUCTOR -> new AllArgsConstructorInstanter(
           v,
           definition,
           targetStore,
           targetMembers,
           firstLocalStore
       );
-      case NO_ARGS_CONSTRUCTOR_THEN_GET_SET -> new NoArgsConstructorInstancer(
+      case NO_ARGS_CONSTRUCTOR_THEN_GET_SET -> new NoArgsConstructorInstanter(
           v,
           definition,
           targetStore,

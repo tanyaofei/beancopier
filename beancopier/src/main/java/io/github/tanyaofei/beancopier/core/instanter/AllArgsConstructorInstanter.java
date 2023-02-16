@@ -1,4 +1,4 @@
-package io.github.tanyaofei.beancopier.core.instancer;
+package io.github.tanyaofei.beancopier.core.instanter;
 
 import io.github.tanyaofei.beancopier.constants.LocalOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
@@ -13,7 +13,7 @@ import org.objectweb.asm.Opcodes;
  *
  * @author tanyaofei
  */
-public class AllArgsConstructorInstancer implements TargetInstancer {
+public class AllArgsConstructorInstanter implements TargetInstanter {
 
   private final MethodVisitor v;
   private final ConverterDefinition definition;
@@ -21,7 +21,7 @@ public class AllArgsConstructorInstancer implements TargetInstancer {
   private final Iterable<BeanMember> targetMembers;
   private final int firstLocalStore;
 
-  public AllArgsConstructorInstancer(MethodVisitor v, ConverterDefinition definition, int targetStore, Iterable<BeanMember> targetMembers, int firstLocalStore) {
+  public AllArgsConstructorInstanter(MethodVisitor v, ConverterDefinition definition, int targetStore, Iterable<BeanMember> targetMembers, int firstLocalStore) {
     this.v = v;
     this.definition = definition;
     this.targetStore = targetStore;

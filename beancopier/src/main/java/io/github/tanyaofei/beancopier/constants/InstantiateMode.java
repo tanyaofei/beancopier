@@ -1,5 +1,8 @@
 package io.github.tanyaofei.beancopier.constants;
 
+import io.github.tanyaofei.beancopier.core.instanter.AllArgsConstructorInstanter;
+import io.github.tanyaofei.beancopier.core.instanter.NoArgsConstructorInstanter;
+
 /**
  * @author tanyaofei
  */
@@ -16,13 +19,13 @@ public enum InstantiateMode {
    *   and method parameters names included at compilation time</li>
    * </ul>
    *
-   * @see io.github.tanyaofei.beancopier.core.instancer.AllArgsConstructorInstancer
+   * @see AllArgsConstructorInstanter
    */
   ALL_ARGS_CONSTRUCTOR,
 
   /**
    * Instantiate a target using no-args-constructor, then copied fields using setters
-   * @see io.github.tanyaofei.beancopier.core.instancer.NoArgsConstructorInstancer
+   * @see NoArgsConstructorInstanter
    */
   NO_ARGS_CONSTRUCTOR_THEN_GET_SET,
 

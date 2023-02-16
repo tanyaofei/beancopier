@@ -1,4 +1,4 @@
-package io.github.tanyaofei.beancopier.core.instancer;
+package io.github.tanyaofei.beancopier.core.instanter;
 
 import io.github.tanyaofei.beancopier.constants.LocalOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
@@ -17,7 +17,7 @@ import java.util.Set;
  *
  * @author tanyaofei
  */
-public class NoArgsConstructorInstancer implements TargetInstancer {
+public class NoArgsConstructorInstanter implements TargetInstanter {
 
   private final MethodVisitor v;
   private final ConverterDefinition definition;
@@ -26,7 +26,7 @@ public class NoArgsConstructorInstancer implements TargetInstancer {
   private final int firstLocalStore;
   private final Set<BeanMember> skippedMembers;
 
-  public NoArgsConstructorInstancer(
+  public NoArgsConstructorInstanter(
       MethodVisitor v,
       ConverterDefinition definition,
       int targetStore,

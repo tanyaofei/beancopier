@@ -1,11 +1,11 @@
-package io.github.tanyaofei.beancopier.core.instancer;
+package io.github.tanyaofei.beancopier.core.instanter;
 
 /**
  * A tool for generating bytecode to instantiate the target
  *
  * @author tanyaofei
  */
-public interface TargetInstancer {
+public interface TargetInstanter {
 
   /**
    * Instantiate a target and complete fields assignment
