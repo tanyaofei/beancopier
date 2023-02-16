@@ -1,7 +1,16 @@
 package io.github.tanyaofei.beancopier.exception;
 
 /**
- * 拷贝异常
+ * Copy Exception. Any exceptions occur during copying will be wrapped as a CopyException.
+ * <pre>{@code
+ * try {
+ *   List<Target> targets = BeanCopier.copyList(
+ *    sources,
+ *    (s, t) -> thrown new NullPointerException();
+ * } catch (CopyException e) {
+ *    assertEquals(e.getCause().getClass(), NullPointerException.class);
+ * }
+ * }</pre>
  *
  * @author tanyaofei
  * @since 0.1.2

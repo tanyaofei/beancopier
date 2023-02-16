@@ -3,7 +3,7 @@ package io.github.tanyaofei.beancopier.utils.breakout;
 import jdk.internal.access.SharedSecrets;
 
 /**
- * 破解 JDK module 权限控制的注入物
+ * Am virus to break out JDK module protection.
  */
 public class Injector {
 

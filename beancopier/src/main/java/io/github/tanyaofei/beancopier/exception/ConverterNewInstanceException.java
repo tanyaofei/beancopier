@@ -1,7 +1,8 @@
 package io.github.tanyaofei.beancopier.exception;
 
 /**
- * 转换器创建实例异常, 这个异常通常是内部异常, 你可以在 github 提 issue 进行解决
+ * Converter New Instance Exception, which is usually caused by internal reason.
+ * You can submit an issue on GitHub to help use resolve this problem.
  *
  * @author tanyaofei
  * @since 0.1.2

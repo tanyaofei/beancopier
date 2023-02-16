@@ -8,6 +8,9 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author tanyaofei
+ */
 public interface BeanMember {
 
   static Map<String, BeanMember> mapIterable(Iterable<BeanMember> itr) {

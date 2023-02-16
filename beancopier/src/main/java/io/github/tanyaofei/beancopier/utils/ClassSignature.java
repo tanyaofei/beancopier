@@ -6,10 +6,7 @@ import lombok.Getter;
 import org.objectweb.asm.Type;
 
 /**
- * 类签名工具
- *
  * @author tanyaofei
- * @since 0.1.6
  */
 public class ClassSignature {
 

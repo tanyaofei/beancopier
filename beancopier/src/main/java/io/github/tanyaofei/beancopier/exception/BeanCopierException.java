@@ -1,14 +1,9 @@
 package io.github.tanyaofei.beancopier.exception;
 
-import io.github.tanyaofei.beancopier.BeanCopier;
-
 /**
- * {@link BeanCopier} 拷贝异常父类
+ * <b>beancopier</b> exception superclass
  *
  * @author tanyaofei
- * @see ConverterGenerateException
- * @see CopyException
- * @see ConverterNewInstanceException
  * @since 0.0.1
  */
 public sealed class BeanCopierException extends RuntimeException permits ConverterGenerateException, ConverterNewInstanceException, CopyException {

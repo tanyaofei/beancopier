@@ -10,7 +10,6 @@ import java.lang.reflect.Type;
 
 /**
  * @author tanyaofei
- * @since 0.2.0
  */
 @Accessors
 @EqualsAndHashCode

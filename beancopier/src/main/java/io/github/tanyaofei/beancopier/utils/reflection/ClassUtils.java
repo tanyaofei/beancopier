@@ -8,7 +8,6 @@ import java.util.*;
  */
 public class ClassUtils {
 
-
   public static final String ARRAY_SUFFIX = "[]";
 
   public static final String CGLIB_CLASS_SEPARATOR = "$$";

@@ -4,10 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 /**
- * 字符串工具
- *
  * @author tanyaofei
- * @since 0.0.1
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StringUtils {
