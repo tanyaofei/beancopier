@@ -28,7 +28,7 @@ public interface Properties {
   }
 
   static Property getOrDefault(BeanMember member) {
-    Property property = propertiesCache.get(member);
+    var property = propertiesCache.get(member);
     if (property == null) {
       property = member.getAnnotation(Property.class);
       if (property == null) {

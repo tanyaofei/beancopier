@@ -55,7 +55,7 @@ public abstract class NamingPolicy {
         @NotNull Class<?> targetType,
         @NotNull Predicate<String> predicate
     ) {
-      String base = getPackage()
+      var base = getPackage()
           + "."
           + sourceType.getSimpleName()
           + "To"
@@ -63,7 +63,7 @@ public abstract class NamingPolicy {
           + "Converter$$GeneratedByBeanCopier$$"
           + Integer.toHexString((sourceType.getName() + targetType.getName()).hashCode());
 
-      String attempt = base;
+      var attempt = base;
       for (int i = 2; predicate.test(attempt); attempt = base + "_" + i++) {
 
       }
