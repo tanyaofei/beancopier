@@ -22,31 +22,36 @@ public interface BeanMember {
   }
 
   /**
-   * @return 属性名称
+   * @return identify
+   */
+  Object getIdentify();
+
+  /**
+   * @return member name
    */
   String getName();
 
   /**
-   * @return 字段类型
+   * @return member type
    */
   Class<?> getType();
 
   /**
-   * @return 字段泛型
+   * @return member generic type
    */
   Type getGenericType();
 
   /**
    * @return getter or setter
-   * @throws UnsupportedOperationException 如果该属性没有定义 getter 或者 setter
+   * @throws UnsupportedOperationException throw if the member has none
    */
   Method getMethod();
 
   /**
-   * 获取属性的注解
+   * Return an annotation from the origin
    *
-   * @param annotationClass 注解类型
-   * @param <T>             注解类型
+   * @param annotationClass annotation class
+   * @param <T>             the type of annotation
    * @return 注解
    */
   @Nullable <T extends Annotation> T getAnnotation(Class<T> annotationClass);

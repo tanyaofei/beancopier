@@ -1,39 +1,46 @@
 package io.github.tanyaofei.beancopier.utils.reflection.member;
 
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 
 /**
  * @author tanyaofei
  */
+@Accessors
 @EqualsAndHashCode
-public class RecordBeanMember implements BeanMember {
+public class POJOMember implements BeanMember {
 
-  private final RecordComponent rc;
+  private final Field field;
   private final Method xetter;
 
-  public RecordBeanMember(RecordComponent rc, Method xetter) {
-    this.rc = rc;
+  public POJOMember(Field field, Method xetter) {
+    this.field = field;
     this.xetter = xetter;
   }
 
   @Override
+  public Object getIdentify() {
+    return field;
+  }
+
+  @Override
   public String getName() {
-    return rc.getName();
+    return field.getName();
   }
 
   @Override
   public Class<?> getType() {
-    return rc.getType();
+    return field.getType();
   }
 
   @Override
   public Type getGenericType() {
-    return rc.getGenericType();
+    return field.getGenericType();
   }
 
   @Override
@@ -43,6 +50,6 @@ public class RecordBeanMember implements BeanMember {
 
   @Override
   public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-    return rc.getAnnotation(annotationClass);
+    return field.getAnnotation(annotationClass);
   }
 }

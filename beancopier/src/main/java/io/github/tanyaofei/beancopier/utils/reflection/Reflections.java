@@ -2,9 +2,9 @@ package io.github.tanyaofei.beancopier.utils.reflection;
 
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.ClassBeanMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.RecordBeanMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.RecordBeanWithSetterMember;
+import io.github.tanyaofei.beancopier.utils.reflection.member.POJOMember;
+import io.github.tanyaofei.beancopier.utils.reflection.member.RecordMember;
+import io.github.tanyaofei.beancopier.utils.reflection.member.SettableRecordMember;
 import io.github.tanyaofei.guava.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -78,7 +78,7 @@ public class Reflections {
         continue;
       }
 
-      properties.add(new ClassBeanMember(field, getter));
+      properties.add(new POJOMember(field, getter));
     }
 
     var superclass = c.getSuperclass();
@@ -104,7 +104,7 @@ public class Reflections {
     var properties = new ArrayList<BeanMember>(c.getRecordComponents().length);
     for (var rc : c.getRecordComponents()) {
       try {
-        properties.add(new RecordBeanMember(rc, c.getMethod(rc.getName())));
+        properties.add(new RecordMember(rc, c.getMethod(rc.getName())));
       } catch (NoSuchMethodException e) {
         throw new IllegalStateException(c + " missing a getter for property: " + rc.getName());
       }
@@ -141,7 +141,7 @@ public class Reflections {
         continue;
       }
 
-      properties.add(new ClassBeanMember(f, setter));
+      properties.add(new POJOMember(f, setter));
     }
 
     Class<?> superclass = c.getSuperclass();
@@ -158,7 +158,7 @@ public class Reflections {
     }
     return Arrays
         .stream(c.getRecordComponents())
-        .map(RecordBeanWithSetterMember::new)
+        .map(SettableRecordMember::new)
         .collect(Collectors.toList());
   }
 

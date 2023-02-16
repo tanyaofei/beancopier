@@ -6,8 +6,8 @@ import java.lang.reflect.RecordComponent;
 /**
  * @author tanyaofei
  */
-public class RecordBeanWithSetterMember extends RecordBeanMember {
-  public RecordBeanWithSetterMember(RecordComponent rc) {
+public class SettableRecordMember extends RecordMember {
+  public SettableRecordMember(RecordComponent rc) {
     super(rc, null);
   }
 

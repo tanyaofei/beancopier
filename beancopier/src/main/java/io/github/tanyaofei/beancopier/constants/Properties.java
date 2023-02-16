@@ -11,16 +11,16 @@ import java.util.WeakHashMap;
  */
 public interface Properties {
 
-  WeakHashMap<BeanMember, Property> propertiesCache = new WeakHashMap<>(32);
+  WeakHashMap<Object, Property> propertiesCache = new WeakHashMap<>(32);
 
   Property defaultProperty = defaultProperty();
 
   @SneakyThrows
   private static Property defaultProperty() {
-    return PropertyProxy.class.getField("b").getAnnotation(Property.class);
+    return DefaultPropertyHolder.class.getField("b").getAnnotation(Property.class);
   }
 
-  class PropertyProxy {
+  class DefaultPropertyHolder {
 
     @Property
     public byte b;
@@ -28,14 +28,15 @@ public interface Properties {
   }
 
   static Property getOrDefault(BeanMember member) {
-    var property = propertiesCache.get(member);
+    var cacheKey = member.getIdentify();
+    var property = propertiesCache.get(cacheKey);
     if (property == null) {
       property = member.getAnnotation(Property.class);
       if (property == null) {
         property = defaultProperty;
       }
       synchronized (propertiesCache) {
-        propertiesCache.put(member, property);
+        propertiesCache.put(cacheKey, property);
       }
     }
     return property;
