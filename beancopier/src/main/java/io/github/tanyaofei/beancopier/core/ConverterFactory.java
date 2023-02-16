@@ -276,9 +276,12 @@ public class ConverterFactory implements Opcodes, Methods {
       throw new ConverterGenerateException("'" + c.getName() + "' is not a enclosing class");
     }
 
-    if (Reflections.hasMatchedPublicAllArgsConstructor(c)) {
+    if (c.isRecord()) {
+      return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
+    } else if (!configuration.isSkipNull() && Reflections.hasMatchedPublicAllArgsConstructor(c)) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
     }
+
     if (Reflections.hasPublicNoArgsConstructor(c)) {
       return InstantiateMode.NO_ARGS_CONSTRUCTOR_THEN_GET_SET;
     }
