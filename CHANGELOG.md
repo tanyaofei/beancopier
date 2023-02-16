@@ -1,5 +1,13 @@
 # 更新日志
 
++ 0.2.0
+  + 从这个版本开始要求最低版本为 JDK17
+  + 添加对 JDK16 record 的支持
+  + 添加 `module-info.java` 以支持 JDK9+ 的模块化
+  + <b>BreakingChanges: </b>
+    + `@Property("aliasName")` 不会在拷贝来源和拷贝目标时同一个类时生效（这将会被认定是克隆对象）
+    + 回调动作不再使用 `Callback` 而是使用 JDK 提供的 `BiConsumer`
+
 + 0.1.5
   + 新增 `new BeanCopierImpl(builder -> builder.preferNested)` 等更多配置
   + **修复生成转换器时生成类名可能出现死循环的问题**
