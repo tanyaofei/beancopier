@@ -62,7 +62,7 @@ public class MethodInvoker implements ExecutableInvoker {
     } else {
       this.opcode = Opcodes.INVOKEVIRTUAL;
     }
-    this.hasReturnValue = !method.getReturnType().equals(Void.class);
+    this.hasReturnValue = !method.getReturnType().equals(void.class);
   }
 
   @Override
