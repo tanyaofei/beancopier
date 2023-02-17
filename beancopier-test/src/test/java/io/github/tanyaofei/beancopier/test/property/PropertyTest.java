@@ -1,13 +1,16 @@
 package io.github.tanyaofei.beancopier.test.property;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
-import io.github.tanyaofei.beancopier.test.BeanCopierTest;
+import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * @author tanyaofei
  */
-public class PropertyTest extends BeanCopierTest {
+@ExtendWith(DumpConverterClassesExtension.class)
+public class PropertyTest extends Assertions {
 
   @Test
   public void testPropertyObject() {

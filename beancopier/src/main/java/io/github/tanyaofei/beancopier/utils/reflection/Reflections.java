@@ -2,7 +2,7 @@ package io.github.tanyaofei.beancopier.utils.reflection;
 
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.POJOMember;
+import io.github.tanyaofei.beancopier.utils.reflection.member.PojoMember;
 import io.github.tanyaofei.beancopier.utils.reflection.member.RecordMember;
 import io.github.tanyaofei.beancopier.utils.reflection.member.SettableRecordMember;
 import io.github.tanyaofei.guava.common.collect.Iterables;
@@ -78,7 +78,7 @@ public class Reflections {
         continue;
       }
 
-      properties.add(new POJOMember(field, getter));
+      properties.add(new PojoMember(field, getter));
     }
 
     var superclass = c.getSuperclass();
@@ -125,7 +125,7 @@ public class Reflections {
    */
   public static Iterable<BeanMember> getMembersWithSetter(Class<?> c, boolean includingSuper) {
     if (c.isRecord()) {
-      return getRecordMembersWithSetter(c);
+      return getSettableRecordMember(c);
     }
 
     var fields = c.getDeclaredFields();
@@ -141,7 +141,7 @@ public class Reflections {
         continue;
       }
 
-      properties.add(new POJOMember(f, setter));
+      properties.add(new PojoMember(f, setter));
     }
 
     Class<?> superclass = c.getSuperclass();
@@ -152,7 +152,7 @@ public class Reflections {
     return properties;
   }
 
-  private static Iterable<BeanMember> getRecordMembersWithSetter(Class<?> c) {
+  private static Iterable<BeanMember> getSettableRecordMember(Class<?> c) {
     if (!c.isRecord()) {
       throw new IllegalArgumentException(c.getName() + " is not a record class");
     }

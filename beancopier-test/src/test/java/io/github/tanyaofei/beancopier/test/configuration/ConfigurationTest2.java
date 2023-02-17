@@ -2,30 +2,28 @@ package io.github.tanyaofei.beancopier.test.configuration;
 
 import io.github.tanyaofei.beancopier.BeanCopierImpl;
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.test.util.DumpConverterClasses;
+import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-@ExtendWith(DumpConverterClasses.class)
-public class ConfigurationTest2 {
+@ExtendWith(DumpConverterClassesExtension.class)
+public class ConfigurationTest2 extends Assertions {
 
   @Test
   public void testNotSupportProperty() {
-    assertNull(new BeanCopierImpl(builder -> builder.propertySupported(false).classDumpPath(DumpConverterClasses.dumpPath)).copy(new A().setA("1"), B.class).a1);
+    assertNull(new BeanCopierImpl(builder -> builder.propertySupported(false)).copy(new A().setA("1"), B.class).a1);
   }
 
   @Test
   public void testFullTypeMatching() {
-    assertNull(new BeanCopierImpl(builder -> builder.fullTypeMatching(true).classDumpPath(DumpConverterClasses.dumpPath)).copy(new A().setB(1), B.class).b);
+    assertNull(new BeanCopierImpl(builder -> builder.fullTypeMatching(true)).copy(new A().setB(1), B.class).b);
   }
 
   @Test
@@ -33,7 +31,7 @@ public class ConfigurationTest2 {
     A a = new A()
         .setC(new A())
         .setD(Collections.singletonList(new A()));
-    B b = new BeanCopierImpl(builder -> builder.preferNested(false).classDumpPath(DumpConverterClasses.dumpPath)).copy(a, B.class);
+    B b = new BeanCopierImpl(builder -> builder.preferNested(false)).copy(a, B.class);
     assertNull(b.c);
     assertNull(b.d);
   }
@@ -43,14 +41,14 @@ public class ConfigurationTest2 {
     C c = new C();
     c.setA("1");
 
-    D d = new BeanCopierImpl(builder -> builder.includingSuper(false).classDumpPath(DumpConverterClasses.dumpPath)).copy(c, D.class);
+    D d = new BeanCopierImpl(builder -> builder.includingSuper(false)).copy(c, D.class);
     assertNull(d.getA());
   }
 
   @Test
   public void testSkipNull() {
     A a = new A().setE(null);
-    B b = new BeanCopierImpl(builder -> builder.skipNull(true).classDumpPath(DumpConverterClasses.dumpPath)).copy(a, B.class);
+    B b = new BeanCopierImpl(builder -> builder.skipNull(true)).copy(a, B.class);
     assertEquals(b.getE(), "1");
   }
 

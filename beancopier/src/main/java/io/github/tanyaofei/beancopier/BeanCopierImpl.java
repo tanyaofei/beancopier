@@ -2,7 +2,6 @@ package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.core.ConverterFactory;
-import io.github.tanyaofei.beancopier.core.DefaultClassLoader;
 import io.github.tanyaofei.beancopier.exception.CopyException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +59,8 @@ public final class BeanCopierImpl {
   public BeanCopierImpl(int cachesInitialCapacity) {
     this(
         cachesInitialCapacity,
-        builder -> builder.classLoader(new DefaultClassLoader(BeanCopierImpl.class.getClassLoader()))
+        config -> {
+        }
     );
   }
 
@@ -136,8 +136,8 @@ public final class BeanCopierImpl {
       return null;
     }
 
-    var sc = (Class<S>) source.getClass();
-    var converter = generateConverter(new CacheKey(sc, target), sc, target);
+    var sourceType = (Class<S>) source.getClass();
+    var converter = generateConverter(new CacheKey(sourceType, target), sourceType, target);
 
     // init a t, and copy fields from source
     T t;

@@ -28,7 +28,7 @@ public class ConverterDefinition {
   private final Class<?> targetType;
 
   /**
-   * The method descriptor of {@link Converter#convert(Object)} implementer
+   * The method descriptor of {@link Converter#convert(Object)} implementation
    */
   private final String convertMethodDescriptor;
 

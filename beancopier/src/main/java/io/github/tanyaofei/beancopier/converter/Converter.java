@@ -2,6 +2,8 @@ package io.github.tanyaofei.beancopier.converter;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * A converter the used to copy properties of source to target.
  * The implementations class will be dynamically generated at runtime by {@link io.github.tanyaofei.beancopier.core.ConverterFactory} using ASM technology.
@@ -13,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface Converter<S, T> {
 
+  MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+
   /**
    * <ol>
    *   <li>Return null if source is null</li>
@@ -20,7 +24,7 @@ public interface Converter<S, T> {
    * </ol>
    *
    * @param source An object that used to copy
-   * @return T The type of target
+   * @return target
    */
   @Nullable
   T convert(@Nullable S source);

@@ -1,9 +1,6 @@
 package io.github.tanyaofei.beancopier;
 
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.core.ConverterFactory;
-import io.github.tanyaofei.beancopier.core.DefaultClassLoader;
-import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -13,20 +10,7 @@ import java.util.function.BiConsumer;
 
 /**
  * This is a wrapper class for the default instance of {@link BeanCopierImpl}. The methods defined in this class can be used for bean copying.
- * If there are personalized requirements, such as the need for class unloading capability, an instance can also be created by using {@code new BeanCopierImpl()}.
- * When class unloading occurs, the process should be as follows:
- * <ol>
- *   <li>The {@link BeanCopierImpl} instance is no longer referenced and is therefore deleted.</li>
- *   <li>The {@link ConverterFactory} and {@link DefaultClassLoader} referenced by the {@link BeanCopierImpl} instance are no longer referenced and are therefore deleted.</li>
- *   <li>The classes loaded by {@link DefaultClassLoader} should be delete.</li>
- * </ol>
- * <p>
- *   Simply put, when the {@link BeanCopierImpl} instance is no longer referenced, the converter instances and classes created by it will also be removed.
- * </p>
- * <p>
- *   The {@link BeanCopierImpl} instance held by this class will automatically select the most appropriate classloader to load the generated {@link io.github.tanyaofei.beancopier.converter.Converter} class,
- *   depending on which classloader is at a lower level between the Source and Target ClassLoaders. If the tow ClassLoaders have no relationship, {@link ConverterGenerateException} will be thrown.
- * </p>
+ * If there are personalized requirements, such as copy an object which in a module that is not exported, an instance can also be created by using {@code new BeanCopierImpl()}.
  *
  * @author tanyaofei
  * @see BeanCopierImpl
@@ -50,6 +34,7 @@ public final class BeanCopier {
    * @param <T>    the type of target
    * @return a target object
    * @see BeanCopierImpl#copy(Object, Class)
+   * @since 0.0.1
    */
   public static <S, T> T copy(S source, Class<T> target) {
     return theCopier.copy(source, target, null);
@@ -71,6 +56,7 @@ public final class BeanCopier {
    * @param <T>      the type of target
    * @return the instance of target
    * @see BeanCopierImpl#copy(Object, Class, BiConsumer)
+   * @since 0.0.1
    */
   public static <S, T> T copy(S source, Class<T> target, BiConsumer<S, T> consumer) {
     return theCopier.copy(source, target, consumer);
@@ -124,6 +110,7 @@ public final class BeanCopier {
    * @param <T>     the type of target
    * @return The instances of target. The return values has the same size as sources.
    * @see BeanCopierImpl#copyList(Collection, Class)
+   * @since 0.0.1
    */
   public static <S, T> List<T> copyList(Collection<S> sources, Class<T> target) {
     return theCopier.copyList(sources, target);
@@ -139,6 +126,7 @@ public final class BeanCopier {
    * @param <T>      the type of target
    * @return The instances of target, the return values has the same size as sources.
    * @see BeanCopierImpl#copyList(Collection, Class, BiConsumer)
+   * @since 0.0.1
    **/
   public static <S, T> List<T> copyList(Collection<S> source, Class<T> target, BiConsumer<S, T> consumer) {
     return theCopier.copyList(source, target, consumer);

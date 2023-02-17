@@ -12,7 +12,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class SkipNullObject {
+public class SkipNullPOJO {
 
   private String name = "name";
 

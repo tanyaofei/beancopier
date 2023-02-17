@@ -15,6 +15,7 @@ import java.lang.annotation.*;
 public @interface Property {
 
   /**
+   *
    * <pre>{@code
    *  public class Source {
    *      private String val;

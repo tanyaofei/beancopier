@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.lang.invoke.MethodHandles;
+
 /**
  * Converter generation configuration
  *
@@ -48,9 +50,9 @@ public final class ConverterConfiguration {
   private final boolean propertySupported;
 
   /**
-   * Determines a classloader for load the generated converter class
+   * Determines a lookup for defining the generated converter class
    */
-  private final ClassLoader classLoader;
+  private final MethodHandles.Lookup lookup;
 
   /**
    * Determines a naming policy for naming the generated converter class
@@ -78,14 +80,14 @@ public final class ConverterConfiguration {
 
     private boolean propertySupported = true;
 
-    private ClassLoader classLoader = null;
+    private MethodHandles.Lookup lookup = null;
 
     private NamingPolicy namingPolicy = NamingPolicy.getDefault();
 
     private String classDumpPath = BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH;
 
     public ConverterConfiguration build() {
-      return new ConverterConfiguration(fullTypeMatching, skipNull, preferNested, includingSuper, propertySupported, classLoader, namingPolicy, classDumpPath);
+      return new ConverterConfiguration(fullTypeMatching, skipNull, preferNested, includingSuper, propertySupported, lookup, namingPolicy, classDumpPath);
     }
 
     public Builder fullTypeMatching(boolean fullTypeMatching) {
@@ -113,8 +115,8 @@ public final class ConverterConfiguration {
       return this;
     }
 
-    public Builder classLoader(ClassLoader classLoader) {
-      this.classLoader = classLoader;
+    public Builder lookup(MethodHandles.Lookup lookup) {
+      this.lookup = lookup;
       return this;
     }
 

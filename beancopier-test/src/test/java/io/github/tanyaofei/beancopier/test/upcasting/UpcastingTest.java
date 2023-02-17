@@ -1,15 +1,18 @@
 package io.github.tanyaofei.beancopier.test.upcasting;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
-import io.github.tanyaofei.beancopier.test.BeanCopierTest;
+import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 
 /**
  * @author tanyaofei
  */
-public class UpcastingTest extends BeanCopierTest {
+@ExtendWith(DumpConverterClassesExtension.class)
+public class UpcastingTest extends Assertions {
 
   @Test
   public void testUpcasting() {

@@ -2,7 +2,9 @@ package io.github.tanyaofei.beancopier.core;
 
 import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.constants.*;
+import io.github.tanyaofei.beancopier.converter.AbstractConverter;
 import io.github.tanyaofei.beancopier.converter.Converter;
+import io.github.tanyaofei.beancopier.core.annotation.Definition;
 import io.github.tanyaofei.beancopier.core.instanter.AllArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.instanter.NoArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
@@ -12,18 +14,13 @@ import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.ClassSignature;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * 转换器字节码编写工具
- *
- * @since 0.1.5
+ * Bytecode writer for writing converter class
  */
 public class ConverterCodeWriter implements Opcodes, Methods {
 
@@ -35,7 +32,7 @@ public class ConverterCodeWriter implements Opcodes, Methods {
   }
 
   /**
-   * 编写无参构造函数
+   * generate a no-args-constructor
    *
    * @param cw ClassWriter
    */
@@ -43,16 +40,16 @@ public class ConverterCodeWriter implements Opcodes, Methods {
     var v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, MethodNames.Object$init, MethodDescriptors.Object$init, null, null);
     v.visitCode();
     v.visitVarInsn(ALOAD, 0);
-    v.visitMethodInsn(INVOKESPECIAL, InternalNames.Object, MethodNames.Object$init, MethodDescriptors.Object$init, false);
+    v.visitMethodInsn(INVOKESPECIAL, InternalNames.AbstractConverter, MethodNames.Object$init, MethodDescriptors.Object$init, false);
     v.visitInsn(RETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
   }
 
   /**
-   * 编写 Converter 字节码
+   * generate converter bytecode
    *
-   * @return Converter 字节码字节数组
+   * @return converter bytecode
    */
   public byte[] write() {
     var sourceType = definition.getSourceType();
@@ -63,16 +60,15 @@ public class ConverterCodeWriter implements Opcodes, Methods {
         ACC_PUBLIC | ACC_SYNTHETIC,
         definition.getInternalName(),
         ClassSignature.getClassSignature(
-            ClassInfos.Object,
-            ClassSignature.ClassInfo.of(Converter.class, sourceType, tc)
+            ClassSignature.ClassInfo.of(AbstractConverter.class, sourceType, tc)
         ),
-        InternalNames.Object,
-        InternalNames.AConverter
+        InternalNames.AbstractConverter,
+        null
     );
     cw.visitSource("<generated>", null);
     genConstructor(cw);
     genConvertMethod(cw);
-    genLambda$convert$0Method(cw);
+    genMetadata(cw);
     if (sourceType != Object.class || tc != Object.class) {
       genConvertBridgeMethod(cw);
     }
@@ -81,39 +77,37 @@ public class ConverterCodeWriter implements Opcodes, Methods {
   }
 
   /**
-   * 编写如果为 null 直接返回 null 的代码片段
    * <pre>{@code
    * if (source == nul) {
    *   return null;
    * }
    * }</pre>
    *
-   * @param v 方法编写器
+   * @param v method writer
    */
   private void returnNullIfNull(MethodVisitor v) {
-    var ifnonnull = new Label();
-
+    var ifNonNull = new Label();
     v.visitVarInsn(ALOAD, 1);
-    v.visitJumpInsn(IFNONNULL, ifnonnull);
+    v.visitJumpInsn(IFNONNULL, ifNonNull);
     v.visitInsn(ACONST_NULL);
     v.visitInsn(ARETURN);
-    v.visitLabel(ifnonnull);
+    v.visitLabel(ifNonNull);
   }
 
   /**
-   * 编写转换方法 {@link Converter#convert(Object)}
+   * Write {@link Converter#convert(Object)} method
    * <pre>{@code
    * var var2 = source.getVar2();
    * var var3 = source.getVar3();
    * }</pre>
    *
    * <ul>
-   *   <li>如果 target 为 {@link Record} 类，那么接下来会写入</li>
+   *   <li>if target is {@link Record} or provides an all-args-constructor</li>
    *   <pre>{@code
    *   var target = new Target(var2, var3);
    *   }
    *   </pre>
-   *   <li>否则接下来将写入</li>
+   *   <li>otherwise</li>
    *   <pre>{@code
    *   var target = new Target();
    *   target.setVar2(var2);
@@ -224,14 +218,14 @@ public class ConverterCodeWriter implements Opcodes, Methods {
   }
 
   /**
-   * 编写 convert 的桥接方法
+   * Write the convert generic bridge method
    * <pre>{@code
    * public Object convert(Object source) {
    *   return convert((Source) source);
    * }
    * }</pre>
    *
-   * @param cw 类编写器
+   * @param cw class writer
    */
   private void genConvertBridgeMethod(
       ClassWriter cw
@@ -251,40 +245,25 @@ public class ConverterCodeWriter implements Opcodes, Methods {
         definition.getInternalName(),
         MethodNames.Converter$convert,
         definition.getConvertMethodDescriptor(),
-        false);
+        false
+    );
     v.visitInsn(ARETURN);
     v.visitMaxs(-1, -1);
     v.visitEnd();
   }
 
   /**
-   * 编写用于集合嵌套拷贝避免空指针错误的 lambda 方法
-   * <pre>{@code
-   * this::convert
-   * }</pre>
+   * Add {@link Definition} to converter
    *
-   * @param cw ClassWriter
+   * @param cw class writer
    */
-  private void genLambda$convert$0Method(
-      ClassWriter cw
-  ) {
-    var convertDescriptor = definition.getConvertMethodDescriptor();
-    var v = cw.visitMethod(
-        ACC_PRIVATE | ACC_SYNTHETIC,
-        MethodNames.lambda$convert$0,
-        convertDescriptor,
-        null,
-        null
-    );
-
-    v.visitCode();
-    v.visitVarInsn(ALOAD, 0);
-    v.visitVarInsn(ALOAD, 1);
-    v.visitMethodInsn(INVOKEVIRTUAL, definition.getInternalName(), MethodNames.Converter$convert, convertDescriptor, false);
-    v.visitInsn(ARETURN);
-
-    v.visitMaxs(-1, -1);
-    v.visitEnd();
+  private void genMetadata(ClassWriter cw) {
+    var a = cw.visitAnnotation(Type.getDescriptor(Definition.class), false);
+    var configuration = definition.getConfiguration();
+    a.visit("skipNull", configuration.isSkipNull());
+    a.visit("preferNested", configuration.isPreferNested());
+    a.visit("propertySupported", configuration.isPropertySupported());
+    a.visit("fullTypeMatching", configuration.isFullTypeMatching());
   }
 
 }

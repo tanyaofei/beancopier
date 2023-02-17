@@ -14,11 +14,11 @@ import java.lang.reflect.Type;
 public class RecordMember implements BeanMember {
 
   private final RecordComponent rc;
-  private final Method xetter;
+  private final Method method;
 
-  public RecordMember(RecordComponent rc, Method xetter) {
+  public RecordMember(RecordComponent rc, Method method) {
     this.rc = rc;
-    this.xetter = xetter;
+    this.method = method;
   }
 
   @Override
@@ -43,7 +43,7 @@ public class RecordMember implements BeanMember {
 
   @Override
   public Method getMethod() {
-    return xetter;
+    return method;
   }
 
   @Override

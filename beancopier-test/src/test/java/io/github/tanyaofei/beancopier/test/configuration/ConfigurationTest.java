@@ -1,24 +1,23 @@
 package io.github.tanyaofei.beancopier.test.configuration;
 
 import io.github.tanyaofei.beancopier.BeanCopierImpl;
-import io.github.tanyaofei.beancopier.NamingPolicy;
-import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
-import io.github.tanyaofei.beancopier.test.BeanCopierTest;
-import org.jetbrains.annotations.NotNull;
+import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Collections;
-import java.util.function.Predicate;
 
 /**
  * @author tanyaofei
  */
-public class ConfigurationTest extends BeanCopierTest {
+@ExtendWith(DumpConverterClassesExtension.class)
+public class ConfigurationTest extends Assertions {
 
   @Test
   public void testSkipNull() {
     var beancopier = new BeanCopierImpl(config -> config.skipNull(true));
-    var source = new ConfigurationObject().setSkippedVal("skipped");
+    var source = new ConfigurationPOJO().setSkippedVal("skipped");
     var target = beancopier.clone(source);
     assertEquals(target.getStringVal(), "stringVal");
     assertEquals(target.getIntVal(), 1);
@@ -32,7 +31,7 @@ public class ConfigurationTest extends BeanCopierTest {
   @Test
   public void testNotIncludingSuper() {
     var beancopier = new BeanCopierImpl(config -> config.includingSuper(false));
-    var source = new ConfigurationObject().setParentVal("parent");
+    var source = new ConfigurationPOJO().setParentVal("parent");
     var target = beancopier.clone(source);
     assertNull(target.getParentVal());
   }
@@ -40,25 +39,9 @@ public class ConfigurationTest extends BeanCopierTest {
   @Test
   public void testPropertyUnsupported() {
     var beancopier = new BeanCopierImpl(config -> config.propertySupported(false));
-    var source = new ConfigurationObject().setSkippedVal("skipped");
+    var source = new ConfigurationPOJO().setSkippedVal("skipped");
     var target = beancopier.clone(source);
     assertEquals("skipped", target.getSkippedVal());
-  }
-
-  @Test
-  public void testNamingPolicy() {
-    var beancopier = new BeanCopierImpl(config -> config.namingPolicy(new NamingPolicy() {
-      @Override
-      public @NotNull String getClassName(@NotNull Class<?> sourceType, @NotNull Class<?> targetType, @NotNull Predicate<String> predicate) {
-        return "MyNamingPolicy";
-      }
-    }));
-
-    var source = new ConfigurationObject();
-    beancopier.clone(source);
-    assertThrows(ConverterGenerateException.class, () -> {
-      beancopier.clone(new Object());
-    });
   }
 
 }

@@ -1,19 +1,18 @@
 package io.github.tanyaofei.beancopier.core.local.impl;
 
-import io.github.tanyaofei.beancopier.constants.*;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
-import io.github.tanyaofei.beancopier.core.local.IfNullOrElse;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
-import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
+
+import static io.github.tanyaofei.beancopier.constants.MethodInvokers.AbstractConverter$convertAll;
 
 /**
  * A definer for define a nested field variable.
@@ -53,67 +52,24 @@ public class CollectionNestedLocalDefiner extends LocalDefiner {
     }
 
     if (converterDefinition.getConfiguration().isPreferNested()
-        && !isCollectionNested(converterDefinition, member, localDefinition.getType(), localDefinition.getGenericType())) {
+        && !isCollectionNested(
+        converterDefinition,
+        member,
+        localDefinition.getType(),
+        localDefinition.getGenericType()
+    )) {
       return false;
     }
 
     var getter = ExecutableInvoker.invoker(member.getMethod());
-    var internalName = converterDefinition.getInternalName();
-    String convertDescriptor = converterDefinition.getConvertMethodDescriptor();
 
     /*
-     ->
-     if (source.getValue() == null) {
-        var value = null;
-     } else {
-        var value = source.getValue().stream().map(this::convert).collect(Collector.toList());
-     }
+     var variable = this.convertAll(source.getVal());
      */
-    new IfNullOrElse(
-        v,
-        () -> {
-          loadSource(v);
-          getter.invoke(v);
-        },
-        () -> v.visitInsn(ACONST_NULL),
-        () -> {
-          // list.stream()
-          MethodInvokers.Collection$stream.invoke(v);
-
-          // this::convert
-          v.visitVarInsn(ALOAD, 0);
-          v.visitInvokeDynamicInsn(
-              MethodNames.Function$apply,
-              "(L" + internalName + ";)" + TypeDescriptors.Function,
-              new Handle(H_INVOKESTATIC,
-                  InternalNames.LambdaMetafactory,
-                  MethodNames.Lambda$Metafactory$metafactory,
-                  MethodDescriptors.LambdaMetafactory$metafactory,
-                  false),
-              MethodTypes.Converter$convert,
-              new Handle(H_INVOKESPECIAL,
-                  internalName,
-                  MethodNames.lambda$convert$0,
-                  convertDescriptor,
-                  false
-              ),
-              org.objectweb.asm.Type.getType(convertDescriptor)
-          );
-
-          // stream.map()
-          MethodInvokers.Stream$map.invoke(v);
-
-          // collector.toList()
-          MethodInvokers.Collector$toList.invoke(v);
-
-          // stream.collect()
-          MethodInvokers.Stream$collect.invoke(v);
-
-          // (List) .....
-          v.visitTypeInsn(CHECKCAST, InternalNames.List);
-        }
-    ).write();
-
+    loadThis(v);
+    loadSource(v);
+    getter.invoke(v);
+    AbstractConverter$convertAll.invoke(v);
     storeLocal(v, localDefinition, context);
     return true;
   }

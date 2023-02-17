@@ -13,14 +13,14 @@ import java.lang.reflect.Type;
  */
 @Accessors
 @EqualsAndHashCode
-public class POJOMember implements BeanMember {
+public class PojoMember implements BeanMember {
 
   private final Field field;
-  private final Method xetter;
+  private final Method method;
 
-  public POJOMember(Field field, Method xetter) {
+  public PojoMember(Field field, Method method) {
     this.field = field;
-    this.xetter = xetter;
+    this.method = method;
   }
 
   @Override
@@ -45,7 +45,7 @@ public class POJOMember implements BeanMember {
 
   @Override
   public Method getMethod() {
-    return xetter;
+    return method;
   }
 
   @Override

@@ -3,17 +3,15 @@ package io.github.tanyaofei.beancopier.test.exception;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
-import io.github.tanyaofei.beancopier.test.util.DumpConverterClasses;
+import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-@ExtendWith(DumpConverterClasses.class)
-public class ExceptionTest {
+@ExtendWith(DumpConverterClassesExtension.class)
+public class ExceptionTest extends Assertions {
 
   @Test
   public void testPublic() {
@@ -22,7 +20,9 @@ public class ExceptionTest {
 
   @Test
   public void testEnclosing() {
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(new Object(), EnclosingObject.class)).printStackTrace();
+    assertThrows(ConverterGenerateException.class,
+                 () -> BeanCopier.copy(new Object(), EnclosingObject.class)
+    ).printStackTrace();
     assertDoesNotThrow(() -> {
       BeanCopier.copy(new EnclosingObject(), Object.class);
     });

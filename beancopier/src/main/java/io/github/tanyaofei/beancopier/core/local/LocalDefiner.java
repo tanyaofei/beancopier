@@ -19,7 +19,7 @@ public abstract class LocalDefiner implements Opcodes {
   /**
    * Pushing the source object from the local variable to stack
    *
-   * @param v Method writer
+   * @param v method writer
    */
   protected static void loadSource(MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 1);
@@ -28,9 +28,9 @@ public abstract class LocalDefiner implements Opcodes {
   /**
    * Storing a variable from the stack to the local variable table
    *
-   * @param v       Method writer
-   * @param type    The type of this variable
-   * @param context The context of the definition
+   * @param v       method writer
+   * @param type    the type of this variable
+   * @param context the context of the definition
    */
   protected static void storeLocal(MethodVisitor v, Class<?> type, LocalsDefinitionContext context) {
     var store = context.getNextStore();
@@ -42,8 +42,8 @@ public abstract class LocalDefiner implements Opcodes {
   /**
    * Storing a variable from the stack to the local variable table
    *
-   * @param v          Method writer
-   * @param definition The definition of local variable
+   * @param v          method writer
+   * @param definition the definition of local variable
    * @since 0.2.0
    */
   protected static void storeLocal(MethodVisitor v, LocalDefinition definition, LocalsDefinitionContext context) {
@@ -56,9 +56,9 @@ public abstract class LocalDefiner implements Opcodes {
   /**
    * Pushing a variable at specified index from the local variable table to the stack
    *
-   * @param v     方法编写器
-   * @param type  值类型
-   * @param store 该值位于局部变量表中的下标
+   * @param v     method writer
+   * @param type  the type of variable
+   * @param store the index in local variable table
    */
   protected static void loadStack(MethodVisitor v, Class<?> type, int store) {
     v.visitVarInsn(LocalOpcode.ofType(type).loadOpcode, store);
@@ -67,7 +67,7 @@ public abstract class LocalDefiner implements Opcodes {
   /**
    * Pushing the reference to <b>{@code this}</b>  from the local variable to the stack
    *
-   * @param v Method writer
+   * @param v method writer
    */
   protected static void loadThis(MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 0);
@@ -75,13 +75,13 @@ public abstract class LocalDefiner implements Opcodes {
 
   /**
    * Defining a variable as expected.
-   * The implementer should define a variable as expected in this method.
-   * If the implementer can not handle, return {@code false} otherwise it should return {@code true}.
+   * The implementation should define a variable as expected in this method.
+   * If the implementation can not handle, return {@code false} otherwise it should return {@code true}.
    *
-   * @param v                   Method writer
-   * @param converterDefinition The definition of converter
-   * @param localDefinition     The definition of the local variable expected
-   * @param context             The definition context of all the local variables needed
+   * @param v                   method writer
+   * @param converterDefinition the definition of converter
+   * @param localDefinition     the definition of the local variable expected
+   * @param context             the definition context of all the local variables needed
    * @return true if the local defined as expected, otherwise false.
    * @since 0.2.0
    */
@@ -106,11 +106,11 @@ public abstract class LocalDefiner implements Opcodes {
   /**
    * Defining a local variable
    *
-   * @param v                   Method Writer
-   * @param converterDefinition The definition of converter
-   * @param localDefinition     The definition of the local variable expected
-   * @param context             The definition context of all the local variables needed
-   * @throws IllegalStateException if none of definers can handle in it's chain
+   * @param v                   method writer
+   * @param converterDefinition the definition of converter
+   * @param localDefinition     the definition of the local variable expected
+   * @param context             the definition context of all the local variables needed
+   * @throws IllegalStateException if none of definers can handle in its chain
    * @since 0.2.0
    */
   public final void define(
@@ -130,7 +130,7 @@ public abstract class LocalDefiner implements Opcodes {
   }
 
   /**
-   * Root definer, can not handle any definition
+   * Root definer, do not handle any definitions
    */
   static class RootLocalDefiner extends LocalDefiner {
 

@@ -2,12 +2,12 @@ package io.github.tanyaofei.beancopier.test;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
 import io.github.tanyaofei.beancopier.core.ConverterFactory;
-import io.github.tanyaofei.beancopier.core.DefaultClassLoader;
 import io.github.tanyaofei.beancopier.test.util.TemplateObject;
 import io.github.tanyaofei.guava.common.base.Stopwatch;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.beanutils.BeanUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -20,12 +20,13 @@ import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.commons.SimpleRemapper;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class PerformanceTest {
+public class PerformanceTest extends Assertions {
 
   private static List<Obj> objs;
 
@@ -191,7 +192,7 @@ public class PerformanceTest {
 
     ConverterFactory converterFactory = new ConverterFactory(
         builder -> builder
-            .classLoader(new DefaultClassLoader(this.getClass().getClassLoader()))
+            .lookup(MethodHandles.lookup())
             .classDumpPath(null)
     );
     TemplateObject o = new TemplateObject();

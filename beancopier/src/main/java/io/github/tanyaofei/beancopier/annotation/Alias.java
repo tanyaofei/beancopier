@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * @author tanyaofei
+ * @since 0.2.0
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -22,4 +23,5 @@ public @interface Alias {
    * @return specified source classes
    */
   Class<?>[] forType();
+
 }

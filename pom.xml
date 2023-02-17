@@ -134,10 +134,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <compilerArgs>
-                        <arg>--add-exports</arg>
-                        <arg>java.base/jdk.internal.access=io.github.tanyaofei.beancopier</arg>
-                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

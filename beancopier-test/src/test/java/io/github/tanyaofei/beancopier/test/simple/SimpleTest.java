@@ -1,15 +1,18 @@
 package io.github.tanyaofei.beancopier.test.simple;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
-import io.github.tanyaofei.beancopier.test.BeanCopierTest;
+import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.LocalDateTime;
 
 /**
  * @author tanyaofei
  */
-public class SimpleTest extends BeanCopierTest {
+@ExtendWith(DumpConverterClassesExtension.class)
+public class SimpleTest extends Assertions {
 
   @Test
   public void testSimpleObject() {

@@ -2,8 +2,8 @@ package io.github.tanyaofei.beancopier.test.classloader;
 
 import io.github.tanyaofei.beancopier.BeanCopierImpl;
 import io.github.tanyaofei.beancopier.converter.Converter;
-import io.github.tanyaofei.beancopier.core.ConverterFactory;
-import io.github.tanyaofei.beancopier.test.util.DumpConverterClasses;
+import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -12,10 +12,8 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-@ExtendWith(DumpConverterClasses.class)
-public class UnloadClassesTest {
+@ExtendWith(DumpConverterClassesExtension.class)
+public class UnloadClassesTest extends Assertions {
 
   @Test
   public void testUnloadClasses() throws NoSuchFieldException, IllegalAccessException {
@@ -23,7 +21,6 @@ public class UnloadClassesTest {
     beanCopier.copy(new Object(), Object.class);
 
     Reference<Class<?>> ref = new WeakReference<>(getCaches(beanCopier).values().iterator().next().getClass());
-    assertFalse(getReservedClassNames().isEmpty());
 
     // note:
     //    beanCopier = null 就会释放 BeanCopierImpl 的引用
@@ -33,9 +30,7 @@ public class UnloadClassesTest {
     beanCopier = null;
     System.gc();
 
-    getReservedClassNames().clear();
     assertNull(ref.get());
-    assertTrue(getReservedClassNames().isEmpty());
   }
 
   @SuppressWarnings("unchecked")
@@ -43,13 +38,6 @@ public class UnloadClassesTest {
     Field cacheField = copier.getClass().getDeclaredField("cache");
     cacheField.setAccessible(true);
     return (Map<String, ? super Converter<?, ?>>) cacheField.get(copier);
-  }
-
-  @SuppressWarnings("unchecked")
-  private Map<ClassLoader, String> getReservedClassNames() throws NoSuchFieldException, IllegalAccessException {
-    Field reservedClassNamesField = ConverterFactory.class.getDeclaredField("classLoaderReservedClassNames");
-    reservedClassNamesField.setAccessible(true);
-    return (Map<ClassLoader, String>) reservedClassNamesField.get(ConverterFactory.class);
   }
 
 }
