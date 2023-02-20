@@ -15,47 +15,48 @@ import java.util.List;
 public class NestedTest extends Assertions {
 
   @Test
-  public void testObject() {
-    var source = new NestedPOJO()
-        .setSeniority(1)
-        .setChild(new NestedPOJO().setSeniority(2)
-                                  .setChildren(List.of(
-                                      new NestedPOJO().setSeniority(3),
-                                      new NestedPOJO().setSeniority(3)
-                                  )));
+  public void testPojo() {
+    var source = new NestedSourcePojo()
+        .setId(1)
+        .setChild(new NestedSourcePojo().setId(2))
+        .setChildren(List.of(new NestedSourcePojo().setId(3), new NestedSourcePojo().setId(4)));
 
-    var target = BeanCopier.clone(source);
-    assertEquals(source, target);
+    var target = BeanCopier.copy(source, NestedTargetPojo.class);
+    assertEquals(source.getId(), target.getId());
+    assertEquals(source.getChild().getId(), target.getChild().getId());
+    assertEquals(source.getChildren().size(), target.getChildren().size());
   }
 
   @Test
   public void testRecord() {
-    var source = new NestedRecord(
+    var source = new NestedSourceRecord(
         1,
-        new NestedRecord(
-            2,
-            null,
-            List.of(new NestedRecord(3, null, null), new NestedRecord(3, null, null))
-        ),
-        null
+        new NestedSourceRecord(2, null, null),
+        List.of(new NestedSourceRecord(3, null, null), new NestedSourceRecord(4, null, null))
     );
-    var target = BeanCopier.clone(source);
-    assertEquals(source, target);
+
+    var target = BeanCopier.copy(source, NestedTargetRecord.class);
+    assertEquals(source.id(), target.id());
+    assertEquals(source.child().id(), target.child().id());
+    assertEquals(source.children().size(), target.children().size());
   }
 
   @Test
-  public void testPOJOToRecord() {
-    var source = new NestedPOJO()
-        .setSeniority(1)
-        .setChild(new NestedPOJO().setSeniority(2)
-                                  .setChildren(List.of(
-                                      new NestedPOJO().setSeniority(3),
-                                      new NestedPOJO().setSeniority(3)
-                                  )));
+  public void testPojoAndRecord() {
+    var source = new NestedSourcePojo()
+        .setId(1)
+        .setChild(new NestedSourcePojo().setId(2))
+        .setChildren(List.of(new NestedSourcePojo().setId(3), new NestedSourcePojo().setId(4)));
 
-    var target = BeanCopier.copy(source, NestedRecord.class);
-    var target2 = BeanCopier.copy(target, NestedPOJO.class);
-    assertEquals(source, target2);
+    var target = BeanCopier.copy(source, NestedSourceRecord.class);
+    assertEquals(source.getId(), target.id());
+    assertEquals(source.getChild().getId(), target.child().id());
+    assertEquals(source.getChildren().size(), target.children().size());
+
+    var target2 = BeanCopier.copy(target, NestedSourcePojo.class);
+    assertEquals(target.id(), target2.getId());
+    assertEquals(target.child().id(), target2.getChild().getId());
+    assertEquals(target.children().size(), target2.getChildren().size());
   }
 
 

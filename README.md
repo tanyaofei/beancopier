@@ -126,7 +126,7 @@ Analyze the field relationships between two classes and use ASM to dynamically g
 package io.github.tanyaofei.beancopier.converter;
 
 import io.github.tanyaofei.beancopier.converter.Converter;
-import io.github.tanyaofei.beancopier.test.simple.SimplePOJO;
+import io.github.tanyaofei.beancopier.test.simple.SimplePojo;
 import java.time.LocalDateTime;
 
 // $FF: synthetic class

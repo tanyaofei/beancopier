@@ -16,7 +16,7 @@ public class SimpleTest extends Assertions {
 
   @Test
   public void testSimpleObject() {
-    var source = new SimplePOJO()
+    var source = new SimplePojo()
         .setByteVal((byte) 1)
         .setShortVal((short) 1)
         .setIntVal(1)
@@ -34,7 +34,7 @@ public class SimpleTest extends Assertions {
 
   @Test
   public void testPrimitiveObject() {
-    var source = new PrimitivePOJO()
+    var source = new PrimitivePojo()
         .setByteVal((byte) 1)
         .setShortVal((short) 1)
         .setIntVal(1)
@@ -85,7 +85,7 @@ public class SimpleTest extends Assertions {
 
   @Test
   public void testObjectToRecord() {
-    var source = new SimplePOJO()
+    var source = new SimplePojo()
         .setByteVal((byte) 1)
         .setShortVal((short) 1)
         .setIntVal(1)
@@ -123,7 +123,7 @@ public class SimpleTest extends Assertions {
         'c'
     );
 
-    var target = BeanCopier.copy(source, PrimitivePOJO.class);
+    var target = BeanCopier.copy(source, PrimitivePojo.class);
     assertEquals(source.booleanVal(), target.isBooleanVal());
     assertEquals(source.byteVal(), target.getByteVal());
     assertEquals(source.shortVal(), target.getShortVal());
@@ -137,7 +137,11 @@ public class SimpleTest extends Assertions {
 
   @Test
   public void testObjectNewInstanceByAllArgsConstructor() {
-    var source = new AllArgsConstructorPOJO("1", 1, "c");
+    var source = new AllArgsConstructorPojo("1", 1, "c");
+    var target = BeanCopier.clone(source);
+    assertEquals(source.getA(), target.getA());
+    assertEquals(source.getB(), target.getB());
+    assertEquals(source.getC(), target.getC());
     assertDoesNotThrow(() -> {
       BeanCopier.clone(source);
     });

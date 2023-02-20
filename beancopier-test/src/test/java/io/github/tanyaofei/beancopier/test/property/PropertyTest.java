@@ -14,7 +14,7 @@ public class PropertyTest extends Assertions {
 
   @Test
   public void testPropertyObject() {
-    var source = new PropertyPOJO()
+    var source = new PropertyPojo()
         .setId("id")
         .setName("name")
         .setAge(18)

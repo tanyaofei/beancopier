@@ -2,9 +2,9 @@ package io.github.tanyaofei.beancopier.converter;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * An abstract class for all {@link Converter} implementation classes generated at runtime,
@@ -21,11 +21,11 @@ public abstract class AbstractConverter<S, T> implements Converter<S, T> {
    * @return targets
    */
   @Nullable
-  public final List<T> convertAll(@Nullable Collection<S> sources) {
+  public final List<T> convertAll(@Nullable Iterable<S> sources) {
     if (sources == null) {
       return null;
     }
-    return sources.stream().map(this::convert).collect(Collectors.toList());
+    return StreamSupport.stream(sources.spliterator(), false).map(this::convert).collect(Collectors.toList());
   }
 
 }

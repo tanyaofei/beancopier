@@ -5,7 +5,7 @@ import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import org.objectweb.asm.MethodVisitor;
 
-public class NoNameMatchLocalDefiner extends ZeroValueLocalDefiner {
+public class NonNameMatchedLocalDefiner extends ZeroValueLocalDefiner {
 
   /**
    * If the source does not have a field with the given name, define a zero value.

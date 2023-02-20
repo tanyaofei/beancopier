@@ -43,6 +43,17 @@ public final class BeanCopierImpl {
 
 
   /**
+   * Return a default instance for {@link BeanCopier}, the {@link Converter} instances and classes will not be GC.
+   *
+   * @return The default instance for {@link BeanCopier}
+   */
+  @Contract
+  static BeanCopierImpl getInstance() {
+    return Lazy.INSTANCE;
+  }
+
+
+  /**
    * Create a BeanCopierImpl with the default configurations.
    */
   @Contract(pure = true)
@@ -53,12 +64,12 @@ public final class BeanCopierImpl {
   /**
    * Create an instance with a cache that has the specified initial capacity.
    *
-   * @param cachesInitialCapacity The initial capacity of cache
+   * @param cacheInitialCapacity The initial capacity of cache
    */
   @Contract(pure = true)
-  public BeanCopierImpl(int cachesInitialCapacity) {
+  public BeanCopierImpl(int cacheInitialCapacity) {
     this(
-        cachesInitialCapacity,
+        cacheInitialCapacity,
         config -> {
         }
     );
@@ -108,17 +119,6 @@ public final class BeanCopierImpl {
   public BeanCopierImpl(int cacheInitialCapacity, Consumer<ConverterConfiguration.Builder> config) {
     this(cacheInitialCapacity, new ConverterFactory(config));
   }
-
-  /**
-   * Return a default instance for {@link BeanCopier}, the {@link Converter} instances and classes will not be GC.
-   *
-   * @return The default instance for {@link BeanCopier}
-   */
-  @Contract
-  static BeanCopierImpl getInstance() {
-    return Lazy.INSTANCE;
-  }
-
 
   @Contract(value = "null, _ -> null")
   public <S, T> T copy(@Nullable S source, @NotNull Class<T> target) {
@@ -294,7 +294,6 @@ public final class BeanCopierImpl {
   }
 
   private static class Lazy {
-
     private final static BeanCopierImpl INSTANCE = new BeanCopierImpl(
         DEFAULT_CACHE_CAPACITY,
         new ConverterFactory(builder -> builder.classDumpPath(BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH))
@@ -308,18 +307,6 @@ public final class BeanCopierImpl {
    * @since 0.1.4
    */
   record CacheKey(Class<?> sc, Class<?> tc) {
-
-    @Override
-    public boolean equals(Object obj) {
-      if (obj == this) {
-        return true;
-      }
-      if (!(obj instanceof CacheKey o)) {
-        return false;
-      }
-
-      return o.sc.equals(sc) && o.tc.equals(tc);
-    }
 
   }
 }

@@ -8,7 +8,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class CallbackPOJO {
+public class CallbackPojo {
 
   private String string;
 

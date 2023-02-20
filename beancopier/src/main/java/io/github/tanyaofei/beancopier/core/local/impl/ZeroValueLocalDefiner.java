@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core.local.impl;
 
-import io.github.tanyaofei.beancopier.constants.LocalOpcode;
+import io.github.tanyaofei.beancopier.constants.TypedOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
@@ -26,7 +26,7 @@ public class ZeroValueLocalDefiner extends LocalDefiner {
       LocalsDefinitionContext context
   ) {
     var requiredType = localDefinition.getType();
-    LocalOpcode.ofType(requiredType).constZero(v);
+    TypedOpcode.ofType(requiredType).constZero(v);
     storeLocal(v, requiredType, context);
     return true;
   }

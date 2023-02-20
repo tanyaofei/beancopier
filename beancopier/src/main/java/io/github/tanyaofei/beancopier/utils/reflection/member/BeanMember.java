@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,10 +15,13 @@ import java.util.Map;
 public interface BeanMember {
 
   static Map<String, BeanMember> mapIterable(Iterable<BeanMember> itr) {
-    Map<String, BeanMember> map = new HashMap<>();
-    for (var m : itr) {
-      map.put(m.getName(), m);
+    Map<String, BeanMember> map;
+    if (itr instanceof Collection<BeanMember> c) {
+      map = new HashMap<>(c.size());
+    } else {
+      map = new HashMap<>();
     }
+    itr.forEach(item -> map.put(item.getName(), item));
     return map;
   }
 

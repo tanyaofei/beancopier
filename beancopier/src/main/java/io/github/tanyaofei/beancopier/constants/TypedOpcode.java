@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * @author tanyaofei
  */
 @AllArgsConstructor
-public enum LocalOpcode {
+public enum TypedOpcode {
 
   INT(int.class, Opcodes.ISTORE, Opcodes.ILOAD, Opcodes.ICONST_0, 1),
   SHORT(short.class, Opcodes.ISTORE, Opcodes.ILOAD, Opcodes.ICONST_0, 1),
@@ -36,13 +36,13 @@ public enum LocalOpcode {
   DOUBLE_ARRAY(double[].class, Opcodes.DASTORE, Opcodes.DALOAD, Opcodes.ACONST_NULL, 1),
   REFERENCE_ARRAY(Object[].class, Opcodes.AASTORE, Opcodes.AALOAD, Opcodes.ACONST_NULL, 1);
 
-  private static volatile Map<Class<?>, LocalOpcode> map;
+  private static volatile Map<Class<?>, TypedOpcode> map;
 
   @Getter(AccessLevel.PRIVATE)
   public final Class<?> type;
-  public final int storeOpcode;
-  public final int loadOpcode;
-  public final int zeroOpcode;
+  public final int store;
+  public final int load;
+  public final int constZero;
   public final int slots;
 
   /**
@@ -51,11 +51,11 @@ public enum LocalOpcode {
    * @param type any type
    * @return a LocalOpcode value, should not be null
    */
-  public static LocalOpcode ofType(Class<?> type) {
+  public static TypedOpcode ofType(Class<?> type) {
     if (map == null) {
-      synchronized (LocalOpcode.class) {
+      synchronized (TypedOpcode.class) {
         if (map == null) {
-          map = Arrays.stream(values()).collect(Collectors.toMap(LocalOpcode::getType, o -> o));
+          map = Arrays.stream(values()).collect(Collectors.toMap(TypedOpcode::getType, o -> o));
         }
       }
     }
@@ -76,7 +76,7 @@ public enum LocalOpcode {
    * @param v Method writer
    */
   public void constZero(MethodVisitor v) {
-    v.visitInsn(this.zeroOpcode);
+    v.visitInsn(this.constZero);
   }
 
 }

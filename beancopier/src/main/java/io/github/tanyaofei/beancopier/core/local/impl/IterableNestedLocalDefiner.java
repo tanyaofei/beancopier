@@ -10,9 +10,8 @@ import io.github.tanyaofei.guava.common.reflect.TypeToken;
 import org.objectweb.asm.MethodVisitor;
 
 import java.lang.reflect.Type;
-import java.util.Collection;
 
-import static io.github.tanyaofei.beancopier.constants.MethodInvokers.AbstractConverter$convertAll;
+import static io.github.tanyaofei.beancopier.constants.Invokers.AbstractConverter$convertAll;
 
 /**
  * A definer for define a nested field variable.
@@ -20,20 +19,19 @@ import static io.github.tanyaofei.beancopier.constants.MethodInvokers.AbstractCo
  *  public record Source(List<Source> nested) {}
  *  public record Target(List<Target> nested) {}
  * }</pre>
- * In this case, the field named "nested" is a Collection Nested Field,
+ * In this case, the field named "nested" is an Iterable Nested Field,
  * which means that a recursive bytecode will be generated to complete the local variable definition.
  *
  * <pre>{@code
- *  List<Target> nested = source.nested() == null
- *    ? null
- *    : source.nested().map(this::convert).collect(Collector.toList());
+ *  List<Target> nested = this.convertAll(source.getNested());
  * }
  * </pre>
+ * @see io.github.tanyaofei.beancopier.converter.AbstractConverter#convertAll(Iterable)
  *
  * @author tanyaofei
  * @see NestedLocalDefiner
  */
-public class CollectionNestedLocalDefiner extends LocalDefiner {
+public class IterableNestedLocalDefiner extends LocalDefiner {
 
   @Override
   protected boolean defineInternal(
@@ -51,13 +49,9 @@ public class CollectionNestedLocalDefiner extends LocalDefiner {
       return false;
     }
 
-    if (converterDefinition.getConfiguration().isPreferNested()
-        && !isCollectionNested(
-        converterDefinition,
-        member,
-        localDefinition.getType(),
-        localDefinition.getGenericType()
-    )) {
+    if (!converterDefinition.getConfiguration().isPreferNested()
+        || !isIterableNested(converterDefinition, member, localDefinition.getType(), localDefinition.getGenericType())
+    ) {
       return false;
     }
 
@@ -75,35 +69,41 @@ public class CollectionNestedLocalDefiner extends LocalDefiner {
   }
 
 
-  protected boolean isCollectionNested(ConverterDefinition converterDefinition, BeanMember souceBeanMember, Class<?> localType, Type localGenericType) {
+  protected boolean isIterableNested(ConverterDefinition converterDefinition, BeanMember souceBeanMember, Class<?> localType, Type localGenericType) {
+    if (!Iterable.class.isAssignableFrom(localType)) {
+      return false;
+    }
+    if (!Iterable.class.isAssignableFrom(souceBeanMember.getType())) {
+      return false;
+    }
+    if (converterDefinition.getConfiguration().isFullTypeMatching()) {
+      if (localType != souceBeanMember.getType()) {
+        return false;
+      }
+    }
+
+    if (converterDefinition.getConfiguration().isFullTypeMatching() && localType != souceBeanMember.getType()) {
+      return false;
+    }
+
     var sc = converterDefinition.getSourceType();
     var tc = converterDefinition.getTargetType();
 
-    if (converterDefinition.getConfiguration().isFullTypeMatching()) {
-      return souceBeanMember.getGenericType().equals(localGenericType)
-          && Collection.class.isAssignableFrom(localType)
-          && getCollectionElementType(souceBeanMember.getGenericType()) == sc
-          && getCollectionElementType(localGenericType) == tc;
-    } else {
-      return Collection.class.isAssignableFrom(souceBeanMember.getType())
-          && Collection.class.isAssignableFrom(localType)
-          && getCollectionElementType(souceBeanMember.getGenericType()) == sc
-          && getCollectionElementType(localGenericType) == tc;
-    }
-
+    return getIterableElementType(localGenericType) == tc
+        && getIterableElementType(souceBeanMember.getGenericType()) == sc;
   }
 
   /**
-   * 获取指定字段 {@link Collection} 的元素类型
+   * Return the element type of {@link Iterable}
    *
-   * @param type 集合类
-   * @return 集合的元素类型
+   * @param type type
+   * @return the element type of {@link Iterable}
    */
   @SuppressWarnings("unchecked")
-  private Class<?> getCollectionElementType(Type type) {
-    return ((TypeToken<? extends Collection<?>>) TypeToken.of(type))
-        .getSupertype(Collection.class)
-        .resolveType(Collection.class.getTypeParameters()[0])
+  private Class<?> getIterableElementType(Type type) {
+    return ((TypeToken<? extends Iterable<?>>) TypeToken.of(type))
+        .getSupertype(Iterable.class)
+        .resolveType(Iterable.class.getTypeParameters()[0])
         .getRawType();
   }
 

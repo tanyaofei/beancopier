@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core.instanter;
 
-import io.github.tanyaofei.beancopier.constants.LocalOpcode;
+import io.github.tanyaofei.beancopier.constants.TypedOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
@@ -37,8 +37,8 @@ public class AllArgsConstructorInstanter implements TargetInstanter {
         () -> {
           int store = firstLocalStore;
           for (var member : targetMembers) {
-            var op = LocalOpcode.ofType(member.getType());
-            v.visitVarInsn(op.loadOpcode, store);
+            var op = TypedOpcode.ofType(member.getType());
+            v.visitVarInsn(op.load, store);
             store += op.slots;
           }
         }

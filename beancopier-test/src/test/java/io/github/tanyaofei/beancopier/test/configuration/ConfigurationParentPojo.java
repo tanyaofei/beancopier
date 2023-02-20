@@ -8,7 +8,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class ConfigurationParentPOJO {
+public class ConfigurationParentPojo {
 
   private String parentVal;
 

@@ -1,7 +1,10 @@
 package io.github.tanyaofei.beancopier.core;
 
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.constants.*;
+import io.github.tanyaofei.beancopier.constants.InternalNames;
+import io.github.tanyaofei.beancopier.constants.MethodDescriptors;
+import io.github.tanyaofei.beancopier.constants.MethodNames;
+import io.github.tanyaofei.beancopier.constants.Properties;
 import io.github.tanyaofei.beancopier.converter.AbstractConverter;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.core.annotation.Definition;
@@ -22,7 +25,7 @@ import java.util.stream.StreamSupport;
 /**
  * Bytecode writer for writing converter class
  */
-public class ConverterCodeWriter implements Opcodes, Methods {
+public class ConverterCodeWriter implements Opcodes {
 
   private final static LocalDefiner definer = LocalDefiners.getDefiner();
   private final ConverterDefinition definition;
@@ -57,7 +60,7 @@ public class ConverterCodeWriter implements Opcodes, Methods {
     var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
     cw.visit(
         V1_8,
-        ACC_PUBLIC | ACC_SYNTHETIC,
+        ACC_PUBLIC,
         definition.getInternalName(),
         ClassSignature.getClassSignature(
             ClassSignature.ClassInfo.of(AbstractConverter.class, sourceType, tc)
@@ -136,7 +139,7 @@ public class ConverterCodeWriter implements Opcodes, Methods {
     returnNullIfNull(v);
 
     var targetMembers = Reflections.getMembersWithSetter(definition.getTargetType(), configuration.isIncludingSuper());
-    var sourceMembers = BeanMember.mapIterable(Reflections.getMembersWithGetter(definition.getSourceType(), configuration.isIncludingSuper()));
+    var sourceMembers = BeanMember.mapIterable(Reflections.getGettableBeanMember(definition.getSourceType(), configuration.isIncludingSuper()));
 
     int firstLocalStore = 2;  // 0: this, 1: source object ref
     var context = new LocalsDefinitionContext()
@@ -170,7 +173,7 @@ public class ConverterCodeWriter implements Opcodes, Methods {
           targetMembers,
           firstLocalStore
       );
-      case NO_ARGS_CONSTRUCTOR_THEN_GET_SET -> new NoArgsConstructorInstanter(
+      case NO_ARGS_CONSTRUCTOR_THEN_SET -> new NoArgsConstructorInstanter(
           v,
           definition,
           targetStore,

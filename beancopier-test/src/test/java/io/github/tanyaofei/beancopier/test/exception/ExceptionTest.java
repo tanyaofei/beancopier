@@ -3,6 +3,7 @@ package io.github.tanyaofei.beancopier.test.exception;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
+import io.github.tanyaofei.beancopier.exception.CopyException;
 import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -14,18 +15,43 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class ExceptionTest extends Assertions {
 
   @Test
-  public void testPublic() {
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.clone(new UnPublicObject())).printStackTrace();
+  public void testDuringCopying() {
+    assertThrows(
+        CopyException.class,
+        () -> BeanCopier.copy(new ExceptionOnGetter(), ExceptionOnGetter.class)
+    ).printStackTrace();
   }
 
   @Test
   public void testEnclosing() {
-    assertThrows(ConverterGenerateException.class,
-                 () -> BeanCopier.copy(new Object(), EnclosingObject.class)
+    assertThrows(
+        ConverterGenerateException.class,
+        () -> BeanCopier.copy(new Object(), EnclosingObject.class)
     ).printStackTrace();
     assertDoesNotThrow(() -> {
       BeanCopier.copy(new EnclosingObject(), Object.class);
     });
+  }
+
+  @Test
+  public void testPublic() {
+    assertThrows(ConverterGenerateException.class, () -> BeanCopier.clone(new UnPublicObject())).printStackTrace();
+  }
+
+  public static class ExceptionOnGetter {
+    private String val;
+
+    public String getVal() {
+      if (true) {
+        throw new RuntimeException();
+      }
+      return "";
+    }
+
+    public void setVal(String val) {
+      throw new RuntimeException();
+    }
+
   }
 
   @Test

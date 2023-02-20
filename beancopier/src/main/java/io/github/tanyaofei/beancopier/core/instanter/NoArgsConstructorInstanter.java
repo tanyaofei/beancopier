@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core.instanter;
 
-import io.github.tanyaofei.beancopier.constants.LocalOpcode;
+import io.github.tanyaofei.beancopier.constants.TypedOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import io.github.tanyaofei.beancopier.core.invoker.ConstructorInvoker;
 import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
@@ -50,7 +50,7 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
     for (var member : targetMembers) {
       boolean skip = skippedMembers.contains(member);
       if (skip) {
-        store += LocalOpcode.ofType(member.getType()).slots;
+        store += TypedOpcode.ofType(member.getType()).slots;
       } else {
         store = setValue(member, store);
       }
@@ -58,7 +58,7 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
   }
 
   private int setValue(BeanMember member, int localStore) {
-    var os = LocalOpcode.ofType(member.getType());
+    var os = TypedOpcode.ofType(member.getType());
     if (definition.getConfiguration().isSkipNull() && !member.getType().isPrimitive()) {
       // If skipNull is configured as true, a null check will be performed before calling the setter.
       // The setter method will only be called if the value is not null.
@@ -66,13 +66,13 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
           v,
           () -> {
             v.visitVarInsn(Opcodes.ALOAD, targetStore);
-            v.visitVarInsn(os.loadOpcode, localStore);
+            v.visitVarInsn(os.load, localStore);
           },
           () -> ExecutableInvoker.invoker(member.getMethod()).invoke(v, true)
       ).write();
     } else {
       v.visitVarInsn(Opcodes.ALOAD, targetStore);
-      v.visitVarInsn(os.loadOpcode, localStore);
+      v.visitVarInsn(os.load, localStore);
       ExecutableInvoker.invoker(member.getMethod()).invoke(v, true);
     }
     return localStore + os.slots;

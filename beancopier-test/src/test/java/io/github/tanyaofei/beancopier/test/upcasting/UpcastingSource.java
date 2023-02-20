@@ -18,5 +18,4 @@ public class UpcastingSource {
 
   private List<Integer> numbers;
 
-
 }

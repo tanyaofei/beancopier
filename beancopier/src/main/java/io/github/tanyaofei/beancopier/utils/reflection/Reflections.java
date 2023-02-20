@@ -24,18 +24,14 @@ import java.util.stream.Collectors;
 public class Reflections {
 
   /**
-   * 通过 internalName 获取 class 的 simpleName
+   * Return the simple name by the specified internal name of class
    * <pre>{@code
+   *  var simpleName = Reflections.getClassSimpleNameByInternalName("java/base/Object");
+   *  assertEquals("Object", simpleName);
+   * }</pre>
    *
-   *  String simpleName = Reflection.getClassSimpleNameByInternalName(
-   *    "io/tanyaofei/beancopier/converter/TestConverter"
-   *  );
-   *  assert simpleName.equals("TestConverter")
-   * }
-   * </pre>
-   *
-   * @param internalName JAVA 内部名
-   * @return class 的 simpleName
+   * @param internalName internal name
+   * @return simple class name
    */
   public static String getClassSimpleNameByInternalName(String internalName) {
     return internalName.substring(internalName.lastIndexOf("/") + 1);
@@ -46,16 +42,13 @@ public class Reflections {
   }
 
   /**
-   * 获取一个对象包括父类所有的 getter
-   * <p>
-   * 如果某个字段没有 getter 或者 getter 没有对应的字段, 则不会在返回值
-   * </p>
+   * Return bean members and the {@link BeanMember#getMethod()} is a getter
    *
-   * @param c              类
-   * @param includingSuper 是否包含父类 getters
-   * @return 该类包括父类的所有 getter 集合迭代器
+   * @param c              class
+   * @param includingSuper whether including super members or not
+   * @return bean members
    */
-  public static Iterable<BeanMember> getMembersWithGetter(Class<?> c, boolean includingSuper) {
+  public static Iterable<BeanMember> getGettableBeanMember(Class<?> c, boolean includingSuper) {
     if (c.isRecord()) {
       return getRecordMembersWithGetter(c);
     }
@@ -83,18 +76,17 @@ public class Reflections {
 
     var superclass = c.getSuperclass();
     if (superclass != null && superclass != Object.class && includingSuper) {
-      return Iterables.concat(properties, getMembersWithGetter(superclass, true));
+      return Iterables.concat(properties, getGettableBeanMember(superclass, true));
     }
 
     return properties;
   }
 
   /**
-   * 获取 record 类的 getter
+   * Return bean members and the {@link BeanMember#getMethod()} is a getter
    *
-   * @param c record 类
-   * @return record 类的 getter 可迭代对象
-   * @since 2.0.0
+   * @param c record class
+   * @return bean members
    */
   private static Iterable<BeanMember> getRecordMembersWithGetter(Class<?> c) {
     if (!c.isRecord()) {
@@ -114,14 +106,11 @@ public class Reflections {
   }
 
   /**
-   * 获取一个对象包括父类所有的 setter
-   * <p>
-   * 如果某个字段没有 setter 或者 setter 没有对应的字段, 则不会在返回值
-   * </p>
+   * Return bean members and {@link BeanMember#getMethod()} is setter
    *
-   * @param c              类
-   * @param includingSuper 是否包含父类 setters
-   * @return 该类包括父类的所有 setter 集合迭代器
+   * @param c              specified class
+   * @param includingSuper whether including super members or not
+   * @return bean members
    */
   public static Iterable<BeanMember> getMembersWithSetter(Class<?> c, boolean includingSuper) {
     if (c.isRecord()) {
@@ -152,6 +141,12 @@ public class Reflections {
     return properties;
   }
 
+  /**
+   * Return record members and each of them has no setter
+   *
+   * @param c the specified class
+   * @return bean members
+   */
   private static Iterable<BeanMember> getSettableRecordMember(Class<?> c) {
     if (!c.isRecord()) {
       throw new IllegalArgumentException(c.getName() + " is not a record class");
@@ -163,51 +158,20 @@ public class Reflections {
   }
 
   /**
-   * 判断 superClassLoader 是否是 subClassLoader 的祖宗
+   * Return whether the specified class is an enclosing class
    *
-   * @param superClassLoader 可能为祖宗的 classloader
-   * @param subClassLoader   可能为子孙的 classloader
-   * @return true 表示 superClassLoader 是 subClassLoader, 反则为 false
-   */
-  public static boolean isClAssignableFrom(ClassLoader superClassLoader, ClassLoader subClassLoader) {
-    if (superClassLoader == subClassLoader) {
-      return true;
-    }
-
-    // Object.class.getClassLoader() == null
-    if (superClassLoader == null) {
-      return true;
-    }
-    if (subClassLoader == null) {
-      return false;
-    }
-
-    var p = subClassLoader;
-
-    while (p.getParent() != null) {
-      if (p == superClassLoader) {
-        return true;
-      }
-      p = p.getParent();
-    }
-
-    return false;
-  }
-
-  /**
-   * 判断一个类是否是封闭类, 如果一个类是成员类但是不是 static 则不是封闭类
-   *
-   * @param c 类
-   * @return 如果这个类是封闭类则返回 true，反之为 false
+   * @param c the specified class
+   * @return true if the specified class is an enclosing otherwise false
    */
   public static boolean isEnclosingClass(Class<?> c) {
     return !c.isMemberClass() || Modifier.isStatic(c.getModifiers());
   }
 
   /**
-   * 判断一个类是否有一个 public 的无参构造函数
-   * @param c 类
-   * @return 是否有一个 public 的无参构造函数
+   * Return whether the specified has a public no-args-constructor
+   *
+   * @param c the specified class
+   * @return true if the specified class has a public no-args-constructor otherwise false
    */
   public static boolean hasPublicNoArgsConstructor(Class<?> c) {
     if (c.isRecord()) {
@@ -223,12 +187,12 @@ public class Reflections {
 
 
   /**
-   * 判断一个类是否包含一个与其所有字段相匹配（同名同顺序）的 public 构造器
+   * Return the specified has an all-args-constructor
    *
-   * @param c 类
-   * @return 是否包含一个与其所有字段相匹配（同名同顺序）的构造器
+   * @param c the specified
+   * @return true if the specified class has an all-args-constructor otherwise false
    */
-  public static boolean hasMatchedPublicAllArgsConstructor(Class<?> c) {
+  public static boolean hasPublicAllArgsConstructor(Class<?> c) {
     if (c.isRecord()) {
       return true;
     }

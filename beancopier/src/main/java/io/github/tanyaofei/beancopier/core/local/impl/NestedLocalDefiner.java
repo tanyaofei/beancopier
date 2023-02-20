@@ -25,7 +25,7 @@ import java.lang.reflect.Type;
  * </pre>
  *
  * @author tanyaofei
- * @see CollectionNestedLocalDefiner
+ * @see IterableNestedLocalDefiner
  */
 public class NestedLocalDefiner extends LocalDefiner {
 
@@ -41,7 +41,9 @@ public class NestedLocalDefiner extends LocalDefiner {
       return false;
     }
 
-    if (!isNested(converterDefinition, member.getGenericType(), localDefinition.getGenericType())) {
+    if (!converterDefinition.getConfiguration().isPreferNested()
+        || !isNested(converterDefinition, member.getGenericType(), localDefinition.getGenericType())
+    ) {
       return false;
     }
 
@@ -49,19 +51,22 @@ public class NestedLocalDefiner extends LocalDefiner {
     loadSource(v);
     var getter = ExecutableInvoker.invoker(member.getMethod());
     getter.invoke(v);
-    v.visitMethodInsn(INVOKESPECIAL, converterDefinition.getInternalName(), MethodNames.Converter$convert, converterDefinition.getConvertMethodDescriptor(), false);
+    v.visitMethodInsn(
+        INVOKESPECIAL,
+        converterDefinition.getInternalName(),
+        MethodNames.Converter$convert,
+        converterDefinition.getConvertMethodDescriptor(),
+        false
+    );
     storeLocal(v, localDefinition.getType(), context);
     return true;
   }
 
 
-  private boolean isNested(ConverterDefinition definition, Type getterReturnType, Type localType) {
-    var configuration = definition.getConfiguration();
-    if (!configuration.isPreferNested()) {
-      return false;
-    }
-
-    return definition.getSourceType().equals(getterReturnType) && definition.getTargetType().equals(localType);
+  private boolean isNested(ConverterDefinition definition, Type sourceMemberGenericType, Type localGenericType) {
+    var sc = definition.getSourceType();
+    var tc = definition.getTargetType();
+    return sourceMemberGenericType == sc && localGenericType == tc;
   }
 
 }

@@ -6,7 +6,7 @@ import io.github.tanyaofei.beancopier.core.invoker.MethodInvoker;
 /**
  * @author tanyaofei
  */
-public interface MethodInvokers {
+public interface Invokers {
 
   MethodInvoker AbstractConverter$convertAll = ExecutableInvoker.invoker(Methods.AbstractConverter$convertAll());
 

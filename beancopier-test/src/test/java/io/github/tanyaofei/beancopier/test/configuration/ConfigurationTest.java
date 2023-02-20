@@ -17,7 +17,7 @@ public class ConfigurationTest extends Assertions {
   @Test
   public void testSkipNull() {
     var beancopier = new BeanCopierImpl(config -> config.skipNull(true));
-    var source = new ConfigurationPOJO().setSkippedVal("skipped");
+    var source = new ConfigurationPojo().setSkippedVal("skipped");
     var target = beancopier.clone(source);
     assertEquals(target.getStringVal(), "stringVal");
     assertEquals(target.getIntVal(), 1);
@@ -31,7 +31,7 @@ public class ConfigurationTest extends Assertions {
   @Test
   public void testNotIncludingSuper() {
     var beancopier = new BeanCopierImpl(config -> config.includingSuper(false));
-    var source = new ConfigurationPOJO().setParentVal("parent");
+    var source = new ConfigurationPojo().setParentVal("parent");
     var target = beancopier.clone(source);
     assertNull(target.getParentVal());
   }
@@ -39,7 +39,7 @@ public class ConfigurationTest extends Assertions {
   @Test
   public void testPropertyUnsupported() {
     var beancopier = new BeanCopierImpl(config -> config.propertySupported(false));
-    var source = new ConfigurationPOJO().setSkippedVal("skipped");
+    var source = new ConfigurationPojo().setSkippedVal("skipped");
     var target = beancopier.clone(source);
     assertEquals("skipped", target.getSkippedVal());
   }

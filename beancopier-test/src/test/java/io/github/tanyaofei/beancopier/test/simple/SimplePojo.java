@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @Accessors(chain = true)
-public class SimplePOJO {
+public class SimplePojo {
 
   private Boolean booleanVal;
 

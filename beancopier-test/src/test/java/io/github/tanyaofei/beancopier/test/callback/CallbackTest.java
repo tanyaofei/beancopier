@@ -16,15 +16,15 @@ public class CallbackTest extends Assertions {
 
   @Test
   public void testCopyCallback() {
-    var source = new CallbackPOJO().setString("source");
-    var target = BeanCopier.copy(source, CallbackPOJO.class, (s, t) -> t.setString("target"));
+    var source = new CallbackPojo().setString("source");
+    var target = BeanCopier.copy(source, CallbackPojo.class, (s, t) -> t.setString("target"));
     assertEquals("target", target.getString());
   }
 
   @Test
   public void testCopyListCallback() {
-    var sources = IntStream.range(0, 10).mapToObj(ignored -> new CallbackPOJO().setString("source")).toList();
-    var targets = BeanCopier.copyList(sources, CallbackPOJO.class, (s, t) -> t.setString("target"));
+    var sources = IntStream.range(0, 10).mapToObj(ignored -> new CallbackPojo().setString("source")).toList();
+    var targets = BeanCopier.copyList(sources, CallbackPojo.class, (s, t) -> t.setString("target"));
     for (var target : targets) {
       assertEquals("target", target.getString());
     }

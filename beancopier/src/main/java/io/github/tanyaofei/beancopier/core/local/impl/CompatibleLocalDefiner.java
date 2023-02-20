@@ -60,12 +60,12 @@ public class CompatibleLocalDefiner extends LocalDefiner {
   }
 
   /**
-   * @param sourceType type of field from source
-   * @param targetType type of field from target
-   * @return true if `targetType` is a subtype of source type
+   * @param sourceMemberGenericType type of field from source
+   * @param localGenericType        type of field from target
+   * @return true if `localGenericType` is a subtype of source type
    */
-  protected boolean isTypeCompatible(Type sourceType, Type targetType) {
-    return TypeToken.of(sourceType).isSubtypeOf(targetType);
+  protected boolean isTypeCompatible(Type sourceMemberGenericType, Type localGenericType) {
+    return TypeToken.of(sourceMemberGenericType).isSubtypeOf(localGenericType);
   }
 
 }

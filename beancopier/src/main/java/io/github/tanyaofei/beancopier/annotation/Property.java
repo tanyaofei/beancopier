@@ -4,8 +4,6 @@ package io.github.tanyaofei.beancopier.annotation;
 import java.lang.annotation.*;
 
 /**
- * 字段配置
- *
  * @author tanyaofei
  * @since 0.1.0
  */

@@ -17,15 +17,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ConfigurationPOJO extends ConfigurationParentPOJO {
+public class ConfigurationPojo extends ConfigurationParentPojo {
 
   private String stringVal = "stringVal";
 
   private int intVal = 1;
 
-  private List<ConfigurationPOJO> nestedList = List.of();
+  private List<ConfigurationPojo> nestedList = List.of();
 
-  private ConfigurationPOJO nested = null;
+  private ConfigurationPojo nested = null;
 
   private boolean booleanVal = true;
 

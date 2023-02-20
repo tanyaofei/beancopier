@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class PropertyPOJO {
+public class PropertyPojo {
 
   @Property(value = "name")
   private String id;

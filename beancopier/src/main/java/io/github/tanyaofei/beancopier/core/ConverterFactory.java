@@ -2,13 +2,13 @@ package io.github.tanyaofei.beancopier.core;
 
 import io.github.tanyaofei.beancopier.ConverterConfiguration;
 import io.github.tanyaofei.beancopier.constants.InstantiateMode;
-import io.github.tanyaofei.beancopier.constants.Methods;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
 import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Contract;
 import org.objectweb.asm.Opcodes;
 
@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -30,15 +31,16 @@ import static java.lang.reflect.Modifier.isPublic;
  * @author tanyaofei
  * @since 0.0.1
  */
-public class ConverterFactory implements Opcodes, Methods {
+@Slf4j
+public class ConverterFactory implements Opcodes {
 
   private final ConverterConfiguration configuration;
 
   public ConverterFactory(
-      Consumer<ConverterConfiguration.Builder> consumer
+      Consumer<ConverterConfiguration.Builder> config
   ) {
     var builder = ConverterConfiguration.builder();
-    consumer.accept(builder);
+    config.accept(builder);
     this.configuration = builder.build();
   }
 
@@ -51,13 +53,14 @@ public class ConverterFactory implements Opcodes, Methods {
   private static void dumpClassSafely(byte[] code, String filename) {
     try (var out = new FileOutputStream(filename)) {
       out.write(code);
+      log.info("Converter class was dumped at {}", filename);
     } catch (Throwable e) {
-      e.printStackTrace();
+      log.warn("Failed to dump converter class", e);
     }
   }
 
   /**
-   * Use the specified Lookup to define the converter class
+   * Use the specified {@link java.lang.invoke.MethodHandles.Lookup} to define the converter class
    *
    * @param code java byte code
    * @return class
@@ -122,9 +125,11 @@ public class ConverterFactory implements Opcodes, Methods {
           byte[] dumpCode;
           String filename;
           if (hiddenClass == null) {
+            // define class failed
             dumpCode = code;
             filename = Reflections.getClassSimpleNameByInternalName(internalName);
           } else {
+            // define class succeed
             dumpCode = BytecodeUtils.rename(code, hiddenClass.getName().replace("/", "$"));
             filename = hiddenClass.getSimpleName().replace("/", "$");
           }
@@ -140,63 +145,58 @@ public class ConverterFactory implements Opcodes, Methods {
     }
   }
 
-  private void checkSourceType(Class<?> c) {
-    int modifiers = c.getModifiers();
-
-    // can not import
-    if (c.isLocalClass()) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is a local class");
+  /**
+   * Check the specified can be import from outer class. If not, a {@link ConverterGenerateException} will be thrown
+   *
+   * @param c the specified class
+   */
+  private void checkImportable(Class<?> c) {
+    if (c.isAnonymousClass()) {
+      throw new ConverterGenerateException("Can not import a anonymous class: " + c.getName());
     }
 
-    // can not import
-    if (!isPublic(modifiers)) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is not a public class");
+    if (c.isLocalClass()) {
+      throw new ConverterGenerateException("Can not import a local class: " + c.getName());
+    }
+
+    if (!isPublic(c.getModifiers())) {
+      throw new ConverterGenerateException("Can not import a " + Modifier.toString(c.getModifiers()) + " class: " + c.getName());
     }
   }
 
+  private void checkSourceType(Class<?> c) {
+    checkImportable(c);
+  }
+
   private InstantiateMode checkTargetType(Class<?> c) {
-    int modifiers = c.getModifiers();
+    checkImportable(c);
 
-    // can not import
-    if (c.isLocalClass()) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is a local class");
-    }
-
-    // can not import
-    if (!isPublic(modifiers)) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is not a public class");
-    }
-
-    // can not new instance
     if (c.isInterface()) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is an interface");
+      throw new ConverterGenerateException("Can not instantiate an interface: " + c.getName());
     }
 
-    // can not new instance
-    if (isAbstract(modifiers)) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is an abstract class");
+    if (isAbstract(c.getModifiers())) {
+      throw new ConverterGenerateException("Can not instantiate an abstract class: " + c.getName());
     }
 
-    // can not new instance
     if (c.isEnum()) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is an enum class");
+      throw new ConverterGenerateException("Can not instantiate an enum class: " + c.getName());
     }
 
-    // can not new instance
     if (!Reflections.isEnclosingClass(c)) {
-      throw new ConverterGenerateException("'" + c.getName() + "' is not a enclosing class");
+      throw new ConverterGenerateException("Can not instantiate an enclosing class: " + c.getName());
     }
 
     if (c.isRecord()) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
-    } else if (!configuration.isSkipNull() && Reflections.hasMatchedPublicAllArgsConstructor(c)) {
+    } else if (!configuration.isSkipNull() && Reflections.hasPublicAllArgsConstructor(c)) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
     }
 
     if (Reflections.hasPublicNoArgsConstructor(c)) {
-      return InstantiateMode.NO_ARGS_CONSTRUCTOR_THEN_GET_SET;
+      return InstantiateMode.NO_ARGS_CONSTRUCTOR_THEN_SET;
     }
-    throw new ConverterGenerateException("'" + c.getName() + "' missing a public no-args-constructor or a public all-args-constructor");
+    throw new ConverterGenerateException("Can not instantiate the class without public no-args-constructor or all-args-constructor: " + c.getName());
   }
 
 }

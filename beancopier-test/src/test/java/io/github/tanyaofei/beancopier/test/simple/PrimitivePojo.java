@@ -8,7 +8,7 @@ import lombok.experimental.Accessors;
  */
 @Data
 @Accessors(chain = true)
-public class PrimitivePOJO {
+public class PrimitivePojo {
   private boolean booleanVal;
   private byte byteVal;
   private short shortVal;

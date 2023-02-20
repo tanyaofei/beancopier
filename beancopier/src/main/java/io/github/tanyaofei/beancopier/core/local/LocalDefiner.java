@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core.local;
 
-import io.github.tanyaofei.beancopier.constants.LocalOpcode;
+import io.github.tanyaofei.beancopier.constants.TypedOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -34,8 +34,8 @@ public abstract class LocalDefiner implements Opcodes {
    */
   protected static void storeLocal(MethodVisitor v, Class<?> type, LocalsDefinitionContext context) {
     var store = context.getNextStore();
-    var op = LocalOpcode.ofType(type);
-    v.visitVarInsn(op.storeOpcode, store);
+    var op = TypedOpcode.ofType(type);
+    v.visitVarInsn(op.store, store);
     context.setNextStore(store + op.slots);
   }
 
@@ -48,8 +48,8 @@ public abstract class LocalDefiner implements Opcodes {
    */
   protected static void storeLocal(MethodVisitor v, LocalDefinition definition, LocalsDefinitionContext context) {
     var store = context.getNextStore();
-    var op = LocalOpcode.ofType(definition.getType());
-    v.visitVarInsn(op.storeOpcode, store);
+    var op = TypedOpcode.ofType(definition.getType());
+    v.visitVarInsn(op.store, store);
     context.setNextStore(store + op.slots);
   }
 
@@ -61,7 +61,7 @@ public abstract class LocalDefiner implements Opcodes {
    * @param store the index in local variable table
    */
   protected static void loadStack(MethodVisitor v, Class<?> type, int store) {
-    v.visitVarInsn(LocalOpcode.ofType(type).loadOpcode, store);
+    v.visitVarInsn(TypedOpcode.ofType(type).load, store);
   }
 
   /**

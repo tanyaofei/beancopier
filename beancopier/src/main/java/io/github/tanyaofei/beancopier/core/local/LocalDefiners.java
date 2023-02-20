@@ -13,10 +13,10 @@ public abstract class LocalDefiners {
   static {
     theDefiner
         .fallbackTo(new SkippedLocalDefiner())
-        .fallbackTo(new NoNameMatchLocalDefiner())
+        .fallbackTo(new NonNameMatchedLocalDefiner())
         .fallbackTo(new CompatibleLocalDefiner())
         .fallbackTo(new NestedLocalDefiner())
-        .fallbackTo(new CollectionNestedLocalDefiner())
+        .fallbackTo(new IterableNestedLocalDefiner())
         .fallbackTo(new ZeroValueLocalDefiner());
   }
 

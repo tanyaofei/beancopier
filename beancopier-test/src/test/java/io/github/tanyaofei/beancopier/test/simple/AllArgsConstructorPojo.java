@@ -1,12 +1,14 @@
 package io.github.tanyaofei.beancopier.test.simple;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
  * @author tanyaofei
  */
 @Data
-public class AllArgsConstructorPOJO {
+@AllArgsConstructor
+public class AllArgsConstructorPojo {
 
   private String a;
 
@@ -14,9 +16,4 @@ public class AllArgsConstructorPOJO {
 
   private String c;
 
-  public AllArgsConstructorPOJO(String a, Integer b, String c) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
-  }
 }
