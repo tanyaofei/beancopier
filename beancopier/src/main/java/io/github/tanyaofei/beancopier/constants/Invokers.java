@@ -8,6 +8,11 @@ import io.github.tanyaofei.beancopier.core.invoker.MethodInvoker;
  */
 public interface Invokers {
 
-  MethodInvoker AbstractConverter$convertAll = ExecutableInvoker.invoker(Methods.AbstractConverter$convertAll());
+  MethodInvoker AbstractConverter$convertAllToList = ExecutableInvoker.invoker(Methods.AbstractConverter$convertAllToList());
+
+  MethodInvoker AbstractConverter$convertAllToArrayList = ExecutableInvoker.invoker(Methods.AbstractConverter$convertAllToArrayList());
+
+  MethodInvoker AbstractConverter$convertAllToLinkedList = ExecutableInvoker.invoker(Methods.AbstractConverter$convertAllToLinkedList());
+  MethodInvoker AbstractConverter$convertAllToSet = ExecutableInvoker.invoker(Methods.AbstractConverter$convertAllToSet());
 
 }

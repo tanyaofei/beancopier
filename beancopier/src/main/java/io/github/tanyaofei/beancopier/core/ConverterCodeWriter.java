@@ -7,7 +7,7 @@ import io.github.tanyaofei.beancopier.constants.MethodNames;
 import io.github.tanyaofei.beancopier.constants.Properties;
 import io.github.tanyaofei.beancopier.converter.AbstractConverter;
 import io.github.tanyaofei.beancopier.converter.Converter;
-import io.github.tanyaofei.beancopier.core.annotation.Definition;
+import io.github.tanyaofei.beancopier.core.annotation.Configuration;
 import io.github.tanyaofei.beancopier.core.instanter.AllArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.instanter.NoArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
@@ -29,6 +29,7 @@ public class ConverterCodeWriter implements Opcodes {
 
   private final static LocalDefiner definer = LocalDefiners.getDefiner();
   private final ConverterDefinition definition;
+  private static final String SOURCE_FILE = "<generated>";
 
   public ConverterCodeWriter(ConverterDefinition definition) {
     this.definition = definition;
@@ -68,10 +69,10 @@ public class ConverterCodeWriter implements Opcodes {
         InternalNames.AbstractConverter,
         null
     );
-    cw.visitSource("<generated>", null);
+    cw.visitSource(SOURCE_FILE, null);
     genConstructor(cw);
     genConvertMethod(cw);
-    genMetadata(cw);
+    genConfigurationAnnotation(cw);
     if (sourceType != Object.class || tc != Object.class) {
       genConvertBridgeMethod(cw);
     }
@@ -256,17 +257,18 @@ public class ConverterCodeWriter implements Opcodes {
   }
 
   /**
-   * Add {@link Definition} to converter
+   * Add {@link Configuration} to converter
    *
    * @param cw class writer
    */
-  private void genMetadata(ClassWriter cw) {
-    var a = cw.visitAnnotation(Type.getDescriptor(Definition.class), false);
+  private void genConfigurationAnnotation(ClassWriter cw) {
+    var a = cw.visitAnnotation(Type.getDescriptor(Configuration.class), false);
     var configuration = definition.getConfiguration();
-    a.visit("skipNull", configuration.isSkipNull());
-    a.visit("preferNested", configuration.isPreferNested());
-    a.visit("propertySupported", configuration.isPropertySupported());
-    a.visit("fullTypeMatching", configuration.isFullTypeMatching());
+    a.visit(Configuration.SKIP_NULL, configuration.isSkipNull());
+    a.visit(Configuration.PREFER_NESTED, configuration.isPreferNested());
+    a.visit(Configuration.PROPERTY_SUPPORTED, configuration.isPropertySupported());
+    a.visit(Configuration.FULL_TYPE_MATCHING, configuration.isFullTypeMatching());
+    a.visit(Configuration.INCLUDING_SUPER, configuration.isIncludingSuper());
   }
 
 }

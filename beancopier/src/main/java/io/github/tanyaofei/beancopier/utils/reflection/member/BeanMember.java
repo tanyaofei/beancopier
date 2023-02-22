@@ -15,6 +15,7 @@ import java.util.Map;
 public interface BeanMember {
 
   static Map<String, BeanMember> mapIterable(Iterable<BeanMember> itr) {
+    assert itr != null;
     Map<String, BeanMember> map;
     if (itr instanceof Collection<BeanMember> c) {
       map = new HashMap<>(c.size());

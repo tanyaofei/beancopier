@@ -17,8 +17,24 @@ public interface Methods {
   }
 
   @SneakyThrows
-  static Method AbstractConverter$convertAll() {
-    return AbstractConverter.class.getMethod("convertAll", Iterable.class);
+  static Method AbstractConverter$convertAllToList() {
+    return AbstractConverter.class.getMethod("convertAllToList", Iterable.class);
   }
+
+  @SneakyThrows
+  static Method AbstractConverter$convertAllToSet() {
+    return AbstractConverter.class.getMethod("convertAllToSet", Iterable.class);
+  }
+
+  @SneakyThrows
+  static Method AbstractConverter$convertAllToArrayList() {
+    return AbstractConverter.class.getMethod("convertAllToArrayList", Iterable.class);
+  }
+
+  @SneakyThrows
+  static Method AbstractConverter$convertAllToLinkedList() {
+    return AbstractConverter.class.getMethod("convertAllToLinkedList", Iterable.class);
+  }
+
 
 }

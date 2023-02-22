@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier.core.local.impl;
 
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
+import io.github.tanyaofei.beancopier.core.invoker.MethodInvoker;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
@@ -10,8 +11,12 @@ import io.github.tanyaofei.guava.common.reflect.TypeToken;
 import org.objectweb.asm.MethodVisitor;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
-import static io.github.tanyaofei.beancopier.constants.Invokers.AbstractConverter$convertAll;
+import static io.github.tanyaofei.beancopier.constants.Invokers.*;
 
 /**
  * A definer for define a nested field variable.
@@ -26,7 +31,7 @@ import static io.github.tanyaofei.beancopier.constants.Invokers.AbstractConverte
  *  List<Target> nested = this.convertAll(source.getNested());
  * }
  * </pre>
- * @see io.github.tanyaofei.beancopier.converter.AbstractConverter#convertAll(Iterable)
+ * @see io.github.tanyaofei.beancopier.converter.AbstractConverter#convertAllToList(Iterable)
  *
  * @author tanyaofei
  * @see NestedLocalDefiner
@@ -56,6 +61,10 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
     }
 
     var getter = ExecutableInvoker.invoker(member.getMethod());
+    var convertAll = getConvertAllMethodInvoker(localDefinition.getType());
+    if (convertAll == null) {
+      return false;
+    }
 
     /*
      var variable = this.convertAll(source.getVal());
@@ -63,13 +72,32 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
     loadThis(v);
     loadSource(v);
     getter.invoke(v);
-    AbstractConverter$convertAll.invoke(v);
+    convertAll.invoke(v);
     storeLocal(v, localDefinition, context);
     return true;
   }
 
+  protected MethodInvoker getConvertAllMethodInvoker(Class<?> localType) {
+    if (localType.isAssignableFrom(List.class)) {
+      return AbstractConverter$convertAllToList;
+    } else if (localType.isAssignableFrom(ArrayList.class)) {
+      return AbstractConverter$convertAllToArrayList;
+    } else if (localType.isAssignableFrom(LinkedList.class)) {
+      return AbstractConverter$convertAllToLinkedList;
+    } else if (localType.isAssignableFrom(Set.class)) {
+      return AbstractConverter$convertAllToSet;
+    } else {
+      return null;
+    }
+  }
 
-  protected boolean isIterableNested(ConverterDefinition converterDefinition, BeanMember souceBeanMember, Class<?> localType, Type localGenericType) {
+
+  protected boolean isIterableNested(
+      ConverterDefinition converterDefinition,
+      BeanMember souceBeanMember,
+      Class<?> localType,
+      Type localGenericType
+  ) {
     if (!Iterable.class.isAssignableFrom(localType)) {
       return false;
     }

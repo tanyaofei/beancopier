@@ -12,27 +12,43 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
-public @interface Definition {
+@SuppressWarnings("unused")
+public @interface Configuration {
+
+  String SKIP_NULL = "skipNull";
 
   /**
    * @see ConverterConfiguration#isSkipNull()
    */
   boolean skipNull();
 
+  String PREFER_NESTED = "preferNested";
+
   /**
    * @see ConverterConfiguration#isPreferNested() ()
    */
   boolean preferNested();
+
+  String PROPERTY_SUPPORTED = "propertySupported";
 
   /**
    * @see ConverterConfiguration#isPropertySupported()
    */
   boolean propertySupported();
 
+  String FULL_TYPE_MATCHING = "fullTypeMatching";
+
   /**
    * @see ConverterConfiguration#isFullTypeMatching()
    */
   boolean fullTypeMatching();
+
+  String INCLUDING_SUPER = "includingSuper";
+
+  /**
+   * @see ConverterConfiguration#isIncludingSuper()
+   */
+  boolean includingSuper();
 
 
 }
