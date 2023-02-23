@@ -1,7 +1,5 @@
 package io.github.tanyaofei.beancopier.exception;
 
-import lombok.Getter;
-
 import static org.jetbrains.annotations.ApiStatus.Internal;
 
 /**
@@ -13,13 +11,15 @@ import static org.jetbrains.annotations.ApiStatus.Internal;
  */
 public non-sealed class VerifyException extends BeanCopierException {
 
-  @Getter
-  private final Class<?> type;
 
   @Internal
-  public VerifyException(Class<?> type, String message) {
+  public VerifyException(String message) {
     super(message);
-    this.type = type;
+  }
+
+  @Internal
+  public VerifyException(String message, Throwable cause) {
+    super(message, cause);
   }
 
 }

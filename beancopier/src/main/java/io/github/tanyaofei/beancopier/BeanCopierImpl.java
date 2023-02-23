@@ -9,10 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
@@ -394,13 +391,22 @@ public final class BeanCopierImpl {
     );
   }
 
-  /**
-   * The key object for {@link #cache}.
-   *
-   * @author tanyaofei
-   * @since 0.1.4
-   */
-  record CacheKey(Class<?> sc, Class<?> tc) {
+  private record CacheKey(
+      String sourceTypeClassLoader,
+      String sourceType,
+      String targetTypeClassLoader,
+      String targetType
+  ) {
+
+    public CacheKey(@Nonnull Class<?> sourceType, @Nonnull Class<?> targetType) {
+      this(
+          Optional.ofNullable(sourceType.getClassLoader()).map(ClassLoader::getName).orElse(null),
+          sourceType.getName(),
+          Optional.ofNullable(targetType.getClassLoader()).map(ClassLoader::getName).orElse(null),
+          targetType.getName()
+      );
+    }
 
   }
+
 }

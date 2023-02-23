@@ -18,9 +18,20 @@ public class BytecodeUtils implements Opcodes {
   }
 
   @SneakyThrows
+  public static byte[] toBytecode(Class<?> c) {
+    var cw = new ClassWriter(0);
+    var cr = new ClassReader(c.getName());
+    cr.accept(cw, 0);
+    return cw.toByteArray();
+  }
+
+  @SneakyThrows
   private static byte[] rename(ClassReader cr, String className) {
     var cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-    var cv = new ClassRemapper(cw, new SimpleRemapper(cr.getClassName().replace(".", "/"), className.replace(".", "/")));
+    var cv = new ClassRemapper(
+        cw,
+        new SimpleRemapper(cr.getClassName().replace(".", "/"), className.replace(".", "/"))
+    );
 
     cr.accept(cv, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
     return cw.toByteArray();

@@ -72,7 +72,7 @@ public class ConverterFactory implements Opcodes {
       byte[] code,
       MethodHandles.Lookup lookup
   ) throws IllegalAccessException {
-    return (Class<T>) lookup.defineHiddenClass(code, true, MethodHandles.Lookup.ClassOption.NESTMATE).lookupClass();
+    return (Class<T>) lookup.defineHiddenClass(code, true).lookupClass();
   }
 
   /**
@@ -92,6 +92,9 @@ public class ConverterFactory implements Opcodes {
     var newInstanceMode = checkTargetType(targetType);
 
     var lookup = Optional.ofNullable(configuration.getLookup()).orElse(Converter.LOOKUP);
+    checkPrivilege(sourceType, lookup);
+    checkPrivilege(targetType, lookup);
+
     var packageName = lookup.lookupClass().getPackageName();
     String className = packageName + "." + configuration
         .getNamingPolicy()
@@ -154,15 +157,15 @@ public class ConverterFactory implements Opcodes {
    */
   private void checkImportable(Class<?> c) {
     if (c.isAnonymousClass()) {
-      throw new VerifyException(c, "Can not import a anonymous class: " + c.getName());
+      throw new VerifyException("Can not import a anonymous class: " + c.getName());
     }
 
     if (c.isLocalClass()) {
-      throw new VerifyException(c, "Can not import a local class: " + c.getName());
+      throw new VerifyException("Can not import a local class: " + c.getName());
     }
 
     if (!isPublic(c.getModifiers())) {
-      throw new VerifyException(c, "Can not import a " + Modifier.toString(c.getModifiers()) + " class: " + c.getName());
+      throw new VerifyException("Can not import a " + Modifier.toString(c.getModifiers()) + " class: " + c.getName());
     }
   }
 
@@ -174,19 +177,19 @@ public class ConverterFactory implements Opcodes {
     checkImportable(c);
 
     if (c.isInterface()) {
-      throw new VerifyException(c, "Can not instantiate an interface: " + c.getName());
+      throw new VerifyException("Can not instantiate an interface: " + c.getName());
     }
 
     if (isAbstract(c.getModifiers())) {
-      throw new VerifyException(c, "Can not instantiate an abstract class: " + c.getName());
+      throw new VerifyException("Can not instantiate an abstract class: " + c.getName());
     }
 
     if (c.isEnum()) {
-      throw new VerifyException(c, "Can not instantiate an enum class: " + c.getName());
+      throw new VerifyException("Can not instantiate an enum class: " + c.getName());
     }
 
     if (!Reflections.isEnclosingClass(c)) {
-      throw new VerifyException(c, "Can not instantiate an enclosing class: " + c.getName());
+      throw new VerifyException("Can not instantiate an enclosing class: " + c.getName());
     }
 
     if (c.isRecord()) {
@@ -198,7 +201,28 @@ public class ConverterFactory implements Opcodes {
     if (Reflections.hasPublicNoArgsConstructor(c)) {
       return InstantiateMode.NO_ARGS_CONSTRUCTOR_THEN_SET;
     }
-    throw new VerifyException(c, "Can not instantiate the class without public no-args-constructor or all-args-constructor: " + c.getName());
+    throw new VerifyException(
+        "Can not instantiate the class without public no-args-constructor or all-args-constructor: " + c.getName()
+    );
+  }
+
+  public void checkPrivilege(Class<?> c, MethodHandles.Lookup lookup) {
+    try {
+      lookup.findClass(c.getName());
+    } catch (IllegalAccessException e) {
+      String message = (lookup == Converter.LOOKUP
+                        ? "This BeanCopierImpl instance can not access class: " + c.getName()
+                        : "The lookup defined in configuration can not access class: " + c.getName())
+          + ", use `new BeanCopierImpl(config -> config.lookup(A_LOOKUP_THAT_HAS_PRIVILEGE_ACCESS))` instead";
+      throw new VerifyException(message, e);
+    } catch (ClassNotFoundException e) {
+      throw new VerifyException(
+          c + "(loaded by " + c.getClassLoader() + ") is not visible to this BeanCopier instance with classloader: "
+              + lookup.lookupClass().getClassLoader()
+              + ", use `new BeanCopierImpl(config -> config.lookup(A_LOOKUP_CAN_VISIT_THE_CLASS))` instead",
+          e
+      );
+    }
   }
 
 }

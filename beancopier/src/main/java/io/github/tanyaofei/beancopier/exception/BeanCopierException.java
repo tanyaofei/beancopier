@@ -8,7 +8,7 @@ import static org.jetbrains.annotations.ApiStatus.Internal;
  * @author tanyaofei
  * @since 0.0.1
  */
-public sealed class BeanCopierException extends RuntimeException permits VerifyException, InstantiationError, CopyException {
+public sealed class BeanCopierException extends RuntimeException permits VerifyException, CopyException {
 
   @Internal
   public BeanCopierException(Throwable cause) {
