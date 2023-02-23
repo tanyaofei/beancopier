@@ -52,6 +52,7 @@
         <guava.version>31.1-jre</guava.version>
         <asm-commons.version>9.4</asm-commons.version>
         <slfj.version>2.0.6</slfj.version>
+        <jsr305.version>3.0.2</jsr305.version>
 
         <!--   test     -->
         <junit.version>5.9.2</junit.version>
@@ -82,6 +83,12 @@
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-commons</artifactId>
                 <version>${asm-commons.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
             </dependency>
 
             <dependency>

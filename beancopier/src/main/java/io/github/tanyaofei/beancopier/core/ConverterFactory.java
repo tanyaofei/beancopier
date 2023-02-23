@@ -9,9 +9,9 @@ import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Contract;
 import org.objectweb.asm.Opcodes;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.invoke.MethodHandles;
@@ -82,9 +82,9 @@ public class ConverterFactory implements Opcodes {
    * @param <T>        the type of target
    * @return A converter that has ability to copy
    */
-  @Contract(pure = true)
+  @Nonnull
   public <S, T> Converter<S, T> generateConverter(
-      Class<S> sourceType, Class<T> targetType
+      @Nonnull Class<S> sourceType, @Nonnull Class<T> targetType
   ) {
     checkSourceType(sourceType);
     var newInstanceMode = checkTargetType(targetType);

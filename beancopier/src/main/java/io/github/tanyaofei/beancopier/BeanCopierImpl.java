@@ -7,6 +7,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnegative;
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -82,25 +84,9 @@ public final class BeanCopierImpl {
    * @param converterFactory     converter factory instance
    */
   @Contract(pure = true)
-  private BeanCopierImpl(int cacheInitialCapacity, @NotNull ConverterFactory converterFactory) {
+  private BeanCopierImpl(@Nonnegative int cacheInitialCapacity, @NotNull ConverterFactory converterFactory) {
     this.cache = new ConcurrentHashMap<>(cacheInitialCapacity);
     this.converterFactory = converterFactory;
-  }
-
-  /**
-   * Create an instance with custom configurations
-   * <pre>{@code
-   *  BeanCopierImpl beanCopier = new BeanCopierImpl(
-   *    config -> config.classLoader(this.getClassLoader())
-   *  );
-   * }
-   * </pre>
-   *
-   * @param config config will be used
-   */
-  @Contract(pure = true)
-  public BeanCopierImpl(Consumer<ConverterConfiguration.Builder> config) {
-    this(DEFAULT_CACHE_CAPACITY, new ConverterFactory(config));
   }
 
   /**
@@ -116,23 +102,90 @@ public final class BeanCopierImpl {
    * @param config               the config will be used
    */
   @Contract(pure = true)
-  public BeanCopierImpl(int cacheInitialCapacity, Consumer<ConverterConfiguration.Builder> config) {
+  public BeanCopierImpl(
+      @Nonnegative int cacheInitialCapacity,
+      @NotNull Consumer<ConverterConfiguration.Builder> config
+  ) {
     this(cacheInitialCapacity, new ConverterFactory(config));
   }
 
-  @Contract(value = "null, _ -> null")
+  /**
+   * Create an instance with custom configurations
+   * <pre>{@code
+   *  BeanCopierImpl beanCopier = new BeanCopierImpl(
+   *    config -> config.classLoader(this.getClassLoader())
+   *  );
+   * }
+   * </pre>
+   *
+   * @param config config will be used
+   */
+  @Contract(pure = true)
+  public BeanCopierImpl(@NotNull Consumer<ConverterConfiguration.Builder> config) {
+    this(DEFAULT_CACHE_CAPACITY, new ConverterFactory(config));
+  }
+
+  /**
+   * clone a object
+   *
+   * @param source the object is about to clone
+   * @param <T>    the type of source
+   * @return cloned object, null if the source is null
+   */
+  @Contract(pure = true)
+  public <T> T clone(@Nullable T source) {
+    return clone(source, null);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Contract(value = "null, _ -> null", pure = true)
+  public <T> T clone(@Nullable T source, @Nullable BiConsumer<T, T> afterCloned) {
+    if (source == null) {
+      if (afterCloned != null) {
+        afterCloned.accept(null, null);
+      }
+      return null;
+    }
+    return copy(source, (Class<T>) source.getClass(), afterCloned);
+  }
+
+  /**
+   * copy an object to a specified class
+   *
+   * @param source the object that is about to be copied
+   * @param target specified class that the source will copy to it
+   * @param <S>    the type of source
+   * @param <T>    the type of target
+   * @return copy object, null if the source is null
+   */
+  @Contract(value = "null, _ -> null", pure = true)
   public <S, T> T copy(@Nullable S source, @NotNull Class<T> target) {
     return copy(source, target, null);
   }
 
+  /**
+   * Copy an object to a specified class,
+   * specify an {@link BiConsumer} {@code afterCopied} to custom what you want to do before returning after copy.
+   *
+   * @param source    the object that is about to be copied
+   * @param target    specified class that the source will copy to it
+   * @param afterCopied custom operations before returning after copy
+   * @param <S>       the type of source
+   * @param <T>       the type of target
+   * @return copy object, null if the source is null
+   * @throws CopyException if any exception occur during the copying process and the {@code afterCopied}
+   */
   @SuppressWarnings("unchecked")
   @Contract(value = "null, _, _ -> null")
   public <S, T> T copy(
       @Nullable S source,
       @NotNull Class<T> target,
-      @Nullable BiConsumer<S, T> consumer
+      @Nullable BiConsumer<S, T> afterCopied
   ) {
     if (source == null) {
+      if (afterCopied != null) {
+        afterCopied.accept(null, null);
+      }
       return null;
     }
 
@@ -143,8 +196,8 @@ public final class BeanCopierImpl {
     T t;
     try {
       t = converter.convert(source);
-      if (consumer != null) {
-        consumer.accept(source, t);
+      if (afterCopied != null) {
+        afterCopied.accept(source, t);
       }
     } catch (Exception e) {
       throw new CopyException("Failed to copy bean with the following converter: " + converter.getClass().getName(), e);
@@ -153,34 +206,48 @@ public final class BeanCopierImpl {
     return t;
   }
 
-  @SuppressWarnings("unchecked")
-  @Contract(value = "null -> null")
-  public <T> T clone(@Nullable T source) {
-    if (source == null) {
-      return null;
-    }
-    return copy(source, (Class<T>) source.getClass(), null);
-  }
-
-
-  @NotNull
+  /**
+   * Clone a collection of sources.
+   * Each element in the collection will be copied into a new collection is about to returning,
+   * if the element is null, it will be copied as null into the new collection
+   *
+   * @param sources sources that is about to copy
+   * @param <T>     the type of source
+   * @return new collection contains copy objects
+   * @throws NullPointerException if the {@code sources} is null
+   */
+  @Nonnull
+  @Contract(pure = true)
   public <T> List<T> cloneList(@NotNull Collection<@Nullable T> sources) {
     return cloneList(sources, null);
   }
 
+  /**
+   * Clone a collection of sources.
+   * Each element in the collection will be cloned into a new collection is about to returning,
+   * if the element is null, it will be cloned as null into the new collection.
+   * Specify an {@link BiConsumer} {@code afterEachCloned} to custom what you want to do after each element is cloned.
+   *
+   * @param sources   collection that is about to be cloned
+   * @param afterEachCloned custom operation after each element is cloned
+   * @param <T>       the type of source
+   * @return new collection contains cloned objects
+   */
+  @Nonnull
+  @Contract(pure = true)
   @SuppressWarnings("unchecked")
   public <T> List<T> cloneList(
-      @NotNull Collection<@Nullable T> objs,
-      @Nullable BiConsumer<T, T> consumer
+      @NotNull Collection<@Nullable T> sources,
+      @Nullable BiConsumer<T, T> afterEachCloned
   ) {
-    if (objs.isEmpty()) {
+    if (sources.isEmpty()) {
       return new ArrayList<>();
     }
 
-    int remains = objs.size();
+    int remains = sources.size();
     var ret = new ArrayList<T>(remains);
 
-    if (objs instanceof List<T> objList) {
+    if (sources instanceof List<T> objList) {
       var itr = objList.listIterator();
       while (itr.hasNext()) {
         T t = itr.next();
@@ -192,11 +259,11 @@ public final class BeanCopierImpl {
 
         itr.previous();
         Class<T> c = (Class<T>) t.getClass();
-        assert remains + ret.size() == objs.size();
-        ret.addAll(copyList(itr, c, consumer, remains));
+        assert remains + ret.size() == sources.size();
+        ret.addAll(copyList(itr, c, afterEachCloned, remains));
       }
     } else {
-      var itr = objs.iterator();
+      var itr = sources.iterator();
       while (itr.hasNext()) {
         T t = itr.next();
         if (t == null) {
@@ -206,17 +273,30 @@ public final class BeanCopierImpl {
         }
 
         var c = (Class<T>) t.getClass();
-        ret.add(copy(t, c, consumer));
-        assert remains - 1 + ret.size() == objs.size();
-        ret.addAll(copyList(itr, c, consumer, remains - 1));
+        ret.add(copy(t, c, afterEachCloned));
+        assert remains - 1 + ret.size() == sources.size();
+        ret.addAll(copyList(itr, c, afterEachCloned, remains - 1));
         return ret;
       }
     }
 
-    assert objs.size() == ret.size();
+    assert sources.size() == ret.size();
     return ret;
   }
 
+  /**
+   * Copy a collection of sources.
+   * Each element in the collection will be copied into a new collection is about to returning,
+   * if the element is null, it will be copied as null into the new collection.
+   *
+   * @param sources collection that is about to be copied
+   * @param target  the type is about to be copied to
+   * @param <S>     the type of source
+   * @param <T>     the type of target
+   * @return new collection contains copy object
+   */
+  @Nonnull
+  @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> sources,
       @NotNull Class<T> target
@@ -224,13 +304,26 @@ public final class BeanCopierImpl {
     return copyList(sources, target, null);
   }
 
-  @NotNull
+  /**
+   * Copy a collection of sources.
+   * Each element in the collection will be copied into a new collection is about to returning,
+   * if the element is null, it will be copied as null into the new collection.
+   * Specify an {@link BiConsumer} {@code afterCopy} to custom what you want to do after each element is copied.
+   *
+   * @param sources collection that is about to be copied
+   * @param target  the type is about to be copied to
+   * @param <S>     the type of source
+   * @param <T>     the type of target
+   * @return new collection contains copy object
+   */
+  @Nonnull
+  @Contract(pure = true)
   public <S, T> List<T> copyList(
-      @NotNull Collection<@Nullable S> source,
+      @NotNull Collection<@Nullable S> sources,
       @NotNull Class<T> target,
-      @Nullable BiConsumer<S, T> consumer
+      @Nullable BiConsumer<S, T> afterCopyEach
   ) {
-    return copyList(source.iterator(), target, consumer, source.size());
+    return copyList(sources.iterator(), target, afterCopyEach, sources.size());
   }
 
   /**
@@ -243,11 +336,12 @@ public final class BeanCopierImpl {
    * @param <T>        the type of target
    * @return a converter that copies the source object to the target object
    */
+  @Nonnull
   @SuppressWarnings("unchecked")
   private <S, T> Converter<S, T> generateConverter(
-      @NotNull CacheKey cacheKey,
-      @NotNull Class<S> sourceType,
-      @NotNull Class<T> targetType
+      @Nonnull CacheKey cacheKey,
+      @Nonnull Class<S> sourceType,
+      Class<T> targetType
   ) {
     return (Converter<S, T>) cache.computeIfAbsent(
         cacheKey,
@@ -255,12 +349,12 @@ public final class BeanCopierImpl {
     );
   }
 
-  @NotNull
+  @Contract
   @SuppressWarnings("unchecked")
   private <S, T> List<T> copyList(
-      @NotNull Iterator<@Nullable S> itr,
-      @NotNull Class<T> tc,
-      @Nullable BiConsumer<S, T> consumer,
+      @Nonnull Iterator<S> itr,
+      @Nonnull Class<T> tc,
+      @Nullable BiConsumer<S, T> afterEachCopied,
       int initialCapacity
   ) {
     if (!itr.hasNext()) {
@@ -285,8 +379,8 @@ public final class BeanCopierImpl {
       }
 
       ret.add(t);
-      if (consumer != null) {
-        consumer.accept(s, t);
+      if (afterEachCopied != null) {
+        afterEachCopied.accept(s, t);
       }
     }
 
