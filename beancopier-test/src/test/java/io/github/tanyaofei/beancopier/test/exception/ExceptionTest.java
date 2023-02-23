@@ -2,8 +2,8 @@ package io.github.tanyaofei.beancopier.test.exception;
 
 
 import io.github.tanyaofei.beancopier.BeanCopier;
-import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
 import io.github.tanyaofei.beancopier.exception.CopyException;
+import io.github.tanyaofei.beancopier.exception.VerifyException;
 import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -25,7 +25,7 @@ public class ExceptionTest extends Assertions {
   @Test
   public void testEnclosing() {
     assertThrows(
-        ConverterGenerateException.class,
+        VerifyException.class,
         () -> BeanCopier.copy(new Object(), EnclosingObject.class)
     ).printStackTrace();
     assertDoesNotThrow(() -> {
@@ -35,7 +35,7 @@ public class ExceptionTest extends Assertions {
 
   @Test
   public void testPublic() {
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.clone(new UnPublicObject())).printStackTrace();
+    assertThrows(VerifyException.class, () -> BeanCopier.clone(new UnPublicObject())).printStackTrace();
   }
 
   public static class ExceptionOnGetter {
@@ -56,23 +56,23 @@ public class ExceptionTest extends Assertions {
 
   @Test
   public void testAbstract() {
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(new Object(), AbstractObject.class)).printStackTrace();
+    assertThrows(VerifyException.class, () -> BeanCopier.copy(new Object(), AbstractObject.class)).printStackTrace();
   }
 
   @Test
   public void testEnum() {
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(new Object(), EnumObj.class)).printStackTrace();
+    assertThrows(VerifyException.class, () -> BeanCopier.copy(new Object(), EnumObj.class)).printStackTrace();
   }
 
   @Test
   public void testInterface() {
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(new Object(), InterfaceObject.class)).printStackTrace();
+    assertThrows(VerifyException.class, () -> BeanCopier.copy(new Object(), InterfaceObject.class)).printStackTrace();
   }
 
   @Test
   public void testPrimitive() {
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(new Object(), int.class)).printStackTrace();
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(1, int.class)).printStackTrace();
+    assertThrows(VerifyException.class, () -> BeanCopier.copy(new Object(), int.class)).printStackTrace();
+    assertThrows(VerifyException.class, () -> BeanCopier.copy(1, int.class)).printStackTrace();
     assertDoesNotThrow(() -> BeanCopier.copy(2, String.class));
   }
 
@@ -82,9 +82,9 @@ public class ExceptionTest extends Assertions {
     @Accessors(chain = true)
     class LocalObject {
     }
-    assertThrows(ConverterGenerateException.class, () -> BeanCopier.copy(new LocalObject(), Object.class));
+    assertThrows(VerifyException.class, () -> BeanCopier.copy(new LocalObject(), Object.class));
 
-    assertThrows(ConverterGenerateException.class, () -> {
+    assertThrows(VerifyException.class, () -> {
       BeanCopier.copy(
           new Object(),
           LocalObject.class);

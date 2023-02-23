@@ -51,8 +51,6 @@ public final class BeanCopier {
     return theCopier.copy(source, target, afterCopied);
   }
 
-
-
   /**
    * @see BeanCopierImpl#cloneList(Collection)
    * @since 0.1.0

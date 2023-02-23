@@ -1,7 +1,9 @@
 package io.github.tanyaofei.beancopier.converter;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,7 +71,8 @@ public abstract class AbstractConverter<S, T> implements Converter<S, T> {
    * @return targets
    */
   @Nullable
-  public final <A, R> R convertAll(@Nullable Iterable<S> sources, Collector<T, A, R> collector) {
+  @Contract(value = "null, _ -> null", pure = true)
+  public final <A, R> R convertAll(@Nullable Iterable<S> sources, @Nonnull Collector<T, A, R> collector) {
     if (sources == null) {
       return null;
     }

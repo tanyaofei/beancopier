@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
  * Converter classes naming policy
  *
  * @author tanyaofei
- * @see ConverterConfiguration#getNamingPolicy()
+ * @see ConverterConfiguration.Builder#namingPolicy(NamingPolicy)
  * @since 0.1.2
  */
 public abstract class NamingPolicy {

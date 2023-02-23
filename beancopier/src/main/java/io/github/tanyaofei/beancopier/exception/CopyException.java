@@ -1,5 +1,5 @@
 package io.github.tanyaofei.beancopier.exception;
-
+import static org.jetbrains.annotations.ApiStatus.Internal;
 /**
  * Copy Exception. Any exceptions occur during copying will be wrapped as a CopyException.
  * <pre>{@code
@@ -15,16 +15,9 @@ package io.github.tanyaofei.beancopier.exception;
  * @author tanyaofei
  * @since 0.1.2
  */
-public final class CopyException extends BeanCopierException {
+public non-sealed class CopyException extends BeanCopierException {
 
-  public CopyException(Throwable cause) {
-    super(cause);
-  }
-
-  public CopyException(String message) {
-    super(message);
-  }
-
+  @Internal
   public CopyException(String message, Throwable cause) {
     super(message, cause);
   }

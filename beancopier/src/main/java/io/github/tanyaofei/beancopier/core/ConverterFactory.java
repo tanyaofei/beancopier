@@ -3,8 +3,10 @@ package io.github.tanyaofei.beancopier.core;
 import io.github.tanyaofei.beancopier.ConverterConfiguration;
 import io.github.tanyaofei.beancopier.constants.InstantiateMode;
 import io.github.tanyaofei.beancopier.converter.Converter;
-import io.github.tanyaofei.beancopier.exception.ConverterGenerateException;
-import io.github.tanyaofei.beancopier.exception.ConverterNewInstanceException;
+import io.github.tanyaofei.beancopier.exception.CodeError;
+import io.github.tanyaofei.beancopier.exception.DefineClassError;
+import io.github.tanyaofei.beancopier.exception.InstantiationError;
+import io.github.tanyaofei.beancopier.exception.VerifyException;
 import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
@@ -109,14 +111,14 @@ public class ConverterFactory implements Opcodes {
     try {
       code = new ConverterCodeWriter(definition).write();
     } catch (Throwable e) {
-      throw new ConverterGenerateException(sourceType, targetType, e);
+      throw new CodeError(sourceType, targetType, e);
     }
 
     Class<Converter<S, T>> c = null;
     try {
       c = Objects.requireNonNull(defineClass(code, lookup));
     } catch (Throwable e) {
-      throw new ConverterGenerateException(sourceType, targetType, e);
+      throw new DefineClassError(code, sourceType, targetType, e);
     } finally {
       String dumpPath = configuration.getClassDumpPath();
       if (StringUtils.hasLength(dumpPath)) {
@@ -141,26 +143,26 @@ public class ConverterFactory implements Opcodes {
     try {
       return c.getConstructor().newInstance();
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-      throw new ConverterNewInstanceException(c, e);
+      throw new InstantiationError(c, e);
     }
   }
 
   /**
-   * Check the specified can be import from outer class. If not, a {@link ConverterGenerateException} will be thrown
+   * Check the specified can be import from outer class. If not, a {@link VerifyException} will be thrown
    *
    * @param c the specified class
    */
   private void checkImportable(Class<?> c) {
     if (c.isAnonymousClass()) {
-      throw new ConverterGenerateException("Can not import a anonymous class: " + c.getName());
+      throw new VerifyException(c, "Can not import a anonymous class: " + c.getName());
     }
 
     if (c.isLocalClass()) {
-      throw new ConverterGenerateException("Can not import a local class: " + c.getName());
+      throw new VerifyException(c, "Can not import a local class: " + c.getName());
     }
 
     if (!isPublic(c.getModifiers())) {
-      throw new ConverterGenerateException("Can not import a " + Modifier.toString(c.getModifiers()) + " class: " + c.getName());
+      throw new VerifyException(c, "Can not import a " + Modifier.toString(c.getModifiers()) + " class: " + c.getName());
     }
   }
 
@@ -172,19 +174,19 @@ public class ConverterFactory implements Opcodes {
     checkImportable(c);
 
     if (c.isInterface()) {
-      throw new ConverterGenerateException("Can not instantiate an interface: " + c.getName());
+      throw new VerifyException(c, "Can not instantiate an interface: " + c.getName());
     }
 
     if (isAbstract(c.getModifiers())) {
-      throw new ConverterGenerateException("Can not instantiate an abstract class: " + c.getName());
+      throw new VerifyException(c, "Can not instantiate an abstract class: " + c.getName());
     }
 
     if (c.isEnum()) {
-      throw new ConverterGenerateException("Can not instantiate an enum class: " + c.getName());
+      throw new VerifyException(c, "Can not instantiate an enum class: " + c.getName());
     }
 
     if (!Reflections.isEnclosingClass(c)) {
-      throw new ConverterGenerateException("Can not instantiate an enclosing class: " + c.getName());
+      throw new VerifyException(c, "Can not instantiate an enclosing class: " + c.getName());
     }
 
     if (c.isRecord()) {
@@ -196,7 +198,7 @@ public class ConverterFactory implements Opcodes {
     if (Reflections.hasPublicNoArgsConstructor(c)) {
       return InstantiateMode.NO_ARGS_CONSTRUCTOR_THEN_SET;
     }
-    throw new ConverterGenerateException("Can not instantiate the class without public no-args-constructor or all-args-constructor: " + c.getName());
+    throw new VerifyException(c, "Can not instantiate the class without public no-args-constructor or all-args-constructor: " + c.getName());
   }
 
 }
