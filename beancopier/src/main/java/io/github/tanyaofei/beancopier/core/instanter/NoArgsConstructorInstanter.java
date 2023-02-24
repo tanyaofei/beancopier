@@ -9,6 +9,7 @@ import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import javax.annotation.Nonnull;
 import java.util.Set;
 
 /**
@@ -27,11 +28,11 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
   private final Set<BeanMember> skippedMembers;
 
   public NoArgsConstructorInstanter(
-      MethodVisitor v,
-      ConverterDefinition definition,
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition definition,
       int targetStore,
-      Iterable<BeanMember> targetMembers,
-      Set<BeanMember> skippedMembers,
+      @Nonnull Iterable<BeanMember> targetMembers,
+      @Nonnull Set<BeanMember> skippedMembers,
       int firstLocalStore
   ) {
     this.v = v;
@@ -57,9 +58,9 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
     }
   }
 
-  private int setValue(BeanMember member, int localStore) {
+  private int setValue(@Nonnull BeanMember member, int localStore) {
     var os = TypedOpcode.ofType(member.getType().getRawType());
-    if (definition.getConfiguration().isSkipNull() && !member.getType().getRawType().isPrimitive()) {
+    if (definition.getFeature().isSkipNull() && !member.getType().getRawType().isPrimitive()) {
       // If skipNull is configured as true, a null check will be performed before calling the setter.
       // The setter method will only be called if the value is not null.
       new IfNonNull(

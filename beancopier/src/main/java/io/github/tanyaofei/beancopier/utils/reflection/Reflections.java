@@ -9,6 +9,7 @@ import io.github.tanyaofei.guava.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -33,11 +34,13 @@ public class Reflections {
    * @param internalName internal name
    * @return simple class name
    */
-  public static String getClassSimpleNameByInternalName(String internalName) {
+  @Nonnull
+  public static String getClassSimpleNameByInternalName(@Nonnull String internalName) {
     return internalName.substring(internalName.lastIndexOf("/") + 1);
   }
 
-  public static String getInternalNameByClassName(String className) {
+  @Nonnull
+  public static String getInternalNameByClassName(@Nonnull String className) {
     return className.replace(".", "/");
   }
 
@@ -48,7 +51,8 @@ public class Reflections {
    * @param includingSuper whether including super members or not
    * @return bean members
    */
-  public static Iterable<BeanMember> getGettableBeanMember(Class<?> c, boolean includingSuper) {
+  @Nonnull
+  public static Iterable<BeanMember> getGettableBeanMember(@Nonnull Class<?> c, boolean includingSuper) {
     if (c.isRecord()) {
       return getRecordMembersWithGetter(c);
     }
@@ -88,7 +92,8 @@ public class Reflections {
    * @param c record class
    * @return bean members
    */
-  private static Iterable<BeanMember> getRecordMembersWithGetter(Class<?> c) {
+  @Nonnull
+  private static Iterable<BeanMember> getRecordMembersWithGetter(@Nonnull Class<?> c) {
     if (!c.isRecord()) {
       throw new IllegalArgumentException(c.getName() + " is not a record class");
     }
@@ -112,7 +117,8 @@ public class Reflections {
    * @param includingSuper whether including super members or not
    * @return bean members
    */
-  public static Iterable<BeanMember> getMembersWithSetter(Class<?> c, boolean includingSuper) {
+  @Nonnull
+  public static Iterable<BeanMember> getMembersWithSetter(@Nonnull Class<?> c, boolean includingSuper) {
     if (c.isRecord()) {
       return getSettableRecordMember(c);
     }
@@ -147,7 +153,8 @@ public class Reflections {
    * @param c the specified class
    * @return bean members
    */
-  private static Iterable<BeanMember> getSettableRecordMember(Class<?> c) {
+  @Nonnull
+  private static Iterable<BeanMember> getSettableRecordMember(@Nonnull Class<?> c) {
     if (!c.isRecord()) {
       throw new IllegalArgumentException(c.getName() + " is not a record class");
     }
@@ -163,7 +170,7 @@ public class Reflections {
    * @param c the specified class
    * @return true if the specified class is an enclosing otherwise false
    */
-  public static boolean isEnclosingClass(Class<?> c) {
+  public static boolean isEnclosingClass(@Nonnull Class<?> c) {
     return !c.isMemberClass() || Modifier.isStatic(c.getModifiers());
   }
 
@@ -173,7 +180,7 @@ public class Reflections {
    * @param c the specified class
    * @return true if the specified class has a public no-args-constructor otherwise false
    */
-  public static boolean hasPublicNoArgsConstructor(Class<?> c) {
+  public static boolean hasPublicNoArgsConstructor(@Nonnull Class<?> c) {
     if (c.isRecord()) {
       return false;
     }
@@ -192,7 +199,7 @@ public class Reflections {
    * @param c the specified
    * @return true if the specified class has an all-args-constructor otherwise false
    */
-  public static boolean hasPublicAllArgsConstructor(Class<?> c) {
+  public static boolean hasPublicAllArgsConstructor(@Nonnull Class<?> c) {
     if (c.isRecord()) {
       return true;
     }

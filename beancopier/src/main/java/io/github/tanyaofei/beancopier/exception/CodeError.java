@@ -2,6 +2,9 @@ package io.github.tanyaofei.beancopier.exception;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * @author tanyaofei
  * @since 0.2.0
@@ -9,12 +12,12 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 public sealed class CodeError extends BeanCopierError permits DefineClassError, InstantiationError {
 
   @Internal
-  public CodeError(String message, Throwable cause) {
+  public CodeError(@javax.annotation.Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 
   @Internal
-  public CodeError(Class<?> source, Class<?> target, Throwable cause) {
+  public CodeError(@Nonnull Class<?> source,@Nonnull Class<?> target, @Nullable Throwable cause) {
     this("Failed to generate converter bytecode: " + source.getName() + " -> " + target.getName(), cause);
   }
 

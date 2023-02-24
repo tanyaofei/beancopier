@@ -9,6 +9,8 @@ import io.github.tanyaofei.beancopier.utils.GenericType;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
 import org.objectweb.asm.MethodVisitor;
 
+import javax.annotation.Nonnull;
+
 /**
  * A definer for defining a local variable which is compatible.
  * If `fullTypeMatching` is true, it will strictly compare whether two types are equals,
@@ -22,17 +24,17 @@ public class CompatibleLocalDefiner extends LocalDefiner {
 
   @Override
   protected boolean defineInternal(
-      MethodVisitor v,
-      ConverterDefinition converter,
-      LocalDefinition local,
-      LocalsDefinitionContext context
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition converter,
+      @Nonnull LocalDefinition local,
+      @Nonnull LocalsDefinitionContext context
   ) {
     var provider = context.getProviders().get(local.getName());
     if (provider == null) {
       return false;
     }
 
-    if (converter.getConfiguration().isFullTypeMatching()) {
+    if (converter.getFeature().isFullTypeMatching()) {
       if (!isFullTypeMatched(provider.getType(), local.getType())) {
         return false;
       }
@@ -54,7 +56,7 @@ public class CompatibleLocalDefiner extends LocalDefiner {
    * @param type2 type 2
    * @return true if two types are equals
    */
-  protected boolean isFullTypeMatched(GenericType<?> type1, GenericType<?> type2) {
+  protected boolean isFullTypeMatched(@Nonnull GenericType<?> type1, @Nonnull GenericType<?> type2) {
     return type1.equals(type2);
   }
 
@@ -63,7 +65,7 @@ public class CompatibleLocalDefiner extends LocalDefiner {
    * @param consumerType type of field from target
    * @return true if `consumerType` is a subtype of source type
    */
-  protected boolean isTypeCompatible(GenericType<?> providerType, GenericType<?> consumerType) {
+  protected boolean isTypeCompatible(@Nonnull GenericType<?> providerType, @Nonnull GenericType<?> consumerType) {
     return TypeToken.of(providerType.getGenericType()).isSubtypeOf(consumerType.getGenericType());
   }
 

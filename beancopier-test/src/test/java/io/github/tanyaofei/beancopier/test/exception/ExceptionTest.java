@@ -4,14 +4,14 @@ package io.github.tanyaofei.beancopier.test.exception;
 import io.github.tanyaofei.beancopier.BeanCopier;
 import io.github.tanyaofei.beancopier.exception.CopyException;
 import io.github.tanyaofei.beancopier.exception.VerifyException;
-import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import io.github.tanyaofei.beancopier.extenstion.BeanCopierDebugExecution;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(DumpConverterClassesExtension.class)
+@ExtendWith(BeanCopierDebugExecution.class)
 public class ExceptionTest extends Assertions {
 
   @Test

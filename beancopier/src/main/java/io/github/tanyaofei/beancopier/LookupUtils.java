@@ -3,6 +3,7 @@ package io.github.tanyaofei.beancopier;
 import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Objects;
@@ -23,7 +24,10 @@ public class LookupUtils {
    * @param classLoader which classloader is about to define a hook, provide this parma can avoid defining {@link LookupHook} twice
    * @param defineClass a function to define a {@link LookupHook} class
    * @return a lookup in the specified module
+   * @throws NullPointerException  if any parameter is {@link null}
+   * @throws IllegalStateException if any exception occurred during the method
    */
+  @Nonnull
   public static <C extends ClassLoader> MethodHandles.Lookup lookupInModule(
       @NotNull C classLoader,
       @NotNull BiFunction<@NotNull C, byte @NotNull [], @NotNull Class<?>> defineClass
@@ -47,7 +51,7 @@ public class LookupUtils {
       var handle = MethodHandles.lookup().findStatic(
           lookupHookClass,
           "getLookup",
-          MethodType.methodType(MethodHandles.Lookup.class)
+          LookupHook.GET_LOOKUP_METHOD_TYPE
       );
       return (MethodHandles.Lookup) handle.invoke();
     } catch (Throwable e) {
@@ -55,11 +59,15 @@ public class LookupUtils {
     }
   }
 
+  @Nonnull
   public static byte[] getLookupHookBytecode() {
     return HOOK_BYTECODE;
   }
 
   public static class LookupHook {
+
+    private static final MethodType GET_LOOKUP_METHOD_TYPE = MethodType.methodType(MethodHandles.Lookup.class);
+
     public static MethodHandles.Lookup getLookup() {
       return MethodHandles.lookup();
     }

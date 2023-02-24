@@ -1,5 +1,7 @@
 package io.github.tanyaofei.beancopier.exception;
 
+import org.jetbrains.annotations.Nullable;
+
 import static org.jetbrains.annotations.ApiStatus.Internal;
 
 /**
@@ -13,12 +15,12 @@ public non-sealed class VerifyException extends BeanCopierException {
 
 
   @Internal
-  public VerifyException(String message) {
+  public VerifyException(@Nullable String message) {
     super(message);
   }
 
   @Internal
-  public VerifyException(String message, Throwable cause) {
+  public VerifyException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 

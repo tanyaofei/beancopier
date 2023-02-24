@@ -2,7 +2,7 @@ package io.github.tanyaofei.beancopier.test.configuration;
 
 import io.github.tanyaofei.beancopier.BeanCopierImpl;
 import io.github.tanyaofei.beancopier.annotation.Property;
-import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import io.github.tanyaofei.beancopier.extenstion.BeanCopierDebugExecution;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -13,8 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.Collections;
 import java.util.List;
 
-@ExtendWith(DumpConverterClassesExtension.class)
-public class ConfigurationTest2 extends Assertions {
+@ExtendWith(BeanCopierDebugExecution.class)
+public class FeatureTest2 extends Assertions {
 
   @Test
   public void testNotSupportProperty() {

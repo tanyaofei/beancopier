@@ -1,4 +1,7 @@
 package io.github.tanyaofei.beancopier.exception;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static org.jetbrains.annotations.ApiStatus.Internal;
 /**
  * Converter New Instance Exception, which is usually caused by internal reason.
@@ -10,7 +13,7 @@ import static org.jetbrains.annotations.ApiStatus.Internal;
 public non-sealed class InstantiationError extends CodeError {
 
   @Internal
-  public InstantiationError(Class<?> c, Throwable cause) {
+  public InstantiationError(@Nonnull Class<?> c, @Nullable Throwable cause) {
     super("Failed to instantiate converter: " + c, cause);
   }
 

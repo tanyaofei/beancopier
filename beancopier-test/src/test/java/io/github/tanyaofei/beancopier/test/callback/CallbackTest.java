@@ -1,7 +1,7 @@
 package io.github.tanyaofei.beancopier.test.callback;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
-import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import io.github.tanyaofei.beancopier.extenstion.BeanCopierDebugExecution;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 /**
  * @author tanyaofei
  */
-@ExtendWith(DumpConverterClassesExtension.class)
+@ExtendWith(BeanCopierDebugExecution.class)
 public class CallbackTest extends Assertions {
 
   @Test

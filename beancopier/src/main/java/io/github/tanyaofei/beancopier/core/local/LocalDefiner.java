@@ -5,6 +5,9 @@ import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * A tool for generating bytecode to define a local variable
  */
@@ -14,6 +17,7 @@ public abstract class LocalDefiner implements Opcodes {
    * Fallback definer. If the definer cannot handle the variable definition,
    * it will be passed to the fallback definer for definition.
    */
+  @Nullable
   protected LocalDefiner fallback;
 
   /**
@@ -21,7 +25,7 @@ public abstract class LocalDefiner implements Opcodes {
    *
    * @param v method writer
    */
-  protected static void loadSource(MethodVisitor v) {
+  protected static void loadSource(@Nonnull MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 1);
   }
 
@@ -32,7 +36,11 @@ public abstract class LocalDefiner implements Opcodes {
    * @param type    the type of this variable
    * @param context the context of the definition
    */
-  protected static void storeLocal(MethodVisitor v, Class<?> type, LocalsDefinitionContext context) {
+  protected static void storeLocal(
+      @Nonnull MethodVisitor v,
+      @Nonnull Class<?> type,
+      @Nonnull LocalsDefinitionContext context
+  ) {
     var store = context.getNextStore();
     var op = TypedOpcode.ofType(type);
     v.visitVarInsn(op.store, store);
@@ -46,7 +54,11 @@ public abstract class LocalDefiner implements Opcodes {
    * @param definition the definition of local variable
    * @since 0.2.0
    */
-  protected static void storeLocal(MethodVisitor v, LocalDefinition definition, LocalsDefinitionContext context) {
+  protected static void storeLocal(
+      @Nonnull MethodVisitor v,
+      @Nonnull LocalDefinition definition,
+      @Nonnull LocalsDefinitionContext context
+  ) {
     var store = context.getNextStore();
     var op = TypedOpcode.ofType(definition.getType().getRawType());
     v.visitVarInsn(op.store, store);
@@ -60,7 +72,7 @@ public abstract class LocalDefiner implements Opcodes {
    * @param type  the type of variable
    * @param store the index in local variable table
    */
-  protected static void loadStack(MethodVisitor v, Class<?> type, int store) {
+  protected static void loadStack(@Nonnull MethodVisitor v, @Nonnull Class<?> type, int store) {
     v.visitVarInsn(TypedOpcode.ofType(type).load, store);
   }
 
@@ -69,7 +81,7 @@ public abstract class LocalDefiner implements Opcodes {
    *
    * @param v method writer
    */
-  protected static void loadThis(MethodVisitor v) {
+  protected static void loadThis(@Nonnull MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 0);
   }
 
@@ -86,10 +98,10 @@ public abstract class LocalDefiner implements Opcodes {
    * @since 0.2.0
    */
   protected abstract boolean defineInternal(
-      MethodVisitor v,
-      ConverterDefinition converter,
-      LocalDefinition local,
-      LocalsDefinitionContext context
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition converter,
+      @Nonnull LocalDefinition local,
+      @Nonnull LocalsDefinitionContext context
   );
 
   /**
@@ -98,7 +110,8 @@ public abstract class LocalDefiner implements Opcodes {
    * @param definer fallback definer
    * @return fallback definer, for chain set
    */
-  public LocalDefiner fallbackTo(LocalDefiner definer) {
+  @Nonnull
+  public LocalDefiner fallbackTo(@Nonnull LocalDefiner definer) {
     this.fallback = definer;
     return definer;
   }
@@ -114,10 +127,10 @@ public abstract class LocalDefiner implements Opcodes {
    * @since 0.2.0
    */
   public final void define(
-      MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
-      LocalsDefinitionContext context
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition converterDefinition,
+      @Nonnull LocalDefinition localDefinition,
+      @Nonnull LocalsDefinitionContext context
   ) {
     var definer = this;
     while (definer != null) {
@@ -136,10 +149,10 @@ public abstract class LocalDefiner implements Opcodes {
 
     @Override
     protected boolean defineInternal(
-        MethodVisitor v,
-        ConverterDefinition converter,
-        LocalDefinition local,
-        LocalsDefinitionContext context
+        @Nonnull MethodVisitor v,
+        @Nonnull ConverterDefinition converter,
+        @Nonnull LocalDefinition local,
+        @Nonnull LocalsDefinitionContext context
     ) {
       return false;
     }

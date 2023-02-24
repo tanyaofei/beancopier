@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier.core.invoker;
 
 import org.objectweb.asm.MethodVisitor;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
@@ -42,11 +43,11 @@ public interface ExecutableInvoker {
    * @param v Method writer
    * @since 0.2.0
    */
-  default void invoke(MethodVisitor v) {
+  default void invoke(@Nonnull MethodVisitor v) {
     invoke(v, false);
   }
 
-  default void invoke(MethodVisitor v, Runnable beforeInvoke, Runnable afterInvoke) {
+  default void invoke(@Nonnull MethodVisitor v, @Nonnull Runnable beforeInvoke, @Nonnull Runnable afterInvoke) {
     beforeInvoke.run();
     invoke(v);
     afterInvoke.run();
@@ -59,6 +60,6 @@ public interface ExecutableInvoker {
    * @param popReturnValue Pop the return value from stack if the executable return one
    * @since 0.2.0
    */
-  void invoke(MethodVisitor v, boolean popReturnValue);
+  void invoke(@Nonnull MethodVisitor v, boolean popReturnValue);
 
 }

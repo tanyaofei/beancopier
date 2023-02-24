@@ -2,6 +2,7 @@ package io.github.tanyaofei.beancopier.utils;
 
 import lombok.Getter;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -13,21 +14,26 @@ import java.util.Arrays;
 @Getter
 public class GenericType<T>  {
 
+  @Nonnull
   private final Class<T> rawType;
+
+  @Nonnull
   private final Type genericType;
   private final boolean generic;
 
-  private GenericType(Class<T> rawType, Type genericType) {
+  private GenericType(@Nonnull Class<T> rawType, @Nonnull Type genericType) {
     this.rawType = rawType;
     this.genericType = genericType;
     this.generic = rawType != genericType;
   }
 
-  public static GenericType<?> of(Field field) {
+  @Nonnull
+  public static GenericType<?> of(@Nonnull Field field) {
     return new GenericType<>(field.getType(), field.getGenericType());
   }
 
-  public static GenericType<?> of(RecordComponent rc) {
+  @Nonnull
+  public static GenericType<?> of(@Nonnull RecordComponent rc) {
     return new GenericType<>(rc.getType(), rc.getGenericType());
   }
 

@@ -7,6 +7,8 @@ import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import javax.annotation.Nonnull;
+
 /**
  * This instancer will instantiate the target using the all-args-constructor,
  * and the fields to be copied will be assigned values during the construction process.
@@ -21,7 +23,13 @@ public class AllArgsConstructorInstanter implements TargetInstanter {
   private final Iterable<BeanMember> targetMembers;
   private final int firstLocalStore;
 
-  public AllArgsConstructorInstanter(MethodVisitor v, ConverterDefinition definition, int targetStore, Iterable<BeanMember> targetMembers, int firstLocalStore) {
+  public AllArgsConstructorInstanter(
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition definition,
+      int targetStore,
+      @Nonnull Iterable<BeanMember> targetMembers,
+      int firstLocalStore
+  ) {
     this.v = v;
     this.definition = definition;
     this.targetStore = targetStore;

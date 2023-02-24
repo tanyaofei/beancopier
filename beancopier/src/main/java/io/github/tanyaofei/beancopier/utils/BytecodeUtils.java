@@ -7,18 +7,22 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.SimpleRemapper;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author tanyaofei
  */
 public class BytecodeUtils implements Opcodes {
 
   @SneakyThrows
-  public static byte[] rename(Class<?> c, String className) {
+  @Nonnull
+  public static byte[] rename(@Nonnull Class<?> c, @Nonnull String className) {
     return rename(new ClassReader(c.getName()), className);
   }
 
   @SneakyThrows
-  public static byte[] toBytecode(Class<?> c) {
+  @Nonnull
+  public static byte[] toBytecode(@Nonnull Class<?> c) {
     var cw = new ClassWriter(0);
     var cr = new ClassReader(c.getName());
     cr.accept(cw, 0);
@@ -26,7 +30,8 @@ public class BytecodeUtils implements Opcodes {
   }
 
   @SneakyThrows
-  private static byte[] rename(ClassReader cr, String className) {
+  @Nonnull
+  private static byte[] rename(@Nonnull ClassReader cr, @Nonnull String className) {
     var cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
     var cv = new ClassRemapper(
         cw,
@@ -38,12 +43,14 @@ public class BytecodeUtils implements Opcodes {
   }
 
   @SneakyThrows
-  public static byte[] rename(byte[] code, String className) {
+  @Nonnull
+  public static byte[] rename(@Nonnull byte[] code, @Nonnull String className) {
     return rename(new ClassReader(code), className);
   }
 
   @SneakyThrows
-  public static byte[] repackage(Class<?> c, String packageName) {
+  @Nonnull
+  public static byte[] repackage(@Nonnull Class<?> c, @Nonnull String packageName) {
     return rename(c, packageName + "." + c.getSimpleName());
   }
 

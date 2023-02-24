@@ -24,17 +24,7 @@ public enum TypedOpcode {
   Long(long.class, Opcodes.LSTORE, Opcodes.LLOAD, Opcodes.LCONST_0, 2),
   FLOAT(float.class, Opcodes.FSTORE, Opcodes.FLOAD, Opcodes.FCONST_0, 1),
   DOUBLE(double.class, Opcodes.DSTORE, Opcodes.DLOAD, Opcodes.DCONST_0, 2),
-  REFERENCE(Object.class, Opcodes.ASTORE, Opcodes.ALOAD, Opcodes.ACONST_NULL, 1),
-
-  INT_ARRAY(int[].class, Opcodes.IASTORE, Opcodes.IALOAD, Opcodes.ACONST_NULL, 1),
-  SHORT_ARRAY(short[].class, Opcodes.SASTORE, Opcodes.SALOAD, Opcodes.ACONST_NULL, 1),
-  BOOLEAN_ARRAY(boolean[].class, Opcodes.BASTORE, Opcodes.BALOAD, Opcodes.ACONST_NULL, 1),
-  CHAR_ARRAY(char[].class, Opcodes.CASTORE, Opcodes.CALOAD, Opcodes.ACONST_NULL, 1),
-  BYTE_ARRAY(byte[].class, Opcodes.BASTORE, Opcodes.BALOAD, Opcodes.ACONST_NULL, 1),
-  LONG_ARRAY(long[].class, Opcodes.LASTORE, Opcodes.LALOAD, Opcodes.ACONST_NULL, 1),
-  FLOAT_ARRAY(float[].class, Opcodes.FASTORE, Opcodes.FALOAD, Opcodes.ACONST_NULL, 1),
-  DOUBLE_ARRAY(double[].class, Opcodes.DASTORE, Opcodes.DALOAD, Opcodes.ACONST_NULL, 1),
-  REFERENCE_ARRAY(Object[].class, Opcodes.ASTORE, Opcodes.ALOAD, Opcodes.ACONST_NULL, 1);
+  REFERENCE(Object.class, Opcodes.ASTORE, Opcodes.ALOAD, Opcodes.ACONST_NULL, 1);
 
   private static volatile Map<Class<?>, TypedOpcode> map;
 
@@ -65,9 +55,7 @@ public enum TypedOpcode {
       return opcode;
     }
 
-    return type.isArray()
-           ? REFERENCE_ARRAY
-           : REFERENCE;
+    return REFERENCE;
   }
 
   /**

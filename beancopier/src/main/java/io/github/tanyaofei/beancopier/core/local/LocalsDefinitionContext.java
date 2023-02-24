@@ -1,9 +1,11 @@
 package io.github.tanyaofei.beancopier.core.local;
 
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
@@ -11,11 +13,13 @@ import java.util.Map;
  */
 @Data
 @Accessors(chain = true)
+@AllArgsConstructor
 public class LocalsDefinitionContext {
 
   /**
    * The bean members map of source
    */
+  @Nonnull
   private Map<String, BeanMember> providers;
 
   /**

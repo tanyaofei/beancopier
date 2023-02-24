@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core.annotation;
 
-import io.github.tanyaofei.beancopier.ConverterConfiguration;
+import io.github.tanyaofei.beancopier.ConverterFeature;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,40 +13,40 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 @SuppressWarnings("unused")
-public @interface Configuration {
+public @interface Feature {
 
   String SKIP_NULL = "skipNull";
 
   /**
-   * @see ConverterConfiguration#isSkipNull()
+   * @see ConverterFeature#isSkipNull()
    */
   boolean skipNull();
 
   String PREFER_NESTED = "preferNested";
 
   /**
-   * @see ConverterConfiguration#isPreferNested() ()
+   * @see ConverterFeature#isPreferNested() ()
    */
   boolean preferNested();
 
   String PROPERTY_SUPPORTED = "propertySupported";
 
   /**
-   * @see ConverterConfiguration#isPropertySupported()
+   * @see ConverterFeature#isPropertySupported()
    */
   boolean propertySupported();
 
   String FULL_TYPE_MATCHING = "fullTypeMatching";
 
   /**
-   * @see ConverterConfiguration#isFullTypeMatching()
+   * @see ConverterFeature#isFullTypeMatching()
    */
   boolean fullTypeMatching();
 
   String INCLUDING_SUPER = "includingSuper";
 
   /**
-   * @see ConverterConfiguration#isIncludingSuper()
+   * @see ConverterFeature#isIncludingSuper()
    */
   boolean includingSuper();
 

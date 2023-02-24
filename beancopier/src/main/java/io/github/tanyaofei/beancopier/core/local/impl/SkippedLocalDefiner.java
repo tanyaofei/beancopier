@@ -5,6 +5,8 @@ import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import org.objectweb.asm.MethodVisitor;
 
+import javax.annotation.Nonnull;
+
 public class SkippedLocalDefiner extends ZeroValueLocalDefiner {
 
   /**
@@ -13,10 +15,10 @@ public class SkippedLocalDefiner extends ZeroValueLocalDefiner {
    */
   @Override
   protected boolean defineInternal(
-      MethodVisitor v,
-      ConverterDefinition converter,
-      LocalDefinition local,
-      LocalsDefinitionContext context
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition converter,
+      @Nonnull LocalDefinition local,
+      @Nonnull LocalsDefinitionContext context
   ) {
     if (local.isSkip()) {
       return super.defineInternal(v, converter, local, context);

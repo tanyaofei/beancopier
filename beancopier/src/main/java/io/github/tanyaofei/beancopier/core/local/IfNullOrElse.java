@@ -4,6 +4,8 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import javax.annotation.Nonnull;
+
 /**
  * A tool for generating bytecode for the "if null" or "else" condition
  */
@@ -12,31 +14,37 @@ public class IfNullOrElse {
   /**
    * Method writer
    */
+  @Nonnull
   private final MethodVisitor v;
 
   /**
    * The label of IFNONNULL
    */
+  @Nonnull
   private final Label ifNonNull = new Label();
 
   /**
    * The label of GOTO
    */
+  @Nonnull
   private final Label elseGoto = new Label();
 
   /**
    * A runnable for generating bytecode to get a value that used to check if it is null or not
    */
+  @Nonnull
   private final Runnable who;
 
   /**
    * A runnable for generating bytecode for the case when the value({@link #who}) is null
    */
+  @Nonnull
   private final Runnable onNull;
 
   /**
    * A runnable for generating bytecode for the case when the value({@link #who}) is not null
    */
+  @Nonnull
   private final Runnable onNonnull;
 
   /**
@@ -47,7 +55,12 @@ public class IfNullOrElse {
    * @param onNull    A runnable for generating bytecode for the case when the value({@link #who}) is null
    * @param onNonnull A runnable for generating bytecode for the case when the value({@link #who}) is not null
    */
-  public IfNullOrElse(MethodVisitor v, Runnable who, Runnable onNull, Runnable onNonnull) {
+  public IfNullOrElse(
+      @Nonnull MethodVisitor v,
+      @Nonnull Runnable who,
+      @Nonnull Runnable onNull,
+      @Nonnull Runnable onNonnull
+  ) {
     this.v = v;
     this.who = who;
     this.onNull = onNull;

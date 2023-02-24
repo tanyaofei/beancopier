@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier.test;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
+import io.github.tanyaofei.beancopier.LookupUtils;
 import io.github.tanyaofei.beancopier.core.ConverterFactory;
 import io.github.tanyaofei.beancopier.test.util.TemplateObject;
 import io.github.tanyaofei.guava.common.base.Stopwatch;
@@ -12,15 +13,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.commons.SimpleRemapper;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -174,32 +172,32 @@ public class PerformanceTest extends Assertions {
 
   @Test
   public void testGenerateConverter() throws IOException {
-    XClassLoader classloader = new XClassLoader();
+    var classloader = new XClassLoader();
     List<Class<?>> classes = new LinkedList<>();
 
     // 通过重命名 TemplateObject 来创建不同的类
     for (int i = 0; i < 10000; i++) {
-      ClassReader cr = new ClassReader(TemplateObject.class.getName());
-      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+      var cr = new ClassReader(TemplateObject.class.getName());
+      var cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
-      Remapper remapper = new SimpleRemapper(Type.getInternalName(TemplateObject.class), Type.getInternalName(TemplateObject.class) + i);
-      ClassVisitor cv = new ClassRemapper(cw, remapper);
+      var remapper = new SimpleRemapper(Type.getInternalName(TemplateObject.class), Type.getInternalName(TemplateObject.class) + i);
+      var cv = new ClassRemapper(cw, remapper);
 
       cr.accept(cv, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
-      byte[] code = cw.toByteArray();
+      var code = cw.toByteArray();
       classes.add(classloader.defineClass(code));
     }
 
-    ConverterFactory converterFactory = new ConverterFactory(
-        builder -> builder
-            .lookup(MethodHandles.lookup())
-            .classDumpPath(null)
+    var converterFactory = new ConverterFactory(
+        feature -> feature
+            .lookup(LookupUtils.lookupInModule(classloader, XClassLoader::defineClass))
+            .debugLocation(null)
     );
-    TemplateObject o = new TemplateObject();
+    var o = new TemplateObject();
 
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    var stopwatch = Stopwatch.createStarted();
     for (Class<?> c : classes) {
-      converterFactory.generateConverter(o.getClass(), c);
+      converterFactory.genConverter(o.getClass(), c);
     }
     stopwatch.stop();
     System.out.println("Time of creating " + classes.size() + " converter classes: " + stopwatch.elapsed().toMillis() + " ms");

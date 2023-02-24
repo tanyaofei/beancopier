@@ -1,29 +1,30 @@
 package io.github.tanyaofei.beancopier;
 
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
- * Global configuration for <b>beancopier</b>
- *
  * @author tanyaofei
- * @since 0.0.8
  */
-public abstract class BeanCopierConfiguration {
+@Data
+@Accessors(chain = true)
+public class BeanCopierConfiguration {
 
   /**
-   * When generating the converter, write the class file to the specified location.
-   *
-   * @since 0.0.8
+   * Determine a disk path that the {@link io.github.tanyaofei.beancopier.converter.Converter} classes will be dumped to.
+   * {@code null} or an empty value indicates that no dump will be performed.
+   * <br>
+   * No exceptions will be thrown during the dumping of the class.
+   * <pre>{@code
+   *  if (debugLocation != null && !debugLocation.isBlank()) {
+   *    try {
+   *      // dump converter class to disk
+   *    } catch (Throwable e) {
+   *      e.printStacktrace();
+   *    }
+   *  }
+   * }</pre>
    */
-  public static String CONVERTER_CLASS_DUMP_PATH = System.getProperty(PropertyNames.CONVERTER_CLASS_DUMP_PATH, "");
-
-  /**
-   * <b>beancopier</b> configuration names.
-   *
-   * @since 0.0.8
-   */
-  public interface PropertyNames {
-    String CONVERTER_CLASS_DUMP_PATH = "io.github.tanyaofei.beancopier.converterClassDumpPath";
-  }
-
+  private String debugLocation = System.getProperty("beancopier.debugLocation");
 
 }

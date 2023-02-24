@@ -1,5 +1,7 @@
 package io.github.tanyaofei.beancopier.exception;
 
+import org.jetbrains.annotations.Nullable;
+
 import static org.jetbrains.annotations.ApiStatus.Internal;
 
 /**
@@ -11,17 +13,17 @@ import static org.jetbrains.annotations.ApiStatus.Internal;
 public sealed class BeanCopierException extends RuntimeException permits VerifyException, CopyException {
 
   @Internal
-  public BeanCopierException(Throwable cause) {
+  public BeanCopierException(@Nullable Throwable cause) {
     super(cause);
   }
 
   @Internal
-  public BeanCopierException(String message) {
+  public BeanCopierException(@Nullable String message) {
     super(message);
   }
 
   @Internal
-  public BeanCopierException(String message, Throwable cause) {
+  public BeanCopierException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 

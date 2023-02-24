@@ -1,4 +1,6 @@
 package io.github.tanyaofei.beancopier.exception;
+import javax.annotation.Nullable;
+
 import static org.jetbrains.annotations.ApiStatus.Internal;
 /**
  * Copy Exception. Any exceptions occur during copying will be wrapped as a CopyException.
@@ -18,7 +20,7 @@ import static org.jetbrains.annotations.ApiStatus.Internal;
 public non-sealed class CopyException extends BeanCopierException {
 
   @Internal
-  public CopyException(String message, Throwable cause) {
+  public CopyException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 

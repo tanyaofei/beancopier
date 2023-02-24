@@ -5,15 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.objectweb.asm.Type;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * @author tanyaofei
  */
 public class ClassSignature {
 
-  public static String getClassSignature(ClassInfo superclass, ClassInfo... interfaces) {
-    if (superclass == null) {
-      throw new IllegalArgumentException("superclass is null");
-    }
+  @Nonnull
+  public static String getClassSignature(@Nonnull ClassInfo superclass, @Nullable ClassInfo... interfaces) {
     if (interfaces == null || interfaces.length == 0) {
       return superclass.getDescriptors();
     }
@@ -42,20 +43,24 @@ public class ClassSignature {
     /**
      * 类
      */
+    @Nonnull
     private final Class<?> type;
 
     /**
      * 范型参数类
      */
+    @Nullable
     private final Class<?>[] typeArguments;
 
-    public static ClassInfo of(Class<?> type, Class<?>... argumentTypes) {
+    @Nonnull
+    public static ClassInfo of(@Nonnull Class<?> type, @Nullable Class<?>... argumentTypes) {
       return new ClassInfo(type, argumentTypes);
     }
 
     /**
      * @return 描述符
      */
+    @Nonnull
     public final String getDescriptors() {
       if (typeArguments == null || typeArguments.length == 0) {
         return Type.getDescriptor(type);

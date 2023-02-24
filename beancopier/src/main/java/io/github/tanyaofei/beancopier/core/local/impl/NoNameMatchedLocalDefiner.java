@@ -5,6 +5,8 @@ import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import org.objectweb.asm.MethodVisitor;
 
+import javax.annotation.Nonnull;
+
 public class NoNameMatchedLocalDefiner extends ZeroValueLocalDefiner {
 
   /**
@@ -12,10 +14,10 @@ public class NoNameMatchedLocalDefiner extends ZeroValueLocalDefiner {
    */
   @Override
   public boolean defineInternal(
-      MethodVisitor v,
-      ConverterDefinition converter,
-      LocalDefinition local,
-      LocalsDefinitionContext context
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition converter,
+      @Nonnull LocalDefinition local,
+      @Nonnull LocalsDefinitionContext context
   ) {
     if (!context.getProviders().containsKey(local.getName())) {
       return super.defineInternal(v, converter, local, context);

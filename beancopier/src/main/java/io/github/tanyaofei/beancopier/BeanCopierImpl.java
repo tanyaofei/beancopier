@@ -42,23 +42,13 @@ public final class BeanCopierImpl {
 
 
   /**
-   * Return a default instance for {@link BeanCopier}, the {@link Converter} instances and classes will not be GC.
-   *
-   * @return The default instance for {@link BeanCopier}
-   */
-  @Contract
-  static BeanCopierImpl getInstance() {
-    return Lazy.INSTANCE;
-  }
-
-
-  /**
    * Create a BeanCopierImpl with the default configurations.
    */
   @Contract(pure = true)
   public BeanCopierImpl() {
     this(DEFAULT_CACHE_CAPACITY);
   }
+
 
   /**
    * Create an instance with a cache that has the specified initial capacity.
@@ -90,36 +80,48 @@ public final class BeanCopierImpl {
    * Create an instance with custom configurations and a cache that has the specified initial capacity
    * <pre>{@code
    *  BeanCopierImpl beanCopier = new BeanCopierImpl(
-   *    config -> config.classLoader(this.getClassLoader())
+   *    feature -> feature.lookup(MethodHandlers.lookup)
    *  );
    * }
    * </pre>
    *
    * @param cacheInitialCapacity the initial capacity of cache
-   * @param config               the config will be used
+   * @param feature              the feature will be used
+   * @throws NullPointerException if {@code feature} is {@code null}
    */
   @Contract(pure = true)
   public BeanCopierImpl(
       @Nonnegative int cacheInitialCapacity,
-      @NotNull Consumer<ConverterConfiguration.Builder> config
+      @NotNull Consumer<ConverterFeature.Builder> feature
   ) {
-    this(cacheInitialCapacity, new ConverterFactory(config));
+    this(cacheInitialCapacity, new ConverterFactory(feature));
   }
 
   /**
    * Create an instance with custom configurations
    * <pre>{@code
    *  BeanCopierImpl beanCopier = new BeanCopierImpl(
-   *    config -> config.classLoader(this.getClassLoader())
+   *    feature -> feature.lookup(MethodHandlers.lookup)
    *  );
    * }
    * </pre>
    *
-   * @param config config will be used
+   * @param feature feature will be used
+   * @throws NullPointerException if {@code feature} is {@code null}
    */
   @Contract(pure = true)
-  public BeanCopierImpl(@NotNull Consumer<ConverterConfiguration.Builder> config) {
-    this(DEFAULT_CACHE_CAPACITY, new ConverterFactory(config));
+  public BeanCopierImpl(@NotNull Consumer<ConverterFeature.Builder> feature) {
+    this(DEFAULT_CACHE_CAPACITY, new ConverterFactory(feature));
+  }
+
+  /**
+   * Return a default instance for {@link BeanCopier}, the {@link Converter} instances and classes will not be GC.
+   *
+   * @return The default instance for {@link BeanCopier}
+   */
+  @Contract
+  static BeanCopierImpl getInstance() {
+    return Lazy.INSTANCE;
   }
 
   /**
@@ -129,9 +131,9 @@ public final class BeanCopierImpl {
    * @param <T>    the type of source
    * @return cloned object, null if the source is null
    */
-  @Contract(pure = true)
+  @Contract(value = "null -> null", pure = true)
   public <T> T clone(@Nullable T source) {
-    return clone(source, (BiConsumer<T, T>) null);
+    return clone(source, null);
   }
 
   @SuppressWarnings("unchecked")
@@ -154,23 +156,25 @@ public final class BeanCopierImpl {
    * @param <S>    the type of source
    * @param <T>    the type of target
    * @return copy object, null if the source is null
+   * @throws NullPointerException if {@code target} is {@code null}
    */
   @Contract(value = "null, _ -> null", pure = true)
   public <S, T> T copy(@Nullable S source, @NotNull Class<T> target) {
-    return copy(source, target, (BiConsumer<S, T>) null);
+    return copy(source, target, null);
   }
 
   /**
    * Copy an object to a specified class,
-   * specify an {@link BiConsumer} {@code afterCopied} to custom what you want to do before returning after copy.
+   * Specific an {@link BiConsumer} {@code afterCopied} to custom what you want to do before returning after copy.
    *
-   * @param source    the object that is about to be copied
-   * @param target    specified class that the source will copy to it
+   * @param source      the object that is about to be copied
+   * @param target      specified class that the source will copy to it
    * @param afterCopied custom operations before returning after copy
-   * @param <S>       the type of source
-   * @param <T>       the type of target
+   * @param <S>         the type of source
+   * @param <T>         the type of target
    * @return copy object, null if the source is null
-   * @throws CopyException if any exception occur during the copying process and the {@code afterCopied}
+   * @throws CopyException        if any exception occur during the copying process and the {@code afterCopied}
+   * @throws NullPointerException if {@code target} is {@code null}
    */
   @SuppressWarnings("unchecked")
   @Contract(value = "null, _, _ -> null", pure = true)
@@ -223,12 +227,13 @@ public final class BeanCopierImpl {
    * Clone a collection of sources.
    * Each element in the collection will be cloned into a new collection is about to returning,
    * if the element is null, it will be cloned as null into the new collection.
-   * Specify an {@link BiConsumer} {@code afterEachCloned} to custom what you want to do after each element is cloned.
+   * Specific an {@link BiConsumer} {@code afterEachCloned} to custom what you want to do after each element is cloned.
    *
-   * @param sources   collection that is about to be cloned
+   * @param sources         collection that is about to be cloned
    * @param afterEachCloned custom operation after each element is cloned
-   * @param <T>       the type of source
+   * @param <T>             the type of source
    * @return new collection contains cloned objects
+   * @throws NullPointerException if {@code sources} is {@code null}
    */
   @Nonnull
   @Contract(pure = true)
@@ -281,6 +286,7 @@ public final class BeanCopierImpl {
    * @param <S>     the type of source
    * @param <T>     the type of target
    * @return new collection contains copy object
+   * @throws NullPointerException if {@code sources} or {@code target} is {@code null}
    */
   @Nonnull
   @Contract(pure = true)
@@ -295,13 +301,14 @@ public final class BeanCopierImpl {
    * Copy a collection of sources.
    * Each element in the collection will be copied into a new collection is about to returning,
    * if the element is null, it will be copied as null into the new collection.
-   * Specify an {@link BiConsumer} {@code afterCopy} to custom what you want to do after each element is copied.
+   * Specific an {@link BiConsumer} {@code afterCopy} to custom what you want to do after each element is copied.
    *
    * @param sources collection that is about to be copied
    * @param target  the type is about to be copied to
    * @param <S>     the type of source
    * @param <T>     the type of target
    * @return new collection contains copy object
+   * @throws NullPointerException if {@code sources} or {@code target} is {@code null}
    */
   @Nonnull
   @Contract(pure = true)
@@ -332,7 +339,7 @@ public final class BeanCopierImpl {
   ) {
     return (Converter<S, T>) cache.computeIfAbsent(
         cacheKey,
-        key -> converterFactory.generateConverter(sourceType, targetType)
+        key -> converterFactory.genConverter(sourceType, targetType)
     );
   }
 
@@ -351,8 +358,8 @@ public final class BeanCopierImpl {
     // 因为 sources 可能一直返回 null, 因此要一直迭代到第一个不为 null 才能正确获取 class
     Converter<S, T> converter = null;
     var ret = initialCapacity > 0
-              ? new ArrayList<T>(initialCapacity)
-              : new ArrayList<T>();
+        ? new ArrayList<T>(initialCapacity)
+        : new ArrayList<T>();
     while (sources.hasNext()) {
       var source = sources.next();
       T target;
@@ -378,7 +385,7 @@ public final class BeanCopierImpl {
   private static class Lazy {
     private final static BeanCopierImpl INSTANCE = new BeanCopierImpl(
         DEFAULT_CACHE_CAPACITY,
-        new ConverterFactory(builder -> builder.classDumpPath(BeanCopierConfiguration.CONVERTER_CLASS_DUMP_PATH))
+        new ConverterFactory()
     );
   }
 

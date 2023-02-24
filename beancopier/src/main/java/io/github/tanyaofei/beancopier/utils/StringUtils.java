@@ -2,6 +2,9 @@ package io.github.tanyaofei.beancopier.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.Contract;
+
+import javax.annotation.Nullable;
 
 /**
  * @author tanyaofei
@@ -9,23 +12,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StringUtils {
 
-  public static boolean hasLength(String str) {
+  @Contract(value = "null -> false", pure = true)
+  public static boolean hasLength(@Nullable String str) {
     return str != null && !str.isEmpty();
   }
 
-  public static boolean hasNotLength(String str) {
+  @Contract(value = "null -> true", pure = true)
+  public static boolean hasNotLength(@Nullable String str) {
     return str == null || str.isEmpty();
   }
 
-  public static String capitalize(String str) {
+  @Contract(value = "null -> null", pure = true)
+  public static String capitalize(@Nullable String str) {
     return changeFirstCharacterCase(str, true);
   }
 
-  public static String uncapitalize(String str) {
+  @Contract(value = "null -> null", pure = true)
+  public static String uncapitalize(@Nullable String str) {
     return changeFirstCharacterCase(str, false);
   }
 
-  private static String changeFirstCharacterCase(String str, boolean capitalize) {
+  @Contract(value = "null, _ -> null", pure = true)
+  private static String changeFirstCharacterCase(@Nullable String str, boolean capitalize) {
     if (hasNotLength(str)) {
       return str;
     } else {

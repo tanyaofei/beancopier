@@ -6,10 +6,13 @@ import lombok.NoArgsConstructor;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
- * This is a wrapper class for the default instance of {@link BeanCopierImpl}. The methods defined in this class can be used for bean copying.
- * If there are personalized requirements, such as copy an object which in a module that is not exported, an instance can also be created by using {@code new BeanCopierImpl()}.
+ * {@link BeanCopier} and {@link BeanCopierImpl} are tools for copying object({@link Object} and {@link Record}) properties.
+ * For ease of use, {@link BeanCopier} is provided, which maintains a default instance of {@link BeanCopierImpl},
+ * and all static methods here are calls to that instance. If you need to configure features of {@link BeanCopierImpl},
+ * you can use {@link BeanCopierImpl#BeanCopierImpl(Consumer)} to create an instance with specific features.
  *
  * @author tanyaofei
  * @see BeanCopierImpl

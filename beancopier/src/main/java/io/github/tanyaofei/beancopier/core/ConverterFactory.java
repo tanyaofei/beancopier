@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core;
 
-import io.github.tanyaofei.beancopier.ConverterConfiguration;
+import io.github.tanyaofei.beancopier.ConverterFeature;
 import io.github.tanyaofei.beancopier.constants.InstantiateMode;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.exception.CodeError;
@@ -8,7 +8,6 @@ import io.github.tanyaofei.beancopier.exception.DefineClassError;
 import io.github.tanyaofei.beancopier.exception.InstantiationError;
 import io.github.tanyaofei.beancopier.exception.VerifyException;
 import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
-import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import lombok.extern.slf4j.Slf4j;
 import org.objectweb.asm.Opcodes;
@@ -16,12 +15,17 @@ import org.objectweb.asm.Opcodes;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import static java.lang.reflect.Modifier.isAbstract;
@@ -36,29 +40,25 @@ import static java.lang.reflect.Modifier.isPublic;
 @Slf4j
 public class ConverterFactory implements Opcodes {
 
-  private final ConverterConfiguration configuration;
+  /**
+   * This ExecutorService is used to dump converter class
+   */
+  private final static ExecutorService debugWorkers = Executors.newSingleThreadExecutor();
+  private final static Consumer<ConverterFeature.Builder> DEFAULT_FEATURE = feature -> {
+  };
 
-  public ConverterFactory(
-      Consumer<ConverterConfiguration.Builder> config
-  ) {
-    var builder = ConverterConfiguration.builder();
-    config.accept(builder);
-    this.configuration = builder.build();
+  private final ConverterFeature feature;
+
+  public ConverterFactory() {
+    this(DEFAULT_FEATURE);
   }
 
-  /**
-   * Dump class bytecode to a class file on disk, never throw any exception
-   *
-   * @param code     java byte code
-   * @param filename the filename will be created, end of '.class' usually
-   */
-  private static void dumpClassSafely(byte[] code, String filename) {
-    try (var out = new FileOutputStream(filename)) {
-      out.write(code);
-      log.info("Converter class was dumped at {}", filename);
-    } catch (Throwable e) {
-      log.warn("Failed to dump converter class", e);
-    }
+  public ConverterFactory(
+      @Nonnull Consumer<ConverterFeature.Builder> feature
+  ) {
+    var builder = ConverterFeature.builder();
+    feature.accept(builder);
+    this.feature = builder.build();
   }
 
   /**
@@ -67,10 +67,11 @@ public class ConverterFactory implements Opcodes {
    * @param code java byte code
    * @return class
    */
+  @Nonnull
   @SuppressWarnings("unchecked")
   private static <T> Class<T> defineClass(
-      byte[] code,
-      MethodHandles.Lookup lookup
+      @Nonnull byte[] code,
+      @Nonnull MethodHandles.Lookup lookup
   ) throws IllegalAccessException {
     return (Class<T>) lookup.defineHiddenClass(code, true).lookupClass();
   }
@@ -85,30 +86,27 @@ public class ConverterFactory implements Opcodes {
    * @return A converter that has ability to copy
    */
   @Nonnull
-  public <S, T> Converter<S, T> generateConverter(
+  public <S, T> Converter<S, T> genConverter(
       @Nonnull Class<S> sourceType, @Nonnull Class<T> targetType
   ) {
     checkSourceType(sourceType);
     var newInstanceMode = checkTargetType(targetType);
 
-    var lookup = Optional.ofNullable(configuration.getLookup()).orElse(Converter.LOOKUP);
+    var lookup = Optional.ofNullable(feature.getLookup()).orElse(Converter.LOOKUP);
     checkPrivilege(sourceType, lookup);
     checkPrivilege(targetType, lookup);
 
     var packageName = lookup.lookupClass().getPackageName();
-    String className = packageName + "." + configuration
+    String className = packageName + "." + feature
         .getNamingPolicy()
-        .getSimpleClassName(
-            sourceType,
-            targetType
-        );
+        .getSimpleClassName(sourceType, targetType);
     String internalName = Reflections.getInternalNameByClassName(className);
     byte[] code;
     var definition = new ConverterDefinition(
         internalName,
         sourceType,
         targetType,
-        configuration,
+        feature,
         newInstanceMode
     );
     try {
@@ -123,24 +121,14 @@ public class ConverterFactory implements Opcodes {
     } catch (Throwable e) {
       throw new DefineClassError(code, sourceType, targetType, e);
     } finally {
-      String dumpPath = configuration.getClassDumpPath();
-      if (StringUtils.hasLength(dumpPath)) {
-        var hiddenClass = c;
-        CompletableFuture.runAsync(() -> {
-          byte[] dumpCode;
-          String filename;
-          if (hiddenClass == null) {
-            // define class failed
-            dumpCode = code;
-            filename = Reflections.getClassSimpleNameByInternalName(internalName);
-          } else {
-            // define class succeed
-            dumpCode = BytecodeUtils.rename(code, hiddenClass.getName().replace("/", "$"));
-            filename = hiddenClass.getSimpleName().replace("/", "$");
-          }
-          dumpClassSafely(dumpCode, dumpPath + File.separatorChar + filename + ".class");
-        });
-      }
+      dumpBytecode(
+          c == null
+              ? code
+              : BytecodeUtils.rename(code, c.getName().replace("/", "$")),
+          c == null
+              ? Reflections.getClassSimpleNameByInternalName(internalName) + "$" + Arrays.hashCode(code)
+              : c.getSimpleName().replace("/", "$")
+      );
     }
 
     try {
@@ -148,6 +136,20 @@ public class ConverterFactory implements Opcodes {
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw new InstantiationError(c, e);
     }
+  }
+
+  private void dumpBytecode(byte[] code, String filename) {
+    var directory = feature.getDebugLocation();
+    if (directory == null || directory.isBlank()) {
+      return;
+    }
+    CompletableFuture.runAsync(() -> {
+      try (var out = new FileOutputStream(directory + File.separatorChar + filename + ".class")) {
+        out.write(code);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }, debugWorkers);
   }
 
   /**
@@ -194,7 +196,7 @@ public class ConverterFactory implements Opcodes {
 
     if (c.isRecord()) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
-    } else if (!configuration.isSkipNull() && Reflections.hasPublicAllArgsConstructor(c)) {
+    } else if (!feature.isSkipNull() && Reflections.hasPublicAllArgsConstructor(c)) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
     }
 

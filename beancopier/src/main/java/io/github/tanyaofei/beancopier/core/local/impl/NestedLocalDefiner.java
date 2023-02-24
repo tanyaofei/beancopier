@@ -9,6 +9,8 @@ import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.GenericType;
 import org.objectweb.asm.MethodVisitor;
 
+import javax.annotation.Nonnull;
+
 /**
  * A definer for define a nested field variable.
  * <pre>{@code
@@ -30,17 +32,17 @@ public class NestedLocalDefiner extends LocalDefiner {
 
   @Override
   protected boolean defineInternal(
-      MethodVisitor v,
-      ConverterDefinition converter,
-      LocalDefinition local,
-      LocalsDefinitionContext context
+      @Nonnull MethodVisitor v,
+      @Nonnull ConverterDefinition converter,
+      @Nonnull LocalDefinition local,
+      @Nonnull LocalsDefinitionContext context
   ) {
     var provider = context.getProviders().get(local.getName());
     if (provider == null) {
       return false;
     }
 
-    if (!converter.getConfiguration().isPreferNested() || !isNested(converter, provider.getType(), local.getType())) {
+    if (!converter.getFeature().isPreferNested() || !isNested(converter, provider.getType(), local.getType())) {
       return false;
     }
 
@@ -60,7 +62,11 @@ public class NestedLocalDefiner extends LocalDefiner {
   }
 
 
-  private boolean isNested(ConverterDefinition definition, GenericType<?> providerType, GenericType<?> consumerType) {
+  private boolean isNested(
+      @Nonnull ConverterDefinition definition,
+      @Nonnull GenericType<?> providerType,
+      @Nonnull GenericType<?> consumerType
+  ) {
     var sc = definition.getSourceType();
     var tc = definition.getTargetType();
     return providerType.getGenericType() == sc && consumerType.getGenericType() == tc;

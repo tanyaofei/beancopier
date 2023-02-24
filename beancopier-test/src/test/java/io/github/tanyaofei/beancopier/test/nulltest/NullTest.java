@@ -1,8 +1,10 @@
 package io.github.tanyaofei.beancopier.test.nulltest;
 
 import io.github.tanyaofei.beancopier.BeanCopier;
+import io.github.tanyaofei.beancopier.extenstion.BeanCopierDebugExecution;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author tanyaofei
  */
 @SuppressWarnings("ResultOfMethodCallIgnored")
+@ExtendWith(BeanCopierDebugExecution.class)
 public class NullTest extends Assertions {
 
   public static List<Object> threeNulls = new ArrayList<>() {{

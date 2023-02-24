@@ -4,6 +4,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -50,7 +51,7 @@ public class MethodInvoker implements ExecutableInvoker {
    */
   private final boolean hasReturnValue;
 
-  public MethodInvoker(Method method) {
+  public MethodInvoker(@Nonnull Method method) {
     this.name = method.getName();
     this.owner = Type.getInternalName(method.getDeclaringClass());
     this.descriptor = Type.getMethodDescriptor(method);
@@ -66,7 +67,7 @@ public class MethodInvoker implements ExecutableInvoker {
   }
 
   @Override
-  public void invoke(MethodVisitor v, boolean popReturnValue) {
+  public void invoke(@Nonnull MethodVisitor v, boolean popReturnValue) {
     v.visitMethodInsn(
         opcode,
         owner,

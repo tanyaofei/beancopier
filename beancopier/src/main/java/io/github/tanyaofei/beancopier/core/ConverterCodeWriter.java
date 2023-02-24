@@ -7,7 +7,7 @@ import io.github.tanyaofei.beancopier.constants.MethodNames;
 import io.github.tanyaofei.beancopier.constants.Properties;
 import io.github.tanyaofei.beancopier.converter.AbstractConverter;
 import io.github.tanyaofei.beancopier.converter.Converter;
-import io.github.tanyaofei.beancopier.core.annotation.Configuration;
+import io.github.tanyaofei.beancopier.core.annotation.Feature;
 import io.github.tanyaofei.beancopier.core.instanter.AllArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.instanter.NoArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
@@ -20,6 +20,7 @@ import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.MethodNode;
 
+import javax.annotation.Nonnull;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -28,11 +29,13 @@ import java.util.stream.StreamSupport;
  */
 public class ConverterCodeWriter implements Opcodes {
 
-  private final static LocalDefiner definer = LocalDefiners.getDefiner();
-  private final ConverterDefinition definition;
+  private static final LocalDefiner definer = LocalDefiners.getDefiner();
   private static final String SOURCE_FILE = "<generated>";
 
-  public ConverterCodeWriter(ConverterDefinition definition) {
+  @Nonnull
+  private final ConverterDefinition definition;
+
+  public ConverterCodeWriter(@Nonnull ConverterDefinition definition) {
     this.definition = definition;
   }
 
@@ -41,7 +44,7 @@ public class ConverterCodeWriter implements Opcodes {
    *
    * @param cw ClassWriter
    */
-  private void genConstructor(ClassWriter cw) {
+  private void genConstructor(@Nonnull ClassWriter cw) {
     var v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, MethodNames.Object$init, MethodDescriptors.Object$init, null, null);
     v.visitCode();
     v.visitVarInsn(ALOAD, 0);
@@ -90,7 +93,7 @@ public class ConverterCodeWriter implements Opcodes {
    *
    * @param v method writer
    */
-  private void returnNullIfNull(MethodVisitor v) {
+  private void returnNullIfNull(@Nonnull MethodVisitor v) {
     var ifNonNull = new Label();
     v.visitVarInsn(ALOAD, 1);
     v.visitJumpInsn(IFNONNULL, ifNonNull);
@@ -127,8 +130,8 @@ public class ConverterCodeWriter implements Opcodes {
    *
    * @param cw ClassWriter
    */
-  private void genConvertMethod(ClassWriter cw) {
-    var configuration = definition.getConfiguration();
+  private void genConvertMethod(@Nonnull ClassWriter cw) {
+    var configuration = definition.getFeature();
     var v = cw.visitMethod(
         ACC_PUBLIC,
         MethodNames.Converter$convert,
@@ -141,15 +144,13 @@ public class ConverterCodeWriter implements Opcodes {
 
     returnNullIfNull(v);
 
-    var targetMembers = Reflections.getMembersWithSetter(definition.getTargetType(), configuration.isIncludingSuper());
-    var sourceMembers = BeanMember.mapIterable(Reflections.getGettableBeanMember(definition.getSourceType(), configuration.isIncludingSuper()));
+    var providers = Reflections.getMembersWithSetter(definition.getTargetType(), configuration.isIncludingSuper());
+    var consumers = BeanMember.mapIterable(Reflections.getGettableBeanMember(definition.getSourceType(), configuration.isIncludingSuper()));
 
     int firstLocalStore = 2;  // 0: this, 1: source object ref
-    var context = new LocalsDefinitionContext()
-        .setProviders(sourceMembers)
-        .setNextStore(firstLocalStore);
+    var context = new LocalsDefinitionContext(consumers, firstLocalStore);
 
-    for (var member : targetMembers) {
+    for (var member : providers) {
       var property = configuration.isPropertySupported()
           ? Properties.getOrDefault(member)
           : Properties.defaultProperty;
@@ -172,16 +173,16 @@ public class ConverterCodeWriter implements Opcodes {
           v,
           definition,
           targetStore,
-          targetMembers,
+          providers,
           firstLocalStore
       );
       case NO_ARGS_CONSTRUCTOR_THEN_SET -> new NoArgsConstructorInstanter(
           v,
           definition,
           targetStore,
-          targetMembers,
+          providers,
           StreamSupport
-              .stream(targetMembers.spliterator(), true)
+              .stream(providers.spliterator(), true)
               .filter(m -> (configuration.isPropertySupported() ? Properties.getOrDefault(m) : Properties.defaultProperty).skip())
               .collect(Collectors.toSet()),
           firstLocalStore
@@ -202,7 +203,8 @@ public class ConverterCodeWriter implements Opcodes {
    * @param defaultName Default name when {@link Property} hasn't alias
    * @return local definition name
    */
-  private String getLocalDefinitionName(Property property, String defaultName) {
+  @Nonnull
+  private String getLocalDefinitionName(@Nonnull Property property, @Nonnull String defaultName) {
     if (definition.isClone()) {
       return defaultName;
     }
@@ -233,7 +235,7 @@ public class ConverterCodeWriter implements Opcodes {
    * @param cw class writer
    */
   private void genConvertBridgeMethod(
-      ClassWriter cw
+      @Nonnull ClassWriter cw
   ) {
     var v = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
@@ -258,18 +260,18 @@ public class ConverterCodeWriter implements Opcodes {
   }
 
   /**
-   * Add {@link Configuration} to converter
+   * Add {@link Feature} to converter
    *
    * @param cw class writer
    */
-  private void genConfigurationAnnotation(ClassWriter cw) {
-    var a = cw.visitAnnotation(Type.getDescriptor(Configuration.class), false);
-    var configuration = definition.getConfiguration();
-    a.visit(Configuration.SKIP_NULL, configuration.isSkipNull());
-    a.visit(Configuration.PREFER_NESTED, configuration.isPreferNested());
-    a.visit(Configuration.PROPERTY_SUPPORTED, configuration.isPropertySupported());
-    a.visit(Configuration.FULL_TYPE_MATCHING, configuration.isFullTypeMatching());
-    a.visit(Configuration.INCLUDING_SUPER, configuration.isIncludingSuper());
+  private void genConfigurationAnnotation(@Nonnull ClassWriter cw) {
+    var a = cw.visitAnnotation(Type.getDescriptor(Feature.class), false);
+    var configuration = definition.getFeature();
+    a.visit(Feature.SKIP_NULL, configuration.isSkipNull());
+    a.visit(Feature.PREFER_NESTED, configuration.isPreferNested());
+    a.visit(Feature.PROPERTY_SUPPORTED, configuration.isPropertySupported());
+    a.visit(Feature.FULL_TYPE_MATCHING, configuration.isFullTypeMatching());
+    a.visit(Feature.INCLUDING_SUPER, configuration.isIncludingSuper());
   }
 
 }

@@ -1,7 +1,7 @@
 package io.github.tanyaofei.beancopier.test.configuration.skipnull;
 
 import io.github.tanyaofei.beancopier.BeanCopierImpl;
-import io.github.tanyaofei.beancopier.extenstion.DumpConverterClassesExtension;
+import io.github.tanyaofei.beancopier.extenstion.BeanCopierDebugExecution;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * @author tanyaofei
  */
-@ExtendWith(DumpConverterClassesExtension.class)
+@ExtendWith(BeanCopierDebugExecution.class)
 public class SkipNullTest extends Assertions {
 
   BeanCopierImpl beancopier = new BeanCopierImpl(config -> config.skipNull(true));

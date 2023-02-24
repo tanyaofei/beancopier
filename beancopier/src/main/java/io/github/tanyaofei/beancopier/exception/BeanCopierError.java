@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier.exception;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @author tanyaofei
@@ -14,17 +15,17 @@ public sealed class BeanCopierError extends Error permits CodeError {
   }
 
   @Internal
-  public BeanCopierError(String message) {
+  public BeanCopierError(@Nullable String message) {
     super(message);
   }
 
   @Internal
-  public BeanCopierError(String message, Throwable cause) {
+  public BeanCopierError(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 
   @Internal
-  public BeanCopierError(Throwable cause) {
+  public BeanCopierError(@Nullable Throwable cause) {
     super(cause);
   }
 
