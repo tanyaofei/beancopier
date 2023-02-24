@@ -16,7 +16,7 @@ public class LocalsDefinitionContext {
   /**
    * The bean members map of source
    */
-  private Map<String, BeanMember> sourceMembers;
+  private Map<String, BeanMember> providers;
 
   /**
    * The index where the next local variable will be stored.

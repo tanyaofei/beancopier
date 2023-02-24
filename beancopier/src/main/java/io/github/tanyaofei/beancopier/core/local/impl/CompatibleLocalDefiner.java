@@ -5,10 +5,9 @@ import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
+import io.github.tanyaofei.beancopier.utils.GenericType;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
 import org.objectweb.asm.MethodVisitor;
-
-import java.lang.reflect.Type;
 
 /**
  * A definer for defining a local variable which is compatible.
@@ -24,29 +23,29 @@ public class CompatibleLocalDefiner extends LocalDefiner {
   @Override
   protected boolean defineInternal(
       MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
+      ConverterDefinition converter,
+      LocalDefinition local,
       LocalsDefinitionContext context
   ) {
-    var member = context.getSourceMembers().get(localDefinition.getName());
-    if (member == null) {
+    var provider = context.getProviders().get(local.getName());
+    if (provider == null) {
       return false;
     }
 
-    if (converterDefinition.getConfiguration().isFullTypeMatching()) {
-      if (!isFullTypeMatched(member.getGenericType(), localDefinition.getGenericType())) {
+    if (converter.getConfiguration().isFullTypeMatching()) {
+      if (!isFullTypeMatched(provider.getType(), local.getType())) {
         return false;
       }
     } else {
-      if (!isTypeCompatible(member.getGenericType(), localDefinition.getGenericType())) {
+      if (!isTypeCompatible(provider.getType(), local.getType())) {
         return false;
       }
     }
 
-    var getter = ExecutableInvoker.invoker(member.getMethod());
+    var getter = ExecutableInvoker.invoker(provider.getMethod());
     loadSource(v);
     getter.invoke(v);
-    storeLocal(v, localDefinition.getType(), context);
+    storeLocal(v, local.getType().getRawType(), context);
     return true;
   }
 
@@ -55,17 +54,17 @@ public class CompatibleLocalDefiner extends LocalDefiner {
    * @param type2 type 2
    * @return true if two types are equals
    */
-  protected boolean isFullTypeMatched(Type type1, Type type2) {
+  protected boolean isFullTypeMatched(GenericType<?> type1, GenericType<?> type2) {
     return type1.equals(type2);
   }
 
   /**
-   * @param sourceMemberGenericType type of field from source
-   * @param localGenericType        type of field from target
-   * @return true if `localGenericType` is a subtype of source type
+   * @param providerType type of field from source
+   * @param consumerType type of field from target
+   * @return true if `consumerType` is a subtype of source type
    */
-  protected boolean isTypeCompatible(Type sourceMemberGenericType, Type localGenericType) {
-    return TypeToken.of(sourceMemberGenericType).isSubtypeOf(localGenericType);
+  protected boolean isTypeCompatible(GenericType<?> providerType, GenericType<?> consumerType) {
+    return TypeToken.of(providerType.getGenericType()).isSubtypeOf(consumerType.getGenericType());
   }
 
 }

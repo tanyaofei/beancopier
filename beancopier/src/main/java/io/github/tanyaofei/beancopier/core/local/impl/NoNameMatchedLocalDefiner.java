@@ -5,7 +5,7 @@ import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import org.objectweb.asm.MethodVisitor;
 
-public class NonNameMatchedLocalDefiner extends ZeroValueLocalDefiner {
+public class NoNameMatchedLocalDefiner extends ZeroValueLocalDefiner {
 
   /**
    * If the source does not have a field with the given name, define a zero value.
@@ -13,12 +13,12 @@ public class NonNameMatchedLocalDefiner extends ZeroValueLocalDefiner {
   @Override
   public boolean defineInternal(
       MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
+      ConverterDefinition converter,
+      LocalDefinition local,
       LocalsDefinitionContext context
   ) {
-    if (!context.getSourceMembers().containsKey(localDefinition.getName())) {
-      return super.defineInternal(v, converterDefinition, localDefinition, context);
+    if (!context.getProviders().containsKey(local.getName())) {
+      return super.defineInternal(v, converter, local, context);
     }
     return false;
   }

@@ -1,12 +1,12 @@
 package io.github.tanyaofei.beancopier.utils.reflection.member;
 
+import io.github.tanyaofei.beancopier.utils.GenericType;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 
 /**
  * @author tanyaofei
@@ -17,10 +17,12 @@ public class PojoMember implements BeanMember {
 
   private final Field field;
   private final Method method;
+  private final GenericType<?> genericType;
 
   public PojoMember(Field field, Method method) {
     this.field = field;
     this.method = method;
+    this.genericType = GenericType.of(field);
   }
 
   @Override
@@ -34,13 +36,8 @@ public class PojoMember implements BeanMember {
   }
 
   @Override
-  public Class<?> getType() {
-    return field.getType();
-  }
-
-  @Override
-  public Type getGenericType() {
-    return field.getGenericType();
+  public GenericType<?> getType() {
+    return this.genericType;
   }
 
   @Override

@@ -1,10 +1,10 @@
 package io.github.tanyaofei.beancopier.utils.reflection.member;
 
+import io.github.tanyaofei.beancopier.utils.GenericType;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,14 +37,9 @@ public interface BeanMember {
   String getName();
 
   /**
-   * @return member type
-   */
-  Class<?> getType();
-
-  /**
    * @return member generic type
    */
-  Type getGenericType();
+  GenericType<?> getType();
 
   /**
    * @return getter or setter

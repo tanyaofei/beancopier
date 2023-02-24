@@ -6,9 +6,8 @@ import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
+import io.github.tanyaofei.beancopier.utils.GenericType;
 import org.objectweb.asm.MethodVisitor;
-
-import java.lang.reflect.Type;
 
 /**
  * A definer for define a nested field variable.
@@ -32,41 +31,39 @@ public class NestedLocalDefiner extends LocalDefiner {
   @Override
   protected boolean defineInternal(
       MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
+      ConverterDefinition converter,
+      LocalDefinition local,
       LocalsDefinitionContext context
   ) {
-    var member = context.getSourceMembers().get(localDefinition.getName());
-    if (member == null) {
+    var provider = context.getProviders().get(local.getName());
+    if (provider == null) {
       return false;
     }
 
-    if (!converterDefinition.getConfiguration().isPreferNested()
-        || !isNested(converterDefinition, member.getGenericType(), localDefinition.getGenericType())
-    ) {
+    if (!converter.getConfiguration().isPreferNested() || !isNested(converter, provider.getType(), local.getType())) {
       return false;
     }
 
     loadThis(v);
     loadSource(v);
-    var getter = ExecutableInvoker.invoker(member.getMethod());
+    var getter = ExecutableInvoker.invoker(provider.getMethod());
     getter.invoke(v);
     v.visitMethodInsn(
         INVOKESPECIAL,
-        converterDefinition.getInternalName(),
+        converter.getInternalName(),
         MethodNames.Converter$convert,
-        converterDefinition.getConvertMethodDescriptor(),
+        converter.getConvertMethodDescriptor(),
         false
     );
-    storeLocal(v, localDefinition.getType(), context);
+    storeLocal(v, local.getType().getRawType(), context);
     return true;
   }
 
 
-  private boolean isNested(ConverterDefinition definition, Type sourceMemberGenericType, Type localGenericType) {
+  private boolean isNested(ConverterDefinition definition, GenericType<?> providerType, GenericType<?> consumerType) {
     var sc = definition.getSourceType();
     var tc = definition.getTargetType();
-    return sourceMemberGenericType == sc && localGenericType == tc;
+    return providerType.getGenericType() == sc && consumerType.getGenericType() == tc;
   }
 
 }

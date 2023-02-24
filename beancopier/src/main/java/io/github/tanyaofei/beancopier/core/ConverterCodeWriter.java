@@ -18,6 +18,7 @@ import io.github.tanyaofei.beancopier.utils.ClassSignature;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import org.objectweb.asm.*;
+import org.objectweb.asm.tree.MethodNode;
 
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -60,7 +61,7 @@ public class ConverterCodeWriter implements Opcodes {
     var tc = definition.getTargetType();
     var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
     cw.visit(
-        V1_8,
+        V17,
         ACC_PUBLIC,
         definition.getInternalName(),
         ClassSignature.getClassSignature(
@@ -135,6 +136,7 @@ public class ConverterCodeWriter implements Opcodes {
         null,
         null
     );
+    var mn = new MethodNode();
     v.visitCode();
 
     returnNullIfNull(v);
@@ -144,21 +146,20 @@ public class ConverterCodeWriter implements Opcodes {
 
     int firstLocalStore = 2;  // 0: this, 1: source object ref
     var context = new LocalsDefinitionContext()
-        .setSourceMembers(sourceMembers)
+        .setProviders(sourceMembers)
         .setNextStore(firstLocalStore);
 
-    for (var tm : targetMembers) {
+    for (var member : targetMembers) {
       var property = configuration.isPropertySupported()
-          ? Properties.getOrDefault(tm)
+          ? Properties.getOrDefault(member)
           : Properties.defaultProperty;
       definer.define(
           v,
           definition,
           LocalDefinition
               .builder()
-              .name(getLocalDefinitionName(property, tm.getName()))
-              .type(tm.getType())
-              .genericType(tm.getGenericType())
+              .name(getLocalDefinitionName(property, member.getName()))
+              .type(member.getType())
               .skip(property.skip())
               .build(),
           context

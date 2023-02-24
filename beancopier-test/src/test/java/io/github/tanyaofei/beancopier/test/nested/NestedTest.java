@@ -19,12 +19,29 @@ public class NestedTest extends Assertions {
     var source = new NestedSourcePojo()
         .setId(1)
         .setChild(new NestedSourcePojo().setId(2))
-        .setChildren(List.of(new NestedSourcePojo().setId(3), new NestedSourcePojo().setId(4)));
+        .setChildren(List.of(new NestedSourcePojo().setId(3), new NestedSourcePojo().setId(4)))
+        .setChildren2(new NestedSourcePojo[]{new NestedSourcePojo().setId(5), new NestedSourcePojo().setId(6)});
 
     var target = BeanCopier.copy(source, NestedTargetPojo.class);
     assertEquals(source.getId(), target.getId());
     assertEquals(source.getChild().getId(), target.getChild().getId());
-    assertEquals(source.getChildren().size(), target.getChildren().size());
+    assertEquals(source.getChildren().size(), target.getChildren1().size());
+    assertEquals(source.getChildren().size(), target.getChildren2().size());
+    assertEquals(source.getChildren().size(), target.getChildren3().size());
+    assertEquals(source.getChildren().size(), target.getChildren4().size());
+    assertEquals(source.getChildren().size(), target.getChildren5().size());
+    assertEquals(source.getChildren().size(), target.getChildren6().size());
+    assertEquals(source.getChildren().size(), target.getChildren7().size());
+    assertEquals(source.getChildren().size(), target.getChildren8().length);
+
+    assertEquals(source.getChildren2().length, target.getChildren21().size());
+    assertEquals(source.getChildren2().length, target.getChildren22().size());
+    assertEquals(source.getChildren2().length, target.getChildren23().size());
+    assertEquals(source.getChildren2().length, target.getChildren24().size());
+    assertEquals(source.getChildren2().length, target.getChildren25().size());
+    assertEquals(source.getChildren2().length, target.getChildren26().size());
+    assertEquals(source.getChildren2().length, target.getChildren27().size());
+    assertEquals(source.getChildren2().length, target.getChildren28().length);
   }
 
   @Test
@@ -58,6 +75,5 @@ public class NestedTest extends Assertions {
     assertEquals(target.child().id(), target2.getChild().getId());
     assertEquals(target.children().size(), target2.getChildren().size());
   }
-
 
 }

@@ -6,15 +6,14 @@ import io.github.tanyaofei.beancopier.core.invoker.MethodInvoker;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
+import io.github.tanyaofei.beancopier.utils.GenericType;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.MethodVisitor;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static io.github.tanyaofei.beancopier.constants.Invokers.*;
 
@@ -31,7 +30,6 @@ import static io.github.tanyaofei.beancopier.constants.Invokers.*;
  *  List<Target> nested = this.convertAll(source.getNested());
  * }
  * </pre>
- * @see io.github.tanyaofei.beancopier.converter.AbstractConverter#convertAllToList(Iterable)
  *
  * @author tanyaofei
  * @see NestedLocalDefiner
@@ -41,85 +39,130 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
   @Override
   protected boolean defineInternal(
       MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
+      ConverterDefinition converter,
+      LocalDefinition local,
       LocalsDefinitionContext context
   ) {
-    if (!converterDefinition.getConfiguration().isPreferNested()) {
+    var config = converter.getConfiguration();
+    if (!config.isPreferNested()) {
       return false;
     }
 
-    var member = context.getSourceMembers().get(localDefinition.getName());
-    if (member == null) {
+    var provider = context.getProviders().get(local.getName());
+    if (provider == null) {
       return false;
     }
 
-    if (!converterDefinition.getConfiguration().isPreferNested()
-        || !isIterableNested(converterDefinition, member, localDefinition.getType(), localDefinition.getGenericType())
+    if (!isIterableNested(converter, provider, local.getType())) {
+      return false;
+    }
+    if (!isIterableNested(converter, provider, local.getType())
     ) {
       return false;
     }
 
-    var getter = ExecutableInvoker.invoker(member.getMethod());
-    var convertAll = getConvertAllMethodInvoker(localDefinition.getType());
+    var convertAll = getConvertAllMethodInvoker(provider.getType().getRawType());
     if (convertAll == null) {
       return false;
     }
+    var collect = getCollectMethodInvoker(local.getType().getRawType());
+    if (collect == null) {
+      return false;
+    }
 
-    /*
-     var variable = this.convertAll(source.getVal());
-     */
+    var getter = ExecutableInvoker.invoker(provider.getMethod());
+
     loadThis(v);
+    v.visitInsn(DUP);
     loadSource(v);
     getter.invoke(v);
     convertAll.invoke(v);
-    storeLocal(v, localDefinition, context);
+    collect.invoke(v);
+    v.visitTypeInsn(CHECKCAST, org.objectweb.asm.Type.getInternalName(local.getType().getRawType()));
+    storeLocal(v, local, context);
     return true;
   }
 
-  protected MethodInvoker getConvertAllMethodInvoker(Class<?> localType) {
-    if (localType.isAssignableFrom(List.class)) {
-      return AbstractConverter$convertAllToList;
-    } else if (localType.isAssignableFrom(ArrayList.class)) {
-      return AbstractConverter$convertAllToArrayList;
-    } else if (localType.isAssignableFrom(LinkedList.class)) {
-      return AbstractConverter$convertAllToLinkedList;
-    } else if (localType.isAssignableFrom(Set.class)) {
-      return AbstractConverter$convertAllToSet;
+  protected MethodInvoker getConvertAllMethodInvoker(Class<?> providedType) {
+    if (Iterable.class.isAssignableFrom(providedType)) {
+      return AbstractConverter$convertIterableToStream;
+    } else if (providedType.isArray()) {
+      return AbstractConverter$convertArrayToStream;
+    } else {
+      return null;
+    }
+  }
+
+  protected MethodInvoker getCollectMethodInvoker(Class<?> consumerType) {
+    if (consumerType.isAssignableFrom(List.class)) {
+      return AbstractConverter$collectToList;
+    } else if (consumerType.isAssignableFrom(ArrayList.class)) {
+      return AbstractConverter$collectToArrayList;
+    } else if (consumerType.isAssignableFrom(LinkedList.class)) {
+      return AbstractConverter$collectToLinkedList;
+    } else if (consumerType.isAssignableFrom(Set.class)) {
+      return AbstractConverter$collectToSet;
+    } else if (consumerType.isAssignableFrom(HashSet.class)) {
+      return AbstractConverter$collectToHashSet;
+    } else if (consumerType.isAssignableFrom(TreeSet.class)) {
+      return AbstractConverter$collectToTreeSet;
+    } else if (consumerType.isArray()) {
+      return AbstractConverter$collectToArray;
     } else {
       return null;
     }
   }
 
 
-  protected boolean isIterableNested(
+  private boolean isIterableNested(
       ConverterDefinition converterDefinition,
-      BeanMember souceBeanMember,
-      Class<?> localType,
-      Type localGenericType
+      BeanMember provided,
+      GenericType<?> consumerType
   ) {
-    if (!Iterable.class.isAssignableFrom(localType)) {
-      return false;
-    }
-    if (!Iterable.class.isAssignableFrom(souceBeanMember.getType())) {
-      return false;
-    }
-    if (converterDefinition.getConfiguration().isFullTypeMatching()) {
-      if (localType != souceBeanMember.getType()) {
-        return false;
-      }
-    }
-
-    if (converterDefinition.getConfiguration().isFullTypeMatching() && localType != souceBeanMember.getType()) {
-      return false;
-    }
-
     var sc = converterDefinition.getSourceType();
     var tc = converterDefinition.getTargetType();
-
-    return getIterableElementType(localGenericType) == tc
-        && getIterableElementType(souceBeanMember.getGenericType()) == sc;
+    boolean fullTypeMatching = converterDefinition.getConfiguration().isFullTypeMatching();
+    if (fullTypeMatching) {
+      return Iterable.class.isAssignableFrom(provided.getType().getRawType())
+          && Iterable.class.isAssignableFrom(consumerType.getRawType())
+          && getIterableElementType(provided.getType().getGenericType()) == sc
+          && getIterableElementType(consumerType.getGenericType()) == tc;
+    } else {
+      var providedElementType = getElementType(provided.getType());
+      if (providedElementType == null) {
+        return false;
+      }
+      var requiredElementType = getElementType(consumerType);
+      if (requiredElementType == null) {
+        return false;
+      }
+      return providedElementType == sc && requiredElementType == tc;
+    }
   }
+
+  /**
+   * Return the elementType of specified {@code type}.
+   * <ol>
+   *   <li>If the specified is a {@link Iterable}, return the element type of it</li>
+   *   <li>If the specified is a array, return the component type of it</li>
+   *   <li>return null if the specified it's not a {@link Iterable} or an array</li>
+   * </ol>
+   *
+   * @param type a class extends from {@link Iterable} or an array class
+   * @return the element type of specified type
+   */
+  @Nullable
+  private Class<?> getElementType(GenericType<?> type) {
+    var rawType = type.getRawType();
+    if (Iterable.class.isAssignableFrom(rawType)) {
+      return getIterableElementType(type.getGenericType());
+    } else if (rawType.isArray()) {
+      return rawType.getComponentType();
+    } else {
+      return null;
+    }
+  }
+
 
   /**
    * Return the element type of {@link Iterable}

@@ -34,7 +34,7 @@ public enum TypedOpcode {
   LONG_ARRAY(long[].class, Opcodes.LASTORE, Opcodes.LALOAD, Opcodes.ACONST_NULL, 1),
   FLOAT_ARRAY(float[].class, Opcodes.FASTORE, Opcodes.FALOAD, Opcodes.ACONST_NULL, 1),
   DOUBLE_ARRAY(double[].class, Opcodes.DASTORE, Opcodes.DALOAD, Opcodes.ACONST_NULL, 1),
-  REFERENCE_ARRAY(Object[].class, Opcodes.AASTORE, Opcodes.AALOAD, Opcodes.ACONST_NULL, 1);
+  REFERENCE_ARRAY(Object[].class, Opcodes.ASTORE, Opcodes.ALOAD, Opcodes.ACONST_NULL, 1);
 
   private static volatile Map<Class<?>, TypedOpcode> map;
 

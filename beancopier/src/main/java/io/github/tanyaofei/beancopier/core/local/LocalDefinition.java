@@ -1,10 +1,9 @@
 package io.github.tanyaofei.beancopier.core.local;
 
+import io.github.tanyaofei.beancopier.utils.GenericType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.lang.reflect.Type;
 
 /**
  * Local variable definition
@@ -23,14 +22,9 @@ public class LocalDefinition {
   private final String name;
 
   /**
-   * The generic type of this local variable
+   * The generic type of the filed required
    */
-  private final Type genericType;
-
-  /**
-   * The class of this local variable
-   */
-  private final Class<?> type;
+  private final GenericType<?> type;
 
   /**
    * Whether this local variable should be skipped

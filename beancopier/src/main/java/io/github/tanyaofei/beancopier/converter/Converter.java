@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier.converter;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.invoke.MethodHandles;
@@ -26,7 +27,7 @@ public interface Converter<S, T> {
    * @param source An object that used to copy
    * @return target
    */
-  @Nullable
+  @Contract(value = "null -> null", pure = true)
   T convert(@Nullable S source);
 
 }

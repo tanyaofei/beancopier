@@ -46,6 +46,12 @@ public interface ExecutableInvoker {
     invoke(v, false);
   }
 
+  default void invoke(MethodVisitor v, Runnable beforeInvoke, Runnable afterInvoke) {
+    beforeInvoke.run();
+    invoke(v);
+    afterInvoke.run();
+  }
+
   /**
    * Write bytecode that invoking the executable
    *

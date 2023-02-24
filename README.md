@@ -20,7 +20,7 @@ _Starting from version 0.2.x, the minimum required JDK version is 17. If you are
 
 1. Support copying fields of the same type
 2. Support copying fields of compatible types: `Integer -> Number`, `List<Integer> -> Collection<? extends Number>`
-3. Support nested copying, collection nested copying
+3. Support nested copying, iterable nested copying
 4. Support copying fields from parent classes
 5. Support setting field aliases
 6. Support ignoring the copying of certain fields

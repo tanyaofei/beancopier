@@ -37,7 +37,7 @@ public class AllArgsConstructorInstanter implements TargetInstanter {
         () -> {
           int store = firstLocalStore;
           for (var member : targetMembers) {
-            var op = TypedOpcode.ofType(member.getType());
+            var op = TypedOpcode.ofType(member.getType().getRawType());
             v.visitVarInsn(op.load, store);
             store += op.slots;
           }

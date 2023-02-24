@@ -14,12 +14,12 @@ public class SkippedLocalDefiner extends ZeroValueLocalDefiner {
   @Override
   protected boolean defineInternal(
       MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
+      ConverterDefinition converter,
+      LocalDefinition local,
       LocalsDefinitionContext context
   ) {
-    if (localDefinition.isSkip()) {
-      return super.defineInternal(v, converterDefinition, localDefinition, context);
+    if (local.isSkip()) {
+      return super.defineInternal(v, converter, local, context);
     }
     return false;
   }

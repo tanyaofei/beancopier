@@ -50,7 +50,7 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
     for (var member : targetMembers) {
       boolean skip = skippedMembers.contains(member);
       if (skip) {
-        store += TypedOpcode.ofType(member.getType()).slots;
+        store += TypedOpcode.ofType(member.getType().getRawType()).slots;
       } else {
         store = setValue(member, store);
       }
@@ -58,8 +58,8 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
   }
 
   private int setValue(BeanMember member, int localStore) {
-    var os = TypedOpcode.ofType(member.getType());
-    if (definition.getConfiguration().isSkipNull() && !member.getType().isPrimitive()) {
+    var os = TypedOpcode.ofType(member.getType().getRawType());
+    if (definition.getConfiguration().isSkipNull() && !member.getType().getRawType().isPrimitive()) {
       // If skipNull is configured as true, a null check will be performed before calling the setter.
       // The setter method will only be called if the value is not null.
       new IfNonNull(

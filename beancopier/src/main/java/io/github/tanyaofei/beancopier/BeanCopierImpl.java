@@ -131,7 +131,7 @@ public final class BeanCopierImpl {
    */
   @Contract(pure = true)
   public <T> T clone(@Nullable T source) {
-    return clone(source, null);
+    return clone(source, (BiConsumer<T, T>) null);
   }
 
   @SuppressWarnings("unchecked")
@@ -157,7 +157,7 @@ public final class BeanCopierImpl {
    */
   @Contract(value = "null, _ -> null", pure = true)
   public <S, T> T copy(@Nullable S source, @NotNull Class<T> target) {
-    return copy(source, target, null);
+    return copy(source, target, (BiConsumer<S, T>) null);
   }
 
   /**
@@ -173,7 +173,7 @@ public final class BeanCopierImpl {
    * @throws CopyException if any exception occur during the copying process and the {@code afterCopied}
    */
   @SuppressWarnings("unchecked")
-  @Contract(value = "null, _, _ -> null")
+  @Contract(value = "null, _, _ -> null", pure = true)
   public <S, T> T copy(
       @Nullable S source,
       @NotNull Class<T> target,
@@ -243,40 +243,30 @@ public final class BeanCopierImpl {
 
     int remains = sources.size();
     var ret = new ArrayList<T>(remains);
-
-    if (sources instanceof List<T> objList) {
-      var itr = objList.listIterator();
-      while (itr.hasNext()) {
-        T t = itr.next();
-        if (t == null) {
-          remains--;
-          ret.add(null);
-          continue;
+    var itr = sources.iterator();
+    T source = null;
+    while (itr.hasNext() && source == null) {
+      // feeding null until found a non-null source
+      source = itr.next();
+      if (source == null) {
+        remains--;
+        ret.add(null);
+        if (afterEachCloned != null) {
+          afterEachCloned.accept(null, null);
         }
-
-        itr.previous();
-        Class<T> c = (Class<T>) t.getClass();
-        assert remains + ret.size() == sources.size();
-        ret.addAll(copyList(itr, c, afterEachCloned, remains));
-      }
-    } else {
-      var itr = sources.iterator();
-      while (itr.hasNext()) {
-        T t = itr.next();
-        if (t == null) {
-          remains--;
-          ret.add(null);
-          continue;
-        }
-
-        var c = (Class<T>) t.getClass();
-        ret.add(copy(t, c, afterEachCloned));
-        assert remains - 1 + ret.size() == sources.size();
-        ret.addAll(copyList(itr, c, afterEachCloned, remains - 1));
-        return ret;
       }
     }
 
+    if (source == null) {
+      return ret;
+      // end loop cause no more sources
+    }
+
+    // end loop cause found a non-null source
+    var c = (Class<T>) source.getClass();
+    ret.add(copy(source, c, afterEachCloned));
+    assert remains - 1 + ret.size() == sources.size();
+    ret.addAll(copyList(itr, c, afterEachCloned, remains - 1));
     assert sources.size() == ret.size();
     return ret;
   }
@@ -349,35 +339,36 @@ public final class BeanCopierImpl {
   @Contract
   @SuppressWarnings("unchecked")
   private <S, T> List<T> copyList(
-      @Nonnull Iterator<S> itr,
-      @Nonnull Class<T> tc,
+      @Nonnull Iterator<S> sources,
+      @Nonnull Class<T> targetType,
       @Nullable BiConsumer<S, T> afterEachCopied,
       int initialCapacity
   ) {
-    if (!itr.hasNext()) {
+    if (!sources.hasNext()) {
       return new ArrayList<>();
     }
 
-    // 因为 itr 可能一直返回 null, 因此要一直迭代到第一个不为 null 才能正确获取 class
-    Converter<S, T> c = null;
-    var ret = initialCapacity > 0 ? new ArrayList<T>(initialCapacity) : new ArrayList<T>();
-    while (itr.hasNext()) {
-      var s = itr.next();
-      T t;
-      if (s == null) {
-        t = null;
-      } else if (c == null) {
-        var sc = (Class<S>) s.getClass();
-        var cacheKey = new CacheKey(sc, tc);
-        c = generateConverter(cacheKey, sc, tc);
-        t = c.convert(s);
+    // 因为 sources 可能一直返回 null, 因此要一直迭代到第一个不为 null 才能正确获取 class
+    Converter<S, T> converter = null;
+    var ret = initialCapacity > 0
+              ? new ArrayList<T>(initialCapacity)
+              : new ArrayList<T>();
+    while (sources.hasNext()) {
+      var source = sources.next();
+      T target;
+      if (source == null) {
+        target = null;
+      } else if (converter == null) {
+        var sourceType = (Class<S>) source.getClass();
+        converter = generateConverter(new CacheKey(sourceType, targetType), sourceType, targetType);
+        target = converter.convert(source);
       } else {
-        t = c.convert(s);
+        target = converter.convert(source);
       }
 
-      ret.add(t);
+      ret.add(target);
       if (afterEachCopied != null) {
-        afterEachCopied.accept(s, t);
+        afterEachCopied.accept(source, target);
       }
     }
 

@@ -48,7 +48,7 @@ public abstract class LocalDefiner implements Opcodes {
    */
   protected static void storeLocal(MethodVisitor v, LocalDefinition definition, LocalsDefinitionContext context) {
     var store = context.getNextStore();
-    var op = TypedOpcode.ofType(definition.getType());
+    var op = TypedOpcode.ofType(definition.getType().getRawType());
     v.visitVarInsn(op.store, store);
     context.setNextStore(store + op.slots);
   }
@@ -78,17 +78,17 @@ public abstract class LocalDefiner implements Opcodes {
    * The implementation should define a variable as expected in this method.
    * If the implementation can not handle, return {@code false} otherwise it should return {@code true}.
    *
-   * @param v                   method writer
-   * @param converterDefinition the definition of converter
-   * @param localDefinition     the definition of the local variable expected
-   * @param context             the definition context of all the local variables needed
+   * @param v         method writer
+   * @param converter the definition of converter
+   * @param local     the definition of the local variable expected
+   * @param context   the definition context of all the local variables needed
    * @return true if the local defined as expected, otherwise false.
    * @since 0.2.0
    */
   protected abstract boolean defineInternal(
       MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
+      ConverterDefinition converter,
+      LocalDefinition local,
       LocalsDefinitionContext context
   );
 
@@ -135,7 +135,12 @@ public abstract class LocalDefiner implements Opcodes {
   static class RootLocalDefiner extends LocalDefiner {
 
     @Override
-    protected boolean defineInternal(MethodVisitor v, ConverterDefinition converterDefinition, LocalDefinition localDefinition, LocalsDefinitionContext context) {
+    protected boolean defineInternal(
+        MethodVisitor v,
+        ConverterDefinition converter,
+        LocalDefinition local,
+        LocalsDefinitionContext context
+    ) {
       return false;
     }
   }

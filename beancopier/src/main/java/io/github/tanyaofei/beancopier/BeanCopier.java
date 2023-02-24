@@ -40,7 +40,7 @@ public final class BeanCopier {
    * @since 0.0.1
    */
   public static <S, T> T copy(S source, Class<T> target) {
-    return theCopier.copy(source, target, null);
+    return theCopier.copy(source, target, (BiConsumer<S, T>) null);
   }
 
   /**

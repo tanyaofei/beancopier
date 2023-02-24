@@ -1,11 +1,11 @@
 package io.github.tanyaofei.beancopier.utils.reflection.member;
 
+import io.github.tanyaofei.beancopier.utils.GenericType;
 import lombok.EqualsAndHashCode;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
-import java.lang.reflect.Type;
 
 /**
  * @author tanyaofei
@@ -15,10 +15,12 @@ public class RecordMember implements BeanMember {
 
   private final RecordComponent rc;
   private final Method method;
+  private final GenericType<?> genericType;
 
   public RecordMember(RecordComponent rc, Method method) {
     this.rc = rc;
     this.method = method;
+    this.genericType = GenericType.of(rc);
   }
 
   @Override
@@ -32,13 +34,8 @@ public class RecordMember implements BeanMember {
   }
 
   @Override
-  public Class<?> getType() {
-    return rc.getType();
-  }
-
-  @Override
-  public Type getGenericType() {
-    return rc.getGenericType();
+  public GenericType<?> getType() {
+    return this.genericType;
   }
 
   @Override

@@ -21,13 +21,13 @@ public class ZeroValueLocalDefiner extends LocalDefiner {
   @Override
   protected boolean defineInternal(
       MethodVisitor v,
-      ConverterDefinition converterDefinition,
-      LocalDefinition localDefinition,
+      ConverterDefinition converter,
+      LocalDefinition local,
       LocalsDefinitionContext context
   ) {
-    var requiredType = localDefinition.getType();
-    TypedOpcode.ofType(requiredType).constZero(v);
-    storeLocal(v, requiredType, context);
+    var rawType = local.getType().getRawType();
+    TypedOpcode.ofType(rawType).constZero(v);
+    storeLocal(v, rawType, context);
     return true;
   }
 

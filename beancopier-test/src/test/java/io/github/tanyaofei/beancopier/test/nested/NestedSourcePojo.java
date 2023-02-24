@@ -14,4 +14,5 @@ public class NestedSourcePojo {
   private Integer id;
   private NestedSourcePojo child;
   private List<NestedSourcePojo> children;
+  private NestedSourcePojo[] children2;
 }
