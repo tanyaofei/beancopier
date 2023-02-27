@@ -80,6 +80,8 @@ public class Example {
 }
 ```
 
+There are more [examples](./docs/example/index.md).
+
 
 ### BeanCopier Features
 
