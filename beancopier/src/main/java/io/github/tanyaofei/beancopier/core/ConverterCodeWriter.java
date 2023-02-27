@@ -18,7 +18,6 @@ import io.github.tanyaofei.beancopier.utils.ClassSignature;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import org.objectweb.asm.*;
-import org.objectweb.asm.tree.MethodNode;
 
 import javax.annotation.Nonnull;
 import java.util.stream.Collectors;
@@ -131,31 +130,30 @@ public class ConverterCodeWriter implements Opcodes {
    * @param cw ClassWriter
    */
   private void genConvertMethod(@Nonnull ClassWriter cw) {
-    var configuration = definition.getFeature();
-    var v = cw.visitMethod(
+    var configuration = definition.getFeatures();
+    var mv = cw.visitMethod(
         ACC_PUBLIC,
         MethodNames.Converter$convert,
         definition.getConvertMethodDescriptor(),
         null,
         null
     );
-    var mn = new MethodNode();
-    v.visitCode();
+    mv.visitCode();
 
-    returnNullIfNull(v);
+    returnNullIfNull(mv);
 
-    var providers = Reflections.getMembersWithSetter(definition.getTargetType(), configuration.isIncludingSuper());
-    var consumers = BeanMember.mapIterable(Reflections.getGettableBeanMember(definition.getSourceType(), configuration.isIncludingSuper()));
+    var consumers = Reflections.getMembersWithSetter(definition.getTargetType(), configuration.isIncludingSuper());
+    var providers = BeanMember.mapIterable(Reflections.getGettableBeanMember(definition.getSourceType(), configuration.isIncludingSuper()));
 
     int firstLocalStore = 2;  // 0: this, 1: source object ref
-    var context = new LocalsDefinitionContext(consumers, firstLocalStore);
+    var context = new LocalsDefinitionContext(providers, firstLocalStore);
 
-    for (var member : providers) {
+    for (var member : consumers) {
       var property = configuration.isPropertySupported()
           ? Properties.getOrDefault(member)
           : Properties.defaultProperty;
       definer.define(
-          v,
+          mv,
           definition,
           LocalDefinition
               .builder()
@@ -170,30 +168,32 @@ public class ConverterCodeWriter implements Opcodes {
     int targetStore = context.getNextStore();
     var instancer = switch (definition.getInstantiateMode()) {
       case ALL_ARGS_CONSTRUCTOR -> new AllArgsConstructorInstanter(
-          v,
+          mv,
           definition,
           targetStore,
-          providers,
+          consumers,
           firstLocalStore
       );
-      case NO_ARGS_CONSTRUCTOR_THEN_SET -> new NoArgsConstructorInstanter(
-          v,
+      case NO_ARGS_CONSTRUCTOR -> new NoArgsConstructorInstanter(
+          mv,
           definition,
           targetStore,
-          providers,
+          consumers,
           StreamSupport
-              .stream(providers.spliterator(), true)
-              .filter(m -> (configuration.isPropertySupported() ? Properties.getOrDefault(m) : Properties.defaultProperty).skip())
+              .stream(consumers.spliterator(), true)
+              .filter(m -> (configuration.isPropertySupported()
+                  ? Properties.getOrDefault(m)
+                  : Properties.defaultProperty).skip())
               .collect(Collectors.toSet()),
           firstLocalStore
       );
     };
     instancer.instantiate();
 
-    v.visitVarInsn(ALOAD, targetStore);
-    v.visitInsn(ARETURN);
-    v.visitMaxs(-1, -1);
-    v.visitEnd();
+    mv.visitVarInsn(ALOAD, targetStore);
+    mv.visitInsn(ARETURN);
+    mv.visitMaxs(-1, -1);
+    mv.visitEnd();
   }
 
   /**
@@ -237,26 +237,27 @@ public class ConverterCodeWriter implements Opcodes {
   private void genConvertBridgeMethod(
       @Nonnull ClassWriter cw
   ) {
-    var v = cw.visitMethod(
+    var mv = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
         MethodNames.Converter$convert,
         MethodDescriptors.Converter$convert,
         null,
-        null);
-    v.visitCode();
-    v.visitVarInsn(ALOAD, 0);
-    v.visitVarInsn(ALOAD, 1);
-    v.visitTypeInsn(CHECKCAST, org.objectweb.asm.Type.getInternalName(definition.getSourceType()));
-    v.visitMethodInsn(
+        null
+    );
+    mv.visitCode();
+    mv.visitVarInsn(ALOAD, 0);
+    mv.visitVarInsn(ALOAD, 1);
+    mv.visitTypeInsn(CHECKCAST, org.objectweb.asm.Type.getInternalName(definition.getSourceType()));
+    mv.visitMethodInsn(
         INVOKEVIRTUAL,
         definition.getInternalName(),
         MethodNames.Converter$convert,
         definition.getConvertMethodDescriptor(),
         false
     );
-    v.visitInsn(ARETURN);
-    v.visitMaxs(-1, -1);
-    v.visitEnd();
+    mv.visitInsn(ARETURN);
+    mv.visitMaxs(-1, -1);
+    mv.visitEnd();
   }
 
   /**
@@ -265,13 +266,13 @@ public class ConverterCodeWriter implements Opcodes {
    * @param cw class writer
    */
   private void genConfigurationAnnotation(@Nonnull ClassWriter cw) {
-    var a = cw.visitAnnotation(Type.getDescriptor(Feature.class), false);
-    var configuration = definition.getFeature();
-    a.visit(Feature.SKIP_NULL, configuration.isSkipNull());
-    a.visit(Feature.PREFER_NESTED, configuration.isPreferNested());
-    a.visit(Feature.PROPERTY_SUPPORTED, configuration.isPropertySupported());
-    a.visit(Feature.FULL_TYPE_MATCHING, configuration.isFullTypeMatching());
-    a.visit(Feature.INCLUDING_SUPER, configuration.isIncludingSuper());
+    var av = cw.visitAnnotation(Type.getDescriptor(Feature.class), false);
+    var configuration = definition.getFeatures();
+    av.visit(Feature.SKIP_NULL, configuration.isSkipNull());
+    av.visit(Feature.PREFER_NESTED, configuration.isPreferNested());
+    av.visit(Feature.PROPERTY_SUPPORTED, configuration.isPropertySupported());
+    av.visit(Feature.FULL_TYPE_MATCHING, configuration.isFullTypeMatching());
+    av.visit(Feature.INCLUDING_SUPER, configuration.isIncludingSuper());
   }
 
 }

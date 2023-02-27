@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core;
 
-import io.github.tanyaofei.beancopier.ConverterFeature;
+import io.github.tanyaofei.beancopier.ConverterFeatures;
 import io.github.tanyaofei.beancopier.annotation.Property;
 import io.github.tanyaofei.beancopier.constants.InstantiateMode;
 import io.github.tanyaofei.beancopier.converter.Converter;
@@ -42,7 +42,7 @@ public class ConverterDefinition {
    * The features of the converter that is about to be generated
    */
   @Nonnull
-  private final ConverterFeature feature;
+  private final ConverterFeatures features;
 
   /**
    * Whether it is a clone copy. {@code true} if {@link #sourceType} is equals to {@link #targetType}
@@ -61,13 +61,13 @@ public class ConverterDefinition {
       @Nonnull String internalName,
       @Nonnull Class<?> sourceType,
       @Nonnull Class<?> targetType,
-      @Nonnull ConverterFeature feature,
+      @Nonnull ConverterFeatures features,
       @Nonnull InstantiateMode instantiateMode
   ) {
     this.internalName = internalName;
     this.sourceType = sourceType;
     this.targetType = targetType;
-    this.feature = feature;
+    this.features = features;
     this.convertMethodDescriptor = Type.getMethodDescriptor(Type.getType(targetType), Type.getType(sourceType));
     this.clone = sourceType.equals(targetType);
     this.instantiateMode = instantiateMode;

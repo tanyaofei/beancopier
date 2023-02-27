@@ -17,23 +17,30 @@ import javax.annotation.Nonnull;
  */
 public class AllArgsConstructorInstanter implements TargetInstanter {
 
-  private final MethodVisitor v;
+  @Nonnull
+  private final MethodVisitor mv;
+
+  @Nonnull
   private final ConverterDefinition definition;
+
   private final int targetStore;
-  private final Iterable<BeanMember> targetMembers;
+
+  @Nonnull
+  private final Iterable<BeanMember> consumers;
+
   private final int firstLocalStore;
 
   public AllArgsConstructorInstanter(
-      @Nonnull MethodVisitor v,
+      @Nonnull MethodVisitor mv,
       @Nonnull ConverterDefinition definition,
       int targetStore,
-      @Nonnull Iterable<BeanMember> targetMembers,
+      @Nonnull Iterable<BeanMember> consumers,
       int firstLocalStore
   ) {
-    this.v = v;
+    this.mv = mv;
     this.definition = definition;
     this.targetStore = targetStore;
-    this.targetMembers = targetMembers;
+    this.consumers = consumers;
     this.firstLocalStore = firstLocalStore;
   }
 
@@ -41,16 +48,16 @@ public class AllArgsConstructorInstanter implements TargetInstanter {
   @Override
   public void instantiate() {
     ExecutableInvoker.invoker(definition.getTargetType().getConstructors()[0]).invoke(
-        v,
+        mv,
         () -> {
           int store = firstLocalStore;
-          for (var member : targetMembers) {
-            var op = TypedOpcode.ofType(member.getType().getRawType());
-            v.visitVarInsn(op.load, store);
+          for (var consumer : consumers) {
+            var op = TypedOpcode.ofType(consumer.getType().getRawType());
+            mv.visitVarInsn(op.load, store);
             store += op.slots;
           }
         }
     );
-    v.visitVarInsn(Opcodes.ASTORE, targetStore);
+    mv.visitVarInsn(Opcodes.ASTORE, targetStore);
   }
 }

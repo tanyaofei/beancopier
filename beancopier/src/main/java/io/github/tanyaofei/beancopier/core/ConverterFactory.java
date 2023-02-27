@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core;
 
-import io.github.tanyaofei.beancopier.ConverterFeature;
+import io.github.tanyaofei.beancopier.ConverterFeatures;
 import io.github.tanyaofei.beancopier.constants.InstantiateMode;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.exception.CodeError;
@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,9 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-
-import static java.lang.reflect.Modifier.isAbstract;
-import static java.lang.reflect.Modifier.isPublic;
 
 /**
  * Factory used to generate {@link Converter} implementations
@@ -40,29 +36,31 @@ import static java.lang.reflect.Modifier.isPublic;
 @Slf4j
 public class ConverterFactory implements Opcodes {
 
+  public final static Consumer<ConverterFeatures.Builder> DEFAULT_FEATURE = features -> {
+  };
+
   /**
    * This ExecutorService is used to dump converter class
    */
   private final static ExecutorService debugWorkers = Executors.newSingleThreadExecutor();
-  private final static Consumer<ConverterFeature.Builder> DEFAULT_FEATURE = feature -> {
-  };
 
-  private final ConverterFeature feature;
+
+  private final ConverterFeatures features;
 
   public ConverterFactory() {
     this(DEFAULT_FEATURE);
   }
 
   public ConverterFactory(
-      @Nonnull Consumer<ConverterFeature.Builder> feature
+      @Nonnull Consumer<ConverterFeatures.Builder> features
   ) {
-    var builder = ConverterFeature.builder();
-    feature.accept(builder);
-    this.feature = builder.build();
+    var builder = ConverterFeatures.builder();
+    features.accept(builder);
+    this.features = builder.build();
   }
 
   /**
-   * Use the specified {@link java.lang.invoke.MethodHandles.Lookup} to define the converter class
+   * Use the given {@link java.lang.invoke.MethodHandles.Lookup} to define the converter class
    *
    * @param code java byte code
    * @return class
@@ -89,15 +87,16 @@ public class ConverterFactory implements Opcodes {
   public <S, T> Converter<S, T> genConverter(
       @Nonnull Class<S> sourceType, @Nonnull Class<T> targetType
   ) {
-    checkSourceType(sourceType);
-    var newInstanceMode = checkTargetType(targetType);
+    verifySourceType(sourceType);
+    verifyTargetType(targetType);
+    InstantiateMode newInstanceMode = getInstantiateMode(targetType);
 
-    var lookup = Optional.ofNullable(feature.getLookup()).orElse(Converter.LOOKUP);
-    checkPrivilege(sourceType, lookup);
-    checkPrivilege(targetType, lookup);
+    var lookup = Optional.ofNullable(features.getLookup()).orElse(Converter.LOOKUP);
+    verifyPrivilege(sourceType, lookup);
+    verifyPrivilege(targetType, lookup);
 
     var packageName = lookup.lookupClass().getPackageName();
-    String className = packageName + "." + feature
+    String className = packageName + "." + features
         .getNamingPolicy()
         .getSimpleClassName(sourceType, targetType);
     String internalName = Reflections.getInternalNameByClassName(className);
@@ -106,7 +105,7 @@ public class ConverterFactory implements Opcodes {
         internalName,
         sourceType,
         targetType,
-        feature,
+        features,
         newInstanceMode
     );
     try {
@@ -139,7 +138,7 @@ public class ConverterFactory implements Opcodes {
   }
 
   private void dumpBytecode(byte[] code, String filename) {
-    var directory = feature.getDebugLocation();
+    var directory = features.getDebugLocation();
     if (directory == null || directory.isBlank()) {
       return;
     }
@@ -152,63 +151,47 @@ public class ConverterFactory implements Opcodes {
     }, debugWorkers);
   }
 
-  /**
-   * Check the specified can be import from outer class. If not, a {@link VerifyException} will be thrown
-   *
-   * @param c the specified class
-   */
-  private void checkImportable(Class<?> c) {
-    if (c.isAnonymousClass()) {
-      throw new VerifyException("Can not import a anonymous class: " + c.getName());
-    }
-
-    if (c.isLocalClass()) {
-      throw new VerifyException("Can not import a local class: " + c.getName());
-    }
-
-    if (!isPublic(c.getModifiers())) {
-      throw new VerifyException("Can not import a " + Modifier.toString(c.getModifiers()) + " class: " + c.getName());
-    }
+  private void verifySourceType(Class<?> c) {
+    Optional.ofNullable(Reflections.getDescriptionIfNotImportable(c)).ifPresent(desc -> {
+      throw new VerifyException("Could not generate a converter that converts " + c.getName() + " because it's " + desc);
+    });
   }
 
-  private void checkSourceType(Class<?> c) {
-    checkImportable(c);
+  private void verifyTargetType(Class<?> c) {
+    Optional.ofNullable(Reflections.getDescriptionIfNotImportable(c)).ifPresent(desc -> {
+      throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it's " + desc);
+    });
+
+    Optional.ofNullable(Reflections.getDescriptionIfNotInstantiatable(c)).ifPresent(desc -> {
+      throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it's " + desc);
+    });
   }
 
-  private InstantiateMode checkTargetType(Class<?> c) {
-    checkImportable(c);
-
-    if (c.isInterface()) {
-      throw new VerifyException("Can not instantiate an interface: " + c.getName());
-    }
-
-    if (isAbstract(c.getModifiers())) {
-      throw new VerifyException("Can not instantiate an abstract class: " + c.getName());
-    }
-
-    if (c.isEnum()) {
-      throw new VerifyException("Can not instantiate an enum class: " + c.getName());
-    }
-
-    if (!Reflections.isEnclosingClass(c)) {
-      throw new VerifyException("Can not instantiate an enclosing class: " + c.getName());
-    }
-
+  private InstantiateMode getInstantiateMode(Class<?> c) {
     if (c.isRecord()) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
-    } else if (!feature.isSkipNull() && Reflections.hasPublicAllArgsConstructor(c)) {
+    }
+
+    if (features.isSkipNull()) {
+      // if skipNull feature is set to true, required a no-args-constructor
+      if (Reflections.hasPublicNoArgsConstructor(c)) {
+        return InstantiateMode.NO_ARGS_CONSTRUCTOR;
+      }
+      throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it hasn't a no-args-constructor(required by skipNull feature)");
+    }
+
+    if (Reflections.hasPublicAllArgsConstructor(c)) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
     }
 
     if (Reflections.hasPublicNoArgsConstructor(c)) {
-      return InstantiateMode.NO_ARGS_CONSTRUCTOR_THEN_SET;
+      return InstantiateMode.NO_ARGS_CONSTRUCTOR;
     }
-    throw new VerifyException(
-        "Can not instantiate the class without public no-args-constructor or all-args-constructor: " + c.getName()
-    );
+
+    throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it hasn't any available constructor(no-args-constructor or all-args-constructor");
   }
 
-  public void checkPrivilege(Class<?> c, MethodHandles.Lookup lookup) {
+  public void verifyPrivilege(Class<?> c, MethodHandles.Lookup lookup) {
     try {
       lookup.findClass(c.getName());
     } catch (IllegalAccessException e) {

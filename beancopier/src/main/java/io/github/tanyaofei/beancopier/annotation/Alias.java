@@ -18,7 +18,7 @@ public @interface Alias {
   String value();
 
   /**
-   * This alias is only works when the source class is in specified classes
+   * This {@link Alias} is only works when the source class is in it
    *
    * @return specified source classes
    */

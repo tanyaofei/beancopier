@@ -82,13 +82,18 @@ public class ExceptionTest extends Assertions {
     @Accessors(chain = true)
     class LocalObject {
     }
-    assertThrows(VerifyException.class, () -> BeanCopier.copy(new LocalObject(), Object.class));
+    assertThrows(VerifyException.class, () -> BeanCopier.copy(new LocalObject(), Object.class)).printStackTrace();
 
     assertThrows(VerifyException.class, () -> {
-      BeanCopier.copy(
-          new Object(),
-          LocalObject.class);
+      BeanCopier.copy(new Object(), LocalObject.class);
     }).printStackTrace();
+  }
+
+  @Test
+  public void testCanNotInstantiate() {
+    assertThrows(VerifyException.class,
+                 () -> BeanCopier.copy(new Object(), NoAvailableConstroctorObject.class)
+    ).printStackTrace();
   }
 
 
@@ -109,6 +114,16 @@ public class ExceptionTest extends Assertions {
   }
 
   public class EnclosingObject {
+  }
+
+  public static class NoAvailableConstroctorObject {
+    private String name;
+    private String id;
+
+    public NoAvailableConstroctorObject(String name) {
+      this.name = name;
+      this.id = name;
+    }
   }
 
 

@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandles;
 
 /**
- * Converter generation configuration
+ * Converter feature
  *
  * @author tanyaofei
  * @since 0.1.5
@@ -20,7 +20,7 @@ import java.lang.invoke.MethodHandles;
 @Getter
 @ToString
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public final class ConverterFeature {
+public final class ConverterFeatures {
 
   /**
    * Determines whether Target field must define a full match in order to be applied.
@@ -72,7 +72,7 @@ public final class ConverterFeature {
   private final NamingPolicy namingPolicy;
 
   /**
-   * When generating the converter, write the class file to the specified location.
+   * When generating the converter, write the class file to the specified filepath.
    */
   private final String debugLocation;
 
@@ -97,8 +97,8 @@ public final class ConverterFeature {
 
     private String debugLocation = new BeanCopierConfiguration().getDebugLocation();
 
-    public ConverterFeature build() {
-      return new ConverterFeature(
+    public ConverterFeatures build() {
+      return new ConverterFeatures(
           fullTypeMatching,
           skipNull,
           preferNested,

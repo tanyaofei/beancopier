@@ -44,7 +44,7 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
       @Nonnull LocalDefinition local,
       @Nonnull LocalsDefinitionContext context
   ) {
-    var config = converter.getFeature();
+    var config = converter.getFeatures();
     if (!config.isPreferNested()) {
       return false;
     }
@@ -124,7 +124,7 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
   ) {
     var sc = converterDefinition.getSourceType();
     var tc = converterDefinition.getTargetType();
-    boolean fullTypeMatching = converterDefinition.getFeature().isFullTypeMatching();
+    boolean fullTypeMatching = converterDefinition.getFeatures().isFullTypeMatching();
     if (fullTypeMatching) {
       return Iterable.class.isAssignableFrom(provided.getType().getRawType())
           && Iterable.class.isAssignableFrom(consumerType.getRawType())

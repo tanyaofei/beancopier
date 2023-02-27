@@ -42,7 +42,7 @@ public class NestedLocalDefiner extends LocalDefiner {
       return false;
     }
 
-    if (!converter.getFeature().isPreferNested() || !isNested(converter, provider.getType(), local.getType())) {
+    if (!converter.getFeatures().isPreferNested() || !isNested(converter, provider.getType(), local.getType())) {
       return false;
     }
 

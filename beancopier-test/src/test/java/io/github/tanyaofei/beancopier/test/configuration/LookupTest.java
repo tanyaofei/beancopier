@@ -7,8 +7,6 @@ import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.InvocationTargetException;
-
 /**
  * @author tanyaofei
  */
@@ -18,10 +16,10 @@ public class LookupTest extends Assertions {
   @Test
   public void testLookup() {
     var classloader = new XClassLoader();
-    var lookup = LookupUtils.lookupInModule(classloader, XClassLoader::defineClass);
+    var lookup = LookupUtils.lookupInClassLoader(classloader, XClassLoader::defineClass);
     assertDoesNotThrow(() -> {
-      LookupUtils.lookupInModule(classloader, XClassLoader::defineClass);
-      LookupUtils.lookupInModule(classloader, XClassLoader::defineClass);
+      LookupUtils.lookupInClassLoader(classloader, XClassLoader::defineClass);
+      LookupUtils.lookupInClassLoader(classloader, XClassLoader::defineClass);
     });
     var beancopier = new BeanCopierImpl(config -> {
       config.lookup(lookup);

@@ -28,6 +28,8 @@ _Starting from version 0.2.x, the minimum required JDK version is 17. If you are
 6. Support ignoring properties
 7. Support JDK 16 record：`POJO -> record`, `record -> record`, `record -> POJO`
 
+_Tips: If the target class provides an all-args-constructor, it can improve the copying speed._
+
 
 
 ## How fast it is

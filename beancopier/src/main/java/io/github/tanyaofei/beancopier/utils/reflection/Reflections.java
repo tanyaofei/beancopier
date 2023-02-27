@@ -227,5 +227,40 @@ public class Reflections {
     return true;
   }
 
+  public static String getDescriptionIfNotImportable(Class<?> c) {
+    if (c.isAnonymousClass()) {
+      return "an anonymous class";
+    }
+
+    if (c.isLocalClass()) {
+      return "a local class";
+    }
+
+    if (!Modifier.isPublic(c.getModifiers())) {
+      return "not a public class";
+    }
+
+    return null;
+  }
+
+  public static String getDescriptionIfNotInstantiatable(Class<?> c) {
+    if (c.isInterface()) {
+      return "an interface";
+    }
+    if (c.isPrimitive()) {
+      return "an primitive class";
+    }
+    if (Modifier.isAbstract(c.getModifiers())) {
+      return "an abstract class";
+    }
+    if (c.isEnum()) {
+      return "an enum class";
+    }
+    if (!isEnclosingClass(c)) {
+      return "not an enclosing class";
+    }
+    return null;
+  }
+
 
 }
