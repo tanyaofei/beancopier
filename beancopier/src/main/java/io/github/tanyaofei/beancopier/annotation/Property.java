@@ -13,7 +13,10 @@ import java.lang.annotation.*;
 public @interface Property {
 
   /**
-   *
+   * Property name.
+   * If beancopier can not find a suitable {@link Alias} in {@link #alias()}, it will be used as default value.
+   * When it's empty, beancopier will use field name or record component as property name.
+   * <p>It will <b>NOT</b> take effect when the class of source and the class of target is the same one</p>
    * <pre>{@code
    *  public class Source {
    *      private String val;
@@ -25,8 +28,6 @@ public @interface Property {
    *  }
    * }
    * </pre>
-   *
-   * <p>It will <b>NOT</b> take effect when the class of source and the class of target is the same one</p>
    *
    * @return property alias
    * @since 0.1.0
@@ -52,6 +53,9 @@ public @interface Property {
   Alias[] alias() default {};
 
   /**
+   * If {@code true}, beancopier will not set value for the field.
+   * But if target is a {@link Record}, a zero value will be set for primitive and {@code null} for reference
+   *
    * @return skip This field will not be initial by converter if true
    * @since 0.1.0
    */

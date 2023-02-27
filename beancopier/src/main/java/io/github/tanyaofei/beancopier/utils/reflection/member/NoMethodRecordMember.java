@@ -8,16 +8,16 @@ import java.lang.reflect.RecordComponent;
 /**
  * @author tanyaofei
  */
-public class SettableRecordMember extends RecordMember {
+public class NoMethodRecordMember extends RecordMember {
 
-  public SettableRecordMember(@Nonnull RecordComponent rc) {
+  public NoMethodRecordMember(@Nonnull RecordComponent rc) {
     super(rc, null);
   }
 
   @Nullable
   @Override
   public Method getMethod() {
-    throw new UnsupportedOperationException("Record class has no setters");
+    throw new UnsupportedOperationException("getMethod");
   }
 
 }

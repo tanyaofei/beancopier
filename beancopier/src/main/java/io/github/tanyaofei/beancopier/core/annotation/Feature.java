@@ -1,6 +1,7 @@
 package io.github.tanyaofei.beancopier.core.annotation;
 
-import io.github.tanyaofei.beancopier.ConverterFeature;
+import io.github.tanyaofei.beancopier.ConverterFeatures;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,38 +16,34 @@ import java.lang.annotation.Target;
 @SuppressWarnings("unused")
 public @interface Feature {
 
-  String SKIP_NULL = "skipNull";
-
-  /**
-   * @see ConverterFeature#isSkipNull()
-   */
-  boolean skipNull();
-
-  String PREFER_NESTED = "preferNested";
-
-  /**
-   * @see ConverterFeature#isPreferNested() ()
-   */
-  boolean preferNested();
-
+  String SKIP_NULL          = "skipNull";
+  String PREFER_NESTED      = "preferNested";
+  String FULL_TYPE_MATCHING = "fullTypeMatching";
+  String INCLUDING_SUPER    = "includingSuper";
   String PROPERTY_SUPPORTED = "propertySupported";
 
   /**
-   * @see ConverterFeature#isPropertySupported()
+   * @see ConverterFeatures#isSkipNull()
+   */
+  boolean skipNull();
+
+  /**
+   * @see ConverterFeatures#isPreferNested() ()
+   */
+  boolean preferNested();
+
+  /**
+   * @see ConverterFeatures#isPropertySupported()
    */
   boolean propertySupported();
 
-  String FULL_TYPE_MATCHING = "fullTypeMatching";
-
   /**
-   * @see ConverterFeature#isFullTypeMatching()
+   * @see ConverterFeatures#isFullTypeMatching()
    */
   boolean fullTypeMatching();
 
-  String INCLUDING_SUPER = "includingSuper";
-
   /**
-   * @see ConverterFeature#isIncludingSuper()
+   * @see ConverterFeatures#isIncludingSuper()
    */
   boolean includingSuper();
 

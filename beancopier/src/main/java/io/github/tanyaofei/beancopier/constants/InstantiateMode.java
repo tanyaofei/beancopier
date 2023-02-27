@@ -27,6 +27,6 @@ public enum InstantiateMode {
    * Instantiate a target using no-args-constructor, then copied fields using setters
    * @see NoArgsConstructorInstanter
    */
-  NO_ARGS_CONSTRUCTOR_THEN_SET,
+  NO_ARGS_CONSTRUCTOR,
 
 }

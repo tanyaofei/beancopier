@@ -34,7 +34,7 @@ public class CompatibleLocalDefiner extends LocalDefiner {
       return false;
     }
 
-    if (converter.getFeature().isFullTypeMatching()) {
+    if (converter.getFeatures().isFullTypeMatching()) {
       if (!isFullTypeMatched(provider.getType(), local.getType())) {
         return false;
       }

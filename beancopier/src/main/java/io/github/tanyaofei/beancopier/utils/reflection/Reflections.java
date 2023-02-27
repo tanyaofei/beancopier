@@ -1,10 +1,11 @@
 package io.github.tanyaofei.beancopier.utils.reflection;
 
+import io.github.tanyaofei.beancopier.utils.RefArrayList;
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
+import io.github.tanyaofei.beancopier.utils.reflection.member.NoMethodRecordMember;
 import io.github.tanyaofei.beancopier.utils.reflection.member.PojoMember;
 import io.github.tanyaofei.beancopier.utils.reflection.member.RecordMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.SettableRecordMember;
 import io.github.tanyaofei.guava.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /**
  * @author tanyaofei
@@ -52,7 +52,7 @@ public class Reflections {
    * @return bean members
    */
   @Nonnull
-  public static Iterable<BeanMember> getGettableBeanMember(@Nonnull Class<?> c, boolean includingSuper) {
+  public static Iterable<? extends BeanMember> getGettableBeanMember(@Nonnull Class<?> c, boolean includingSuper) {
     if (c.isRecord()) {
       return getRecordMembersWithGetter(c);
     }
@@ -93,7 +93,7 @@ public class Reflections {
    * @return bean members
    */
   @Nonnull
-  private static Iterable<BeanMember> getRecordMembersWithGetter(@Nonnull Class<?> c) {
+  private static Iterable<? extends BeanMember> getRecordMembersWithGetter(@Nonnull Class<?> c) {
     if (!c.isRecord()) {
       throw new IllegalArgumentException(c.getName() + " is not a record class");
     }
@@ -118,7 +118,7 @@ public class Reflections {
    * @return bean members
    */
   @Nonnull
-  public static Iterable<BeanMember> getMembersWithSetter(@Nonnull Class<?> c, boolean includingSuper) {
+  public static Iterable<? extends BeanMember> getMembersWithSetter(@Nonnull Class<?> c, boolean includingSuper) {
     if (c.isRecord()) {
       return getSettableRecordMember(c);
     }
@@ -154,14 +154,16 @@ public class Reflections {
    * @return bean members
    */
   @Nonnull
-  private static Iterable<BeanMember> getSettableRecordMember(@Nonnull Class<?> c) {
+  private static Iterable<? extends BeanMember> getSettableRecordMember(@Nonnull Class<?> c) {
     if (!c.isRecord()) {
       throw new IllegalArgumentException(c.getName() + " is not a record class");
     }
-    return Arrays
-        .stream(c.getRecordComponents())
-        .map(SettableRecordMember::new)
-        .collect(Collectors.toList());
+    return RefArrayList.of(
+        Arrays
+            .stream(c.getRecordComponents())
+            .map(NoMethodRecordMember::new)
+            .toArray(NoMethodRecordMember[]::new)
+    );
   }
 
   /**
@@ -225,6 +227,41 @@ public class Reflections {
       }
     }
     return true;
+  }
+
+  public static String getDescriptionIfNotImportable(Class<?> c) {
+    if (c.isAnonymousClass()) {
+      return "an anonymous class";
+    }
+
+    if (c.isLocalClass()) {
+      return "a local class";
+    }
+
+    if (!Modifier.isPublic(c.getModifiers())) {
+      return "not a public class";
+    }
+
+    return null;
+  }
+
+  public static String getDescriptionIfNotInstantiatable(Class<?> c) {
+    if (c.isInterface()) {
+      return "an interface";
+    }
+    if (c.isPrimitive()) {
+      return "an primitive class";
+    }
+    if (Modifier.isAbstract(c.getModifiers())) {
+      return "an abstract class";
+    }
+    if (c.isEnum()) {
+      return "an enum class";
+    }
+    if (!isEnclosingClass(c)) {
+      return "not an enclosing class";
+    }
+    return null;
   }
 
 

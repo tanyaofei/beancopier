@@ -9,7 +9,7 @@ import java.lang.invoke.MethodHandles;
  * Converter classes naming policy
  *
  * @author tanyaofei
- * @see ConverterFeature.Builder#namingPolicy(NamingPolicy)
+ * @see ConverterFeatures.Builder#namingPolicy(NamingPolicy)
  * @since 0.1.2
  */
 public abstract class NamingPolicy {
@@ -41,10 +41,7 @@ public abstract class NamingPolicy {
 
     @Override
     @NotNull
-    public String getSimpleClassName(
-        @Nonnull Class<?> sourceType,
-        @Nonnull Class<?> targetType
-    ) {
+    public String getSimpleClassName(@Nonnull Class<?> sourceType, @Nonnull Class<?> targetType) {
       if (sourceType == targetType) {
         return sourceType.getSimpleName()
             + "Copier";

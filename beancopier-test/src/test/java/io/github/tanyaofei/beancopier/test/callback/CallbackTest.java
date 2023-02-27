@@ -30,4 +30,13 @@ public class CallbackTest extends Assertions {
     }
   }
 
+  @Test
+  public void testCopyArrayCallback() {
+    var sources = IntStream.range(0, 10).mapToObj(ignored -> new CallbackPojo().setString("source")).toArray();
+    var targets = BeanCopier.copyList(sources, CallbackPojo.class, (s, t) -> t.setString("target"));
+    for(var target: targets) {
+      assertEquals("target", target.getString());
+    }
+  }
+
 }

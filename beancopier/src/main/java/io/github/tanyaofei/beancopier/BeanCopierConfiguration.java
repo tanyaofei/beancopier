@@ -4,7 +4,10 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 /**
+ * The following configuration will be used as the default configuration for each {@link BeanCopierImpl} instance.
+ *
  * @author tanyaofei
+ * @see ConverterFeatures
  */
 @Data
 @Accessors(chain = true)

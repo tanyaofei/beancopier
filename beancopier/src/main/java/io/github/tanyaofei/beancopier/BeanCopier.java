@@ -28,30 +28,34 @@ public final class BeanCopier {
 
   /**
    * @see BeanCopierImpl#clone(Object)
-   * @see 0.1.0
+   * @since  0.1.0
    */
   public static <T> T clone(T source) {
     return theCopier.clone(source);
   }
 
+  /**
+   * @see BeanCopierImpl#clone(Object, BiConsumer)
+   * @since 0.1.0
+   */
   public static <T> T clone(T source, BiConsumer<T, T> afterCloned) {
     return theCopier.clone(source, afterCloned);
   }
 
   /**
-   * @see BeanCopierImpl#copy(Object, Class)
-   * @since 0.0.1
+   * @see BeanCopierImpl#cloneList(Object[])
+   * @since 0.2.0
    */
-  public static <S, T> T copy(S source, Class<T> target) {
-    return theCopier.copy(source, target, (BiConsumer<S, T>) null);
+  public static <T> List<T> cloneList(T[] sources) {
+    return theCopier.cloneList(sources);
   }
 
   /**
-   * @see BeanCopierImpl#copy(Object, Class, BiConsumer)
-   * @since 0.0.1
+   * @see BeanCopierImpl#cloneList(Object[], BiConsumer)
+   * @since 0.2.0
    */
-  public static <S, T> T copy(S source, Class<T> target, BiConsumer<S, T> afterCopied) {
-    return theCopier.copy(source, target, afterCopied);
+  public static <T> List<T> cloneList(T[] sources, BiConsumer<T, T> afterEachCloned) {
+    return theCopier.cloneList(sources, afterEachCloned);
   }
 
   /**
@@ -64,10 +68,42 @@ public final class BeanCopier {
 
   /**
    * @see BeanCopierImpl#cloneList(Collection, BiConsumer)
-   * @see 0.1.0
+   * @since 0.1.0
    */
   public static <T> List<T> cloneList(Collection<T> sources, BiConsumer<T, T> afterEachCloned) {
     return theCopier.cloneList(sources, afterEachCloned);
+  }
+
+  /**
+   * @see BeanCopierImpl#copy(Object, Class)
+   * @since 0.0.1
+   */
+  public static <S, T> T copy(S source, Class<T> target) {
+    return theCopier.copy(source, target, null);
+  }
+
+  /**
+   * @see BeanCopierImpl#copy(Object, Class, BiConsumer)
+   * @since 0.0.1
+   */
+  public static <S, T> T copy(S source, Class<T> target, BiConsumer<S, T> afterCopied) {
+    return theCopier.copy(source, target, afterCopied);
+  }
+
+  /**
+   * @see BeanCopierImpl#copyList(Object[], Class)
+   * @since 0.2.0
+   */
+  public static <S, T> List<T> copyList(S[] sources, Class<T> target) {
+    return theCopier.copyList(sources, target);
+  }
+
+  /**
+   * @see BeanCopierImpl#copyList(Object[], Class, BiConsumer)
+   * @since 0.2.0
+   **/
+  public static <S, T> List<T> copyList(S[] source, Class<T> target, BiConsumer<S, T> afterEachCopied) {
+    return theCopier.copyList(source, target, afterEachCopied);
   }
 
   /**

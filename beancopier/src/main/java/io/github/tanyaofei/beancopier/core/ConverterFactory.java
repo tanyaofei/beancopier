@@ -1,6 +1,6 @@
 package io.github.tanyaofei.beancopier.core;
 
-import io.github.tanyaofei.beancopier.ConverterFeature;
+import io.github.tanyaofei.beancopier.ConverterFeatures;
 import io.github.tanyaofei.beancopier.constants.InstantiateMode;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.exception.CodeError;
@@ -13,13 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.objectweb.asm.Opcodes;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
+import java.nio.file.FileSystems;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,9 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-
-import static java.lang.reflect.Modifier.isAbstract;
-import static java.lang.reflect.Modifier.isPublic;
 
 /**
  * Factory used to generate {@link Converter} implementations
@@ -40,29 +36,31 @@ import static java.lang.reflect.Modifier.isPublic;
 @Slf4j
 public class ConverterFactory implements Opcodes {
 
+  public final static Consumer<ConverterFeatures.Builder> DEFAULT_FEATURE = features -> {
+  };
+
   /**
    * This ExecutorService is used to dump converter class
    */
   private final static ExecutorService debugWorkers = Executors.newSingleThreadExecutor();
-  private final static Consumer<ConverterFeature.Builder> DEFAULT_FEATURE = feature -> {
-  };
 
-  private final ConverterFeature feature;
+
+  private final ConverterFeatures features;
 
   public ConverterFactory() {
     this(DEFAULT_FEATURE);
   }
 
   public ConverterFactory(
-      @Nonnull Consumer<ConverterFeature.Builder> feature
+      @Nonnull Consumer<ConverterFeatures.Builder> features
   ) {
-    var builder = ConverterFeature.builder();
-    feature.accept(builder);
-    this.feature = builder.build();
+    var builder = ConverterFeatures.builder();
+    features.accept(builder);
+    this.features = builder.build();
   }
 
   /**
-   * Use the specified {@link java.lang.invoke.MethodHandles.Lookup} to define the converter class
+   * Use the given {@link java.lang.invoke.MethodHandles.Lookup} to define the converter class
    *
    * @param code java byte code
    * @return class
@@ -89,15 +87,16 @@ public class ConverterFactory implements Opcodes {
   public <S, T> Converter<S, T> genConverter(
       @Nonnull Class<S> sourceType, @Nonnull Class<T> targetType
   ) {
-    checkSourceType(sourceType);
-    var newInstanceMode = checkTargetType(targetType);
+    verifySourceType(sourceType);
+    verifyTargetType(targetType);
+    InstantiateMode newInstanceMode = getInstantiateMode(targetType);
 
-    var lookup = Optional.ofNullable(feature.getLookup()).orElse(Converter.LOOKUP);
-    checkPrivilege(sourceType, lookup);
-    checkPrivilege(targetType, lookup);
+    var lookup = Optional.ofNullable(features.getLookup()).orElse(Converter.LOOKUP);
+    verifyPrivilege(sourceType, lookup);
+    verifyPrivilege(targetType, lookup);
 
     var packageName = lookup.lookupClass().getPackageName();
-    String className = packageName + "." + feature
+    String className = packageName + "." + features
         .getNamingPolicy()
         .getSimpleClassName(sourceType, targetType);
     String internalName = Reflections.getInternalNameByClassName(className);
@@ -106,7 +105,7 @@ public class ConverterFactory implements Opcodes {
         internalName,
         sourceType,
         targetType,
-        feature,
+        features,
         newInstanceMode
     );
     try {
@@ -126,8 +125,8 @@ public class ConverterFactory implements Opcodes {
               ? code
               : BytecodeUtils.rename(code, c.getName().replace("/", "$")),
           c == null
-              ? Reflections.getClassSimpleNameByInternalName(internalName) + "$" + Arrays.hashCode(code)
-              : c.getSimpleName().replace("/", "$")
+              ? Reflections.getClassSimpleNameByInternalName(internalName) + "$" + Arrays.hashCode(code) + ".class"
+              : c.getSimpleName().replace("/", "$") + ".class"
       );
     }
 
@@ -138,92 +137,107 @@ public class ConverterFactory implements Opcodes {
     }
   }
 
+  /**
+   * Dump bytecode if to {@code features.getDebugLocation()} is not {@code null} or empty.
+   * This method run in a background thread, it won't affect caller's thread even any exception was thrown
+   *
+   * @param code     bytecode
+   * @param filename filename
+   */
   private void dumpBytecode(byte[] code, String filename) {
-    var directory = feature.getDebugLocation();
+    var directory = features.getDebugLocation();
     if (directory == null || directory.isBlank()) {
       return;
     }
+    var file = FileSystems.getDefault().getPath(directory, filename).normalize().toFile();
     CompletableFuture.runAsync(() -> {
-      try (var out = new FileOutputStream(directory + File.separatorChar + filename + ".class")) {
+      try (var out = new FileOutputStream(file)) {
         out.write(code);
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
+      log.info("The following converter class has been dump at: " + file.getAbsolutePath());
     }, debugWorkers);
   }
 
   /**
-   * Check the specified can be import from outer class. If not, a {@link VerifyException} will be thrown
+   * Verify a class can be used as source
    *
-   * @param c the specified class
+   * @param c class
    */
-  private void checkImportable(Class<?> c) {
-    if (c.isAnonymousClass()) {
-      throw new VerifyException("Can not import a anonymous class: " + c.getName());
-    }
-
-    if (c.isLocalClass()) {
-      throw new VerifyException("Can not import a local class: " + c.getName());
-    }
-
-    if (!isPublic(c.getModifiers())) {
-      throw new VerifyException("Can not import a " + Modifier.toString(c.getModifiers()) + " class: " + c.getName());
-    }
+  private void verifySourceType(Class<?> c) {
+    Optional.ofNullable(Reflections.getDescriptionIfNotImportable(c)).ifPresent(desc -> {
+      throw new VerifyException("Could not generate a converter that converts " + c.getName() + " because it's " + desc);
+    });
   }
 
-  private void checkSourceType(Class<?> c) {
-    checkImportable(c);
+  /**
+   * Verify a class can be used as target
+   *
+   * @param c class
+   */
+  private void verifyTargetType(Class<?> c) {
+    Optional.ofNullable(Reflections.getDescriptionIfNotImportable(c)).ifPresent(desc -> {
+      throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it's " + desc);
+    });
+
+    Optional.ofNullable(Reflections.getDescriptionIfNotInstantiatable(c)).ifPresent(desc -> {
+      throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it's " + desc);
+    });
   }
 
-  private InstantiateMode checkTargetType(Class<?> c) {
-    checkImportable(c);
-
-    if (c.isInterface()) {
-      throw new VerifyException("Can not instantiate an interface: " + c.getName());
-    }
-
-    if (isAbstract(c.getModifiers())) {
-      throw new VerifyException("Can not instantiate an abstract class: " + c.getName());
-    }
-
-    if (c.isEnum()) {
-      throw new VerifyException("Can not instantiate an enum class: " + c.getName());
-    }
-
-    if (!Reflections.isEnclosingClass(c)) {
-      throw new VerifyException("Can not instantiate an enclosing class: " + c.getName());
-    }
-
+  /**
+   * Return the instantiate mode for a class
+   *
+   * @param c class
+   * @return instantiate mode
+   */
+  private InstantiateMode getInstantiateMode(Class<?> c) {
     if (c.isRecord()) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
-    } else if (!feature.isSkipNull() && Reflections.hasPublicAllArgsConstructor(c)) {
+    }
+
+    if (features.isSkipNull()) {
+      // if skipNull feature is set to true, required a no-args-constructor
+      if (Reflections.hasPublicNoArgsConstructor(c)) {
+        return InstantiateMode.NO_ARGS_CONSTRUCTOR;
+      }
+      throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it hasn't a no-args-constructor(required by skipNull feature)");
+    }
+
+    if (Reflections.hasPublicAllArgsConstructor(c)) {
       return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
     }
 
     if (Reflections.hasPublicNoArgsConstructor(c)) {
-      return InstantiateMode.NO_ARGS_CONSTRUCTOR_THEN_SET;
+      return InstantiateMode.NO_ARGS_CONSTRUCTOR;
     }
-    throw new VerifyException(
-        "Can not instantiate the class without public no-args-constructor or all-args-constructor: " + c.getName()
-    );
+
+    throw new VerifyException("Could not generate a converter that converts to " + c.getName() + " because it hasn't any available constructor(no-args-constructor or all-args-constructor");
   }
 
-  public void checkPrivilege(Class<?> c, MethodHandles.Lookup lookup) {
+  /**
+   * Verify the given {@link java.lang.invoke.MethodHandles.Lookup} can access the given class
+   *
+   * @param c      class
+   * @param lookup lookup
+   */
+  public void verifyPrivilege(Class<?> c, MethodHandles.Lookup lookup) {
     try {
       lookup.findClass(c.getName());
     } catch (IllegalAccessException e) {
       String message = (lookup == Converter.LOOKUP
-                        ? "This BeanCopierImpl instance can not access class: " + c.getName()
-                        : "The lookup defined in configuration can not access class: " + c.getName())
-          + ", use `new BeanCopierImpl(config -> config.lookup(A_LOOKUP_THAT_HAS_PRIVILEGE_ACCESS))` instead";
+          ? "This BeanCopierImpl instance can not access class: " + c.getName()
+          : "The lookup defined in configuration can not access class: " + c.getName())
+          + ", use `new BeanCopierImpl(f -> f.lookup(A_LOOKUP_THAT_HAS_PRIVILEGE_ACCESS))` instead";
       throw new VerifyException(message, e);
     } catch (ClassNotFoundException e) {
-      throw new VerifyException(
-          c + "(loaded by " + c.getClassLoader() + ") is not visible to this BeanCopier instance with classloader: "
-              + lookup.lookupClass().getClassLoader()
-              + ", use `new BeanCopierImpl(config -> config.lookup(A_LOOKUP_CAN_VISIT_THE_CLASS))` instead",
-          e
+      var message = "%s(loaded by %s) is not visible to this BeanCopier instance with classloader: %s, use `new BeanCopierImpl(f -> f.lookup(LOOKUP_CAN_VISIT_THE_CLASS)` instead".formatted(
+          c,
+          c.getClassLoader(),
+          lookup.lookupClass().getClassLoader()
       );
+      throw new VerifyException(message, e);
     }
   }
 

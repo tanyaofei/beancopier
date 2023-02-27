@@ -20,61 +20,70 @@ import java.util.Set;
  */
 public class NoArgsConstructorInstanter implements TargetInstanter {
 
-  private final MethodVisitor v;
+  @Nonnull
+  private final MethodVisitor mv;
+
+  @Nonnull
   private final ConverterDefinition definition;
+
   private final int targetStore;
-  private final Iterable<BeanMember> targetMembers;
+
+  @Nonnull
+  private final Iterable<? extends BeanMember> consumers;
+
   private final int firstLocalStore;
-  private final Set<BeanMember> skippedMembers;
+
+  @Nonnull
+  private final Set<? extends BeanMember> skippedConsumers;
 
   public NoArgsConstructorInstanter(
-      @Nonnull MethodVisitor v,
+      @Nonnull MethodVisitor mv,
       @Nonnull ConverterDefinition definition,
       int targetStore,
-      @Nonnull Iterable<BeanMember> targetMembers,
-      @Nonnull Set<BeanMember> skippedMembers,
+      @Nonnull Iterable<? extends BeanMember> consumers,
+      @Nonnull Set<? extends BeanMember> skippedConsumers,
       int firstLocalStore
   ) {
-    this.v = v;
+    this.mv = mv;
     this.definition = definition;
     this.targetStore = targetStore;
-    this.targetMembers = targetMembers;
+    this.consumers = consumers;
     this.firstLocalStore = firstLocalStore;
-    this.skippedMembers = skippedMembers;
+    this.skippedConsumers = skippedConsumers;
   }
 
   @Override
   public void instantiate() {
-    ConstructorInvoker.fromNoArgsConstructor(definition.getTargetType()).invoke(v);
-    v.visitVarInsn(Opcodes.ASTORE, targetStore);
+    ConstructorInvoker.fromNoArgsConstructor(definition.getTargetType()).invoke(mv);
+    mv.visitVarInsn(Opcodes.ASTORE, targetStore);
     int store = firstLocalStore;
-    for (var member : targetMembers) {
-      boolean skip = skippedMembers.contains(member);
+    for (var consumer : consumers) {
+      boolean skip = skippedConsumers.contains(consumer);
       if (skip) {
-        store += TypedOpcode.ofType(member.getType().getRawType()).slots;
+        store += TypedOpcode.ofType(consumer.getType().getRawType()).slots;
       } else {
-        store = setValue(member, store);
+        store = consume(consumer, store);
       }
     }
   }
 
-  private int setValue(@Nonnull BeanMember member, int localStore) {
+  private int consume(@Nonnull BeanMember member, int localStore) {
     var os = TypedOpcode.ofType(member.getType().getRawType());
-    if (definition.getFeature().isSkipNull() && !member.getType().getRawType().isPrimitive()) {
+    if (definition.getFeatures().isSkipNull() && !member.getType().getRawType().isPrimitive()) {
       // If skipNull is configured as true, a null check will be performed before calling the setter.
       // The setter method will only be called if the value is not null.
       new IfNonNull(
-          v,
+          mv,
           () -> {
-            v.visitVarInsn(Opcodes.ALOAD, targetStore);
-            v.visitVarInsn(os.load, localStore);
+            mv.visitVarInsn(Opcodes.ALOAD, targetStore);
+            mv.visitVarInsn(os.load, localStore);
           },
-          () -> ExecutableInvoker.invoker(member.getMethod()).invoke(v, true)
+          () -> ExecutableInvoker.invoker(member.getMethod()).invoke(mv, true)
       ).write();
     } else {
-      v.visitVarInsn(Opcodes.ALOAD, targetStore);
-      v.visitVarInsn(os.load, localStore);
-      ExecutableInvoker.invoker(member.getMethod()).invoke(v, true);
+      mv.visitVarInsn(Opcodes.ALOAD, targetStore);
+      mv.visitVarInsn(os.load, localStore);
+      ExecutableInvoker.invoker(member.getMethod()).invoke(mv, true);
     }
     return localStore + os.slots;
   }

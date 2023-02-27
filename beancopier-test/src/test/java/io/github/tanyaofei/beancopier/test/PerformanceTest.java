@@ -190,7 +190,7 @@ public class PerformanceTest extends Assertions {
 
     var converterFactory = new ConverterFactory(
         feature -> feature
-            .lookup(LookupUtils.lookupInModule(classloader, XClassLoader::defineClass))
+            .lookup(LookupUtils.lookupInClassLoader(classloader, XClassLoader::defineClass))
             .debugLocation(null)
     );
     var o = new TemplateObject();
