@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier.converter;
 
+import io.github.tanyaofei.guava.common.reflect.TypeToken;
 import org.jetbrains.annotations.Contract;
 
 import java.lang.reflect.Array;
@@ -18,27 +19,40 @@ import java.util.stream.StreamSupport;
  */
 public abstract class AbstractConverter<S, T> implements Converter<S, T> {
 
-  protected Class<T> sourceType;
-  protected Class<T> targetType;
+  private Type[] typeArguments;
 
   @SuppressWarnings("unchecked")
-  protected Class<T> getSourceType() {
-    if (sourceType == null) {
-      this.sourceType = (Class<T>) getTypeArguments()[0];
+  protected Class<S> getSourceType() {
+    if (typeArguments == null) {
+      typeArguments = getTypeArguments();
     }
-    return this.sourceType;
+    return (Class<S>) typeArguments[0];
   }
 
   @SuppressWarnings("unchecked")
   protected Class<T> getTargetType() {
-    if (targetType == null) {
-      this.targetType = (Class<T>) getTypeArguments()[1];
+    if (typeArguments == null) {
+      typeArguments = getTypeArguments();
     }
-    return this.targetType;
+    return (Class<T>) typeArguments[1];
   }
 
   private Type[] getTypeArguments() {
-    return ((ParameterizedType) this.getClass().getGenericSuperclass()).getActualTypeArguments();
+    var clazz = this.getClass();
+    if (clazz.getSuperclass() == AbstractConverter.class) {
+      return ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments();
+    }
+
+    var typeParameters = AbstractConverter.class.getTypeParameters();
+    var typeArguments = new Type[typeParameters.length];
+    var supertype = TypeToken
+        .of(clazz)
+        .getSupertype(AbstractConverter.class);
+
+    for(int i = 0; i < typeParameters.length; i++) {
+      typeArguments[i] = supertype.resolveType(typeParameters[i]).getRawType();
+    }
+    return typeArguments;
   }
 
   @Contract(value = "null -> null", pure = true)
