@@ -28,7 +28,7 @@ public @interface Feature {
   boolean skipNull();
 
   /**
-   * @see ConverterFeatures#isPreferNested() ()
+   * @see ConverterFeatures#isPreferNested()
    */
   boolean preferNested();
 
