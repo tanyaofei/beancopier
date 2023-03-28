@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 public sealed class CodeError extends BeanCopierError permits DefineClassError, InstantiationError {
 
   @Internal
-  public CodeError(@javax.annotation.Nullable String message, @Nullable Throwable cause) {
+  public CodeError(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 
