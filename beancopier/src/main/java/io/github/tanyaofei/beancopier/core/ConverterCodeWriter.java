@@ -39,21 +39,6 @@ public class ConverterCodeWriter implements Opcodes {
   }
 
   /**
-   * generate a no-args-constructor
-   *
-   * @param cw ClassWriter
-   */
-  private void genConstructor(@Nonnull ClassWriter cw) {
-    var v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, MethodNames.Object$init, MethodDescriptors.Object$init, null, null);
-    v.visitCode();
-    v.visitVarInsn(ALOAD, 0);
-    v.visitMethodInsn(INVOKESPECIAL, InternalNames.AbstractConverter, MethodNames.Object$init, MethodDescriptors.Object$init, false);
-    v.visitInsn(RETURN);
-    v.visitMaxs(-1, -1);
-    v.visitEnd();
-  }
-
-  /**
    * generate converter bytecode
    *
    * @return converter bytecode
@@ -99,6 +84,21 @@ public class ConverterCodeWriter implements Opcodes {
     v.visitInsn(ACONST_NULL);
     v.visitInsn(ARETURN);
     v.visitLabel(ifNonNull);
+  }
+
+  /**
+   * generate a no-args-constructor
+   *
+   * @param cw ClassWriter
+   */
+  private void genConstructor(@Nonnull ClassWriter cw) {
+    var v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, MethodNames.Object$init, MethodDescriptors.Object$init, null, null);
+    v.visitCode();
+    v.visitVarInsn(ALOAD, 0);
+    v.visitMethodInsn(INVOKESPECIAL, InternalNames.AbstractConverter, MethodNames.Object$init, MethodDescriptors.Object$init, false);
+    v.visitInsn(RETURN);
+    v.visitMaxs(-1, -1);
+    v.visitEnd();
   }
 
   /**
