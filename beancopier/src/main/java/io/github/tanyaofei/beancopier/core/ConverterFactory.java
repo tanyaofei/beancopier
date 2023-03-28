@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Factory used to generate {@link Converter} implementations
@@ -120,13 +121,14 @@ public class ConverterFactory implements Opcodes {
     } catch (Throwable e) {
       throw new DefineClassError(code, sourceType, targetType, e);
     } finally {
-      dumpBytecode(
-          c == null
+      final var clazz = c;
+      dumpBytecodeSafely(
+          () -> clazz == null
               ? code
-              : BytecodeUtils.rename(code, c.getName().replace("/", "$")),
-          c == null
+              : BytecodeUtils.rename(code, clazz.getName().replace("/", "$")),
+          () -> clazz == null
               ? Reflections.getClassSimpleNameByInternalName(internalName) + "$" + Arrays.hashCode(code) + ".class"
-              : c.getSimpleName().replace("/", "$") + ".class"
+              : clazz.getSimpleName().replace("/", "$") + ".class"
       );
     }
 
@@ -144,15 +146,16 @@ public class ConverterFactory implements Opcodes {
    * @param code     bytecode
    * @param filename filename
    */
-  private void dumpBytecode(byte[] code, String filename) {
+  private void dumpBytecodeSafely(Supplier<byte[]> code, Supplier<String> filename) {
     var directory = features.getDebugLocation();
     if (directory == null || directory.isBlank()) {
       return;
     }
-    var file = FileSystems.getDefault().getPath(directory, filename).normalize().toFile();
+
+    var file = FileSystems.getDefault().getPath(directory, filename.get()).normalize().toFile();
     CompletableFuture.runAsync(() -> {
       try (var out = new FileOutputStream(file)) {
-        out.write(code);
+        out.write(code.get());
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }

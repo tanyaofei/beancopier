@@ -166,7 +166,7 @@ public class ConverterCodeWriter implements Opcodes {
     }
 
     int targetStore = context.getNextStore();
-    var instancer = switch (definition.getInstantiateMode()) {
+    var instanter = switch (definition.getInstantiateMode()) {
       case ALL_ARGS_CONSTRUCTOR -> new AllArgsConstructorInstanter(
           mv,
           definition,
@@ -188,7 +188,7 @@ public class ConverterCodeWriter implements Opcodes {
           firstLocalStore
       );
     };
-    instancer.instantiate();
+    instanter.instantiate();
 
     mv.visitVarInsn(ALOAD, targetStore);
     mv.visitInsn(ARETURN);
