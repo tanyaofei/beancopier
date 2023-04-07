@@ -6,7 +6,7 @@
 
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier-parent</artifactId>
-    <version>0.2.0-M1</version>
+    <version>0.2.0-M2</version>
     <packaging>pom</packaging>
     <name>beancopier-parent</name>
 
