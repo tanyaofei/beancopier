@@ -1,10 +1,10 @@
 package io.github.tanyaofei.beancopier.core.local;
 
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import javax.annotation.Nonnull;
 
 /**
  * A tool for generating bytecode for the "if null" or "else" condition
@@ -14,37 +14,37 @@ public class IfNullOrElse {
   /**
    * Method writer
    */
-  @Nonnull
+  @NotNull
   private final MethodVisitor v;
 
   /**
    * The label of IFNONNULL
    */
-  @Nonnull
+  @NotNull
   private final Label ifNonNull = new Label();
 
   /**
    * The label of GOTO
    */
-  @Nonnull
+  @NotNull
   private final Label elseGoto = new Label();
 
   /**
    * A runnable for generating bytecode to get a value that used to check if it is null or not
    */
-  @Nonnull
+  @NotNull
   private final Runnable who;
 
   /**
    * A runnable for generating bytecode for the case when the value({@link #who}) is null
    */
-  @Nonnull
+  @NotNull
   private final Runnable onNull;
 
   /**
    * A runnable for generating bytecode for the case when the value({@link #who}) is not null
    */
-  @Nonnull
+  @NotNull
   private final Runnable onNonnull;
 
   /**
@@ -56,10 +56,10 @@ public class IfNullOrElse {
    * @param onNonnull A runnable for generating bytecode for the case when the value({@link #who}) is not null
    */
   public IfNullOrElse(
-      @Nonnull MethodVisitor v,
-      @Nonnull Runnable who,
-      @Nonnull Runnable onNull,
-      @Nonnull Runnable onNonnull
+      @NotNull MethodVisitor v,
+      @NotNull Runnable who,
+      @NotNull Runnable onNull,
+      @NotNull Runnable onNonnull
   ) {
     this.v = v;
     this.who = who;

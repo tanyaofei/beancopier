@@ -6,7 +6,7 @@
 
     <groupId>io.github.tanyaofei</groupId>
     <artifactId>beancopier-parent</artifactId>
-    <version>0.2.0-M1</version>
+    <version>0.1.7-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>beancopier-parent</name>
 
@@ -43,8 +43,8 @@
     </licenses>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <asm.version>9.4</asm.version>
         <lombok.version>1.18.26</lombok.version>
@@ -83,12 +83,6 @@
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-commons</artifactId>
                 <version>${asm-commons.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.code.findbugs</groupId>
-                <artifactId>jsr305</artifactId>
-                <version>${jsr305.version}</version>
             </dependency>
 
             <dependency>

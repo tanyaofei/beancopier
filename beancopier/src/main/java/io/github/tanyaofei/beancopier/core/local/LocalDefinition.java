@@ -4,8 +4,8 @@ import io.github.tanyaofei.beancopier.utils.GenericType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 
 /**
  * Local variable definition
@@ -21,13 +21,13 @@ public class LocalDefinition {
   /**
    * The name of the field to be copied.
    */
-  @Nonnull
+  @NotNull
   private final String name;
 
   /**
    * The generic type of the filed required
    */
-  @Nonnull
+  @NotNull
   private final GenericType<?> type;
 
   /**

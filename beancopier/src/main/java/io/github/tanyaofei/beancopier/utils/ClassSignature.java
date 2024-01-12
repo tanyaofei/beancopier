@@ -3,18 +3,18 @@ package io.github.tanyaofei.beancopier.utils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * @author tanyaofei
  */
 public class ClassSignature {
 
-  @Nonnull
-  public static String getClassSignature(@Nonnull ClassInfo superclass, @Nullable ClassInfo... interfaces) {
+  @NotNull
+  public static String getClassSignature(@NotNull ClassInfo superclass, @NotNull ClassInfo @Nullable ... interfaces) {
     if (interfaces == null || interfaces.length == 0) {
       return superclass.getDescriptors();
     }
@@ -43,24 +43,23 @@ public class ClassSignature {
     /**
      * 类
      */
-    @Nonnull
+    @NotNull
     private final Class<?> type;
 
     /**
      * 范型参数类
      */
-    @Nullable
-    private final Class<?>[] typeArguments;
+    private final @NotNull Class<?> @Nullable[] typeArguments;
 
-    @Nonnull
-    public static ClassInfo of(@Nonnull Class<?> type, @Nullable Class<?>... argumentTypes) {
+    @NotNull
+    public static ClassInfo of(@NotNull Class<?> type, @NotNull Class<?> @Nullable... argumentTypes) {
       return new ClassInfo(type, argumentTypes);
     }
 
     /**
      * @return 描述符
      */
-    @Nonnull
+    @NotNull
     public final String getDescriptors() {
       if (typeArguments == null || typeArguments.length == 0) {
         return Type.getDescriptor(type);

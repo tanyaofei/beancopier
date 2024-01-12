@@ -1,11 +1,11 @@
 package io.github.tanyaofei.beancopier.core.invoker;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 
 /**
@@ -27,7 +27,7 @@ public class ConstructorInvoker implements ExecutableInvoker {
    */
   private final String descriptor;
 
-  public ConstructorInvoker(@Nonnull Constructor<?> constructor) {
+  public ConstructorInvoker(@NotNull Constructor<?> constructor) {
     this.owner = Type.getInternalName(constructor.getDeclaringClass());
     this.descriptor = Type.getConstructorDescriptor(constructor);
   }
@@ -39,7 +39,7 @@ public class ConstructorInvoker implements ExecutableInvoker {
    * @return An instance of ConstructorInvoker
    * @throws IllegalArgumentException if the specified hasn't no-args-constructor
    */
-  public static ConstructorInvoker fromNoArgsConstructor(@Nonnull Class<?> type) {
+  public static ConstructorInvoker fromNoArgsConstructor(@NotNull Class<?> type) {
     Constructor<?> constructor;
     try {
       constructor = type.getDeclaredConstructor();
@@ -50,7 +50,7 @@ public class ConstructorInvoker implements ExecutableInvoker {
   }
 
   @Override
-  public void invoke(@Nonnull MethodVisitor v, boolean popReturnValue) {
+  public void invoke(@NotNull MethodVisitor v, boolean popReturnValue) {
     invoke(v, popReturnValue, null);
   }
 
@@ -71,7 +71,7 @@ public class ConstructorInvoker implements ExecutableInvoker {
    * @param popReturnValue Whether pop the return value from stack if it has one
    * @param beforeInit     Runnable function after between calling NEW and calling &lt;init&gt;
    */
-  public void invoke(@Nonnull MethodVisitor v, boolean popReturnValue, @Nullable Runnable beforeInit) {
+  public void invoke(@NotNull MethodVisitor v, boolean popReturnValue, @Nullable Runnable beforeInit) {
     v.visitTypeInsn(Opcodes.NEW, owner);
     v.visitInsn(Opcodes.DUP);
     if (beforeInit != null) {

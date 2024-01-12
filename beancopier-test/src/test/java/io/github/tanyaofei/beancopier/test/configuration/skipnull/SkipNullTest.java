@@ -21,12 +21,12 @@ public class SkipNullTest extends Assertions {
     assertEquals("name", target.getName());
   }
 
-  @Test
-  public void testNotSkipNullOnRecord() {
-    var source = new SkipNullRecord(1, null);
-    var target = beancopier.clone(source);
-    assertEquals(source.intVal(), target.intVal());
-    assertEquals(source.stringVal(), target.stringVal());
-  }
+//  @Test
+//  public void testNotSkipNullOnRecord() {
+//    var source = new SkipNullRecord(1, null);
+//    var target = beancopier.clone(source);
+//    assertEquals(source.intVal(), target.intVal());
+//    assertEquals(source.stringVal(), target.stringVal());
+//  }
 
 }

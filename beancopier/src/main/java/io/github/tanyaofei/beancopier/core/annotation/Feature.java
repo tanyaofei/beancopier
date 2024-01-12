@@ -1,7 +1,6 @@
 package io.github.tanyaofei.beancopier.core.annotation;
 
 import io.github.tanyaofei.beancopier.ConverterFeatures;
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

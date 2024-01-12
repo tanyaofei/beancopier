@@ -1,5 +1,6 @@
 package io.github.tanyaofei.beancopier.exception;
-import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.Nullable;
 
 import static org.jetbrains.annotations.ApiStatus.Internal;
 /**
@@ -17,7 +18,7 @@ import static org.jetbrains.annotations.ApiStatus.Internal;
  * @author tanyaofei
  * @since 0.1.2
  */
-public non-sealed class CopyException extends BeanCopierException {
+public class CopyException extends BeanCopierException {
 
   @Internal
   public CopyException(@Nullable String message, @Nullable Throwable cause) {

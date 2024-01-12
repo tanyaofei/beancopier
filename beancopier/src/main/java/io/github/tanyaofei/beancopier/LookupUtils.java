@@ -3,7 +3,6 @@ package io.github.tanyaofei.beancopier;
 import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.ref.SoftReference;
@@ -72,7 +71,7 @@ public class LookupUtils {
   /**
    * @see #lookupInClassLoader(ClassLoader, QuintFunction)
    */
-  @Nonnull
+  @NotNull
   public static <C extends ClassLoader> MethodHandles.Lookup lookupInClassLoader(
       @NotNull C classLoader,
       @NotNull BiFunction<C, byte[], Class<?>> defineClass  // classLoader, code
@@ -80,8 +79,7 @@ public class LookupUtils {
     return lookupInClassLoader(classLoader, (cl, name, code, offset, length) -> defineClass.apply(cl, code));
   }
 
-  @Nonnull
-  public static byte[] getLookupHookBytecode() {
+  public static byte @NotNull [] getLookupHookBytecode() {
     var code = lookupHookBytecode.get();
     if (code == null) {
       code = BytecodeUtils.toBytecode(LookupHook.class);

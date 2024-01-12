@@ -6,10 +6,10 @@ import io.github.tanyaofei.beancopier.core.invoker.ConstructorInvoker;
 import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
 import io.github.tanyaofei.beancopier.core.local.IfNonNull;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import javax.annotation.Nonnull;
 import java.util.Set;
 
 /**
@@ -20,28 +20,28 @@ import java.util.Set;
  */
 public class NoArgsConstructorInstanter implements TargetInstanter {
 
-  @Nonnull
+  @NotNull
   private final MethodVisitor mv;
 
-  @Nonnull
+  @NotNull
   private final ConverterDefinition definition;
 
   private final int targetStore;
 
-  @Nonnull
+  @NotNull
   private final Iterable<? extends BeanMember> consumers;
 
   private final int firstLocalStore;
 
-  @Nonnull
+  @NotNull
   private final Set<? extends BeanMember> skippedConsumers;
 
   public NoArgsConstructorInstanter(
-      @Nonnull MethodVisitor mv,
-      @Nonnull ConverterDefinition definition,
+      @NotNull MethodVisitor mv,
+      @NotNull ConverterDefinition definition,
       int targetStore,
-      @Nonnull Iterable<? extends BeanMember> consumers,
-      @Nonnull Set<? extends BeanMember> skippedConsumers,
+      @NotNull Iterable<? extends BeanMember> consumers,
+      @NotNull Set<? extends BeanMember> skippedConsumers,
       int firstLocalStore
   ) {
     this.mv = mv;
@@ -67,7 +67,7 @@ public class NoArgsConstructorInstanter implements TargetInstanter {
     }
   }
 
-  private int consume(@Nonnull BeanMember member, int localStore) {
+  private int consume(@NotNull BeanMember member, int localStore) {
     var os = TypedOpcode.ofType(member.getType().getRawType());
     if (definition.getFeatures().isSkipNull() && !member.getType().getRawType().isPrimitive()) {
       // If skipNull is configured as true, a null check will be performed before calling the setter.

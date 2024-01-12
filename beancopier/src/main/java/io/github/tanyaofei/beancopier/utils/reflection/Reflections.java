@@ -1,16 +1,13 @@
 package io.github.tanyaofei.beancopier.utils.reflection;
 
-import io.github.tanyaofei.beancopier.utils.RefArrayList;
 import io.github.tanyaofei.beancopier.utils.StringUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.NoMethodRecordMember;
 import io.github.tanyaofei.beancopier.utils.reflection.member.PojoMember;
-import io.github.tanyaofei.beancopier.utils.reflection.member.RecordMember;
 import io.github.tanyaofei.guava.common.collect.Iterables;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -34,13 +31,13 @@ public class Reflections {
    * @param internalName internal name
    * @return simple class name
    */
-  @Nonnull
-  public static String getClassSimpleNameByInternalName(@Nonnull String internalName) {
+  @NotNull
+  public static String getClassSimpleNameByInternalName(@NotNull String internalName) {
     return internalName.substring(internalName.lastIndexOf("/") + 1);
   }
 
-  @Nonnull
-  public static String getInternalNameByClassName(@Nonnull String className) {
+  @NotNull
+  public static String getInternalNameByClassName(@NotNull String className) {
     return className.replace(".", "/");
   }
 
@@ -51,11 +48,11 @@ public class Reflections {
    * @param includingSuper whether including super members or not
    * @return bean members
    */
-  @Nonnull
-  public static Iterable<? extends BeanMember> getGettableBeanMember(@Nonnull Class<?> c, boolean includingSuper) {
-    if (c.isRecord()) {
-      return getRecordMembersWithGetter(c);
-    }
+  @NotNull
+  public static Iterable<? extends BeanMember> getGettableBeanMember(@NotNull Class<?> c, boolean includingSuper) {
+//    if (c.isRecord()) {
+//      return getRecordMembersWithGetter(c);
+//    }
 
     var fields = c.getDeclaredFields();
     var properties = new ArrayList<BeanMember>(fields.length);
@@ -86,29 +83,29 @@ public class Reflections {
     return properties;
   }
 
-  /**
-   * Return bean members and the {@link BeanMember#getMethod()} is a getter
-   *
-   * @param c record class
-   * @return bean members
-   */
-  @Nonnull
-  private static Iterable<? extends BeanMember> getRecordMembersWithGetter(@Nonnull Class<?> c) {
-    if (!c.isRecord()) {
-      throw new IllegalArgumentException(c.getName() + " is not a record class");
-    }
-
-    var properties = new ArrayList<BeanMember>(c.getRecordComponents().length);
-    for (var rc : c.getRecordComponents()) {
-      try {
-        properties.add(new RecordMember(rc, c.getMethod(rc.getName())));
-      } catch (NoSuchMethodException e) {
-        throw new IllegalStateException(c + " missing a getter for property: " + rc.getName());
-      }
-    }
-
-    return properties;
-  }
+//  /**
+//   * Return bean members and the {@link BeanMember#getMethod()} is a getter
+//   *
+//   * @param c record class
+//   * @return bean members
+//   */
+//  @NotNull
+//  private static Iterable<? extends BeanMember> getRecordMembersWithGetter(@NotNull Class<?> c) {
+//    if (!c.isRecord()) {
+//      throw new IllegalArgumentException(c.getName() + " is not a record class");
+//    }
+//
+//    var properties = new ArrayList<BeanMember>(c.getRecordComponents().length);
+//    for (var rc : c.getRecordComponents()) {
+//      try {
+//        properties.add(new RecordMember(rc, c.getMethod(rc.getName())));
+//      } catch (NoSuchMethodException e) {
+//        throw new IllegalStateException(c + " missing a getter for property: " + rc.getName());
+//      }
+//    }
+//
+//    return properties;
+//  }
 
   /**
    * Return bean members and {@link BeanMember#getMethod()} is setter
@@ -117,11 +114,11 @@ public class Reflections {
    * @param includingSuper whether including super members or not
    * @return bean members
    */
-  @Nonnull
-  public static Iterable<? extends BeanMember> getMembersWithSetter(@Nonnull Class<?> c, boolean includingSuper) {
-    if (c.isRecord()) {
-      return getSettableRecordMember(c);
-    }
+  @NotNull
+  public static Iterable<? extends BeanMember> getMembersWithSetter(@NotNull Class<?> c, boolean includingSuper) {
+//    if (c.isRecord()) {
+//      return getSettableRecordMember(c);
+//    }
 
     var fields = c.getDeclaredFields();
     var properties = new ArrayList<BeanMember>(fields.length);
@@ -147,24 +144,24 @@ public class Reflections {
     return properties;
   }
 
-  /**
-   * Return record members and each of them has no setter
-   *
-   * @param c the specified class
-   * @return bean members
-   */
-  @Nonnull
-  private static Iterable<? extends BeanMember> getSettableRecordMember(@Nonnull Class<?> c) {
-    if (!c.isRecord()) {
-      throw new IllegalArgumentException(c.getName() + " is not a record class");
-    }
-    return RefArrayList.of(
-        Arrays
-            .stream(c.getRecordComponents())
-            .map(NoMethodRecordMember::new)
-            .toArray(NoMethodRecordMember[]::new)
-    );
-  }
+//  /**
+//   * Return record members and each of them has no setter
+//   *
+//   * @param c the specified class
+//   * @return bean members
+//   */
+//  @NotNull
+//  private static Iterable<? extends BeanMember> getSettableRecordMember(@NotNull Class<?> c) {
+//    if (!c.isRecord()) {
+//      throw new IllegalArgumentException(c.getName() + " is not a record class");
+//    }
+//    return RefArrayList.of(
+//        Arrays
+//            .stream(c.getRecordComponents())
+//            .map(NoMethodRecordMember::new)
+//            .toArray(NoMethodRecordMember[]::new)
+//    );
+//  }
 
   /**
    * Return whether the specified class is an enclosing class
@@ -172,7 +169,7 @@ public class Reflections {
    * @param c the specified class
    * @return true if the specified class is an enclosing otherwise false
    */
-  public static boolean isEnclosingClass(@Nonnull Class<?> c) {
+  public static boolean isEnclosingClass(@NotNull Class<?> c) {
     return !c.isMemberClass() || Modifier.isStatic(c.getModifiers());
   }
 
@@ -182,10 +179,10 @@ public class Reflections {
    * @param c the specified class
    * @return true if the specified class has a public no-args-constructor otherwise false
    */
-  public static boolean hasPublicNoArgsConstructor(@Nonnull Class<?> c) {
-    if (c.isRecord()) {
-      return false;
-    }
+  public static boolean hasPublicNoArgsConstructor(@NotNull Class<?> c) {
+//    if (c.isRecord()) {
+//      return false;
+//    }
     try {
       c.getConstructor();
       return true;
@@ -201,10 +198,10 @@ public class Reflections {
    * @param c the specified
    * @return true if the specified class has an all-args-constructor otherwise false
    */
-  public static boolean hasPublicAllArgsConstructor(@Nonnull Class<?> c) {
-    if (c.isRecord()) {
-      return true;
-    }
+  public static boolean hasPublicAllArgsConstructor(@NotNull Class<?> c) {
+//    if (c.isRecord()) {
+//      return true;
+//    }
     if (c.getSuperclass() != Object.class && c.getSuperclass() != null) {
       return false;
     }

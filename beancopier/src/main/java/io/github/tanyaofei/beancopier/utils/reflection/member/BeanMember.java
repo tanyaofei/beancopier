@@ -1,9 +1,9 @@
 package io.github.tanyaofei.beancopier.utils.reflection.member;
 
 import io.github.tanyaofei.beancopier.utils.GenericType;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -15,10 +15,11 @@ import java.util.Map;
  */
 public interface BeanMember {
 
-  @Nonnull
-  static Map<String, BeanMember> mapIterable(@Nonnull Iterable<? extends BeanMember> itr) {
+  @NotNull
+  static Map<String, BeanMember> mapIterable(@NotNull Iterable<? extends BeanMember> itr) {
     Map<String, BeanMember> map;
-    if (itr instanceof Collection<?> c) {
+    if (itr instanceof Collection<?>) {
+      var c = (Collection<?>) itr;
       map = new HashMap<>(c.size());
     } else {
       map = new HashMap<>();
@@ -30,19 +31,19 @@ public interface BeanMember {
   /**
    * @return identify
    */
-  @Nonnull
+  @NotNull
   Object getIdentify();
 
   /**
    * @return member name
    */
-  @Nonnull
+  @NotNull
   String getName();
 
   /**
    * @return member generic type
    */
-  @Nonnull
+  @NotNull
   GenericType<?> getType();
 
   /**
@@ -59,6 +60,6 @@ public interface BeanMember {
    * @param <T>             the type of annotation
    * @return 注解
    */
-  @Nullable <T extends Annotation> T getAnnotation(@Nonnull Class<T> annotationClass);
+  @Nullable <T extends Annotation> T getAnnotation(@NotNull Class<T> annotationClass);
 
 }

@@ -4,8 +4,8 @@ import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
@@ -19,7 +19,7 @@ public class LocalsDefinitionContext {
   /**
    * The bean members map of source
    */
-  @Nonnull
+  @NotNull
   private Map<String, BeanMember> providers;
 
   /**

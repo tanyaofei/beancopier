@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -23,7 +24,7 @@ public class CallbackTest extends Assertions {
 
   @Test
   public void testCopyListCallback() {
-    var sources = IntStream.range(0, 10).mapToObj(ignored -> new CallbackPojo().setString("source")).toList();
+    var sources = IntStream.range(0, 10).mapToObj(ignored -> new CallbackPojo().setString("source")).collect(Collectors.toList());
     var targets = BeanCopier.copyList(sources, CallbackPojo.class, (s, t) -> t.setString("target"));
     for (var target : targets) {
       assertEquals("target", target.getString());

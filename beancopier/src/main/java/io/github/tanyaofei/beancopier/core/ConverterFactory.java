@@ -10,18 +10,16 @@ import io.github.tanyaofei.beancopier.exception.VerifyException;
 import io.github.tanyaofei.beancopier.utils.BytecodeUtils;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Opcodes;
 
-import javax.annotation.Nonnull;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileSystems;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,6 +42,11 @@ public class ConverterFactory implements Opcodes {
    */
   private final static ExecutorService debugWorkers = Executors.newSingleThreadExecutor();
 
+  /**
+   * The classnames register in each classloader
+   */
+  private final static WeakHashMap<ClassLoader, Set<String>> classLoaderReservedClassNames = new WeakHashMap<>(4);
+
 
   private final ConverterFeatures features;
 
@@ -52,7 +55,7 @@ public class ConverterFactory implements Opcodes {
   }
 
   public ConverterFactory(
-      @Nonnull Consumer<ConverterFeatures.Builder> features
+      @NotNull Consumer<ConverterFeatures.Builder> features
   ) {
     var builder = ConverterFeatures.builder();
     features.accept(builder);
@@ -65,13 +68,13 @@ public class ConverterFactory implements Opcodes {
    * @param code java byte code
    * @return class
    */
-  @Nonnull
+  @NotNull
   @SuppressWarnings("unchecked")
   private static <T> Class<T> defineClass(
-      @Nonnull byte[] code,
-      @Nonnull MethodHandles.Lookup lookup
+      @NotNull byte[] code,
+      @NotNull MethodHandles.Lookup lookup
   ) throws IllegalAccessException {
-    return (Class<T>) lookup.defineHiddenClass(code, true).lookupClass();
+    return (Class<T>) lookup.defineClass(code);
   }
 
   /**
@@ -83,9 +86,9 @@ public class ConverterFactory implements Opcodes {
    * @param <T>        the type of target
    * @return A converter that has ability to copy
    */
-  @Nonnull
+  @NotNull
   public <S, T> Converter<S, T> genConverter(
-      @Nonnull Class<S> sourceType, @Nonnull Class<T> targetType
+      @NotNull Class<S> sourceType, @NotNull Class<T> targetType
   ) {
     verifySourceType(sourceType);
     verifyTargetType(targetType);
@@ -95,10 +98,17 @@ public class ConverterFactory implements Opcodes {
     verifyPrivilege(sourceType, lookup);
     verifyPrivilege(targetType, lookup);
 
-    var packageName = lookup.lookupClass().getPackageName();
-    String className = packageName + "." + features
-        .getNamingPolicy()
-        .getSimpleClassName(sourceType, targetType);
+    var reservedClassNames = getReservedClassNames(lookup.lookupClass().getClassLoader());
+    String className;
+    synchronized (reservedClassNames) {
+      className = features.getNamingPolicy().getClassName(
+          lookup.lookupClass().getPackageName(),
+          sourceType,
+          targetType,
+          reservedClassNames::contains
+      );
+      reservedClassNames.add(className);
+    }
     String internalName = Reflections.getInternalNameByClassName(className);
     byte[] code;
     var definition = new ConverterDefinition(
@@ -118,6 +128,9 @@ public class ConverterFactory implements Opcodes {
     try {
       c = Objects.requireNonNull(defineClass(code, lookup));
     } catch (Throwable e) {
+      synchronized (reservedClassNames) {
+        reservedClassNames.remove(className);
+      }
       throw new DefineClassError(code, sourceType, targetType, e);
     } finally {
       dumpBytecode(
@@ -193,9 +206,9 @@ public class ConverterFactory implements Opcodes {
    * @return instantiate mode
    */
   private InstantiateMode getInstantiateMode(Class<?> c) {
-    if (c.isRecord()) {
-      return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
-    }
+//    if (c.isRecord()) {
+//      return InstantiateMode.ALL_ARGS_CONSTRUCTOR;
+//    }
 
     if (features.isSkipNull()) {
       // if skipNull feature is set to true, required a no-args-constructor
@@ -232,13 +245,25 @@ public class ConverterFactory implements Opcodes {
           + ", use `new BeanCopierImpl(f -> f.lookup(A_LOOKUP_THAT_HAS_PRIVILEGE_ACCESS))` instead";
       throw new VerifyException(message, e);
     } catch (ClassNotFoundException e) {
-      var message = "%s(loaded by %s) is not visible to this BeanCopier instance with classloader: %s, use `new BeanCopierImpl(f -> f.lookup(LOOKUP_CAN_VISIT_THE_CLASS)` instead".formatted(
+      var message = String.format(
+          "%s(loaded by %s) is not visible to this BeanCopier instance with classloader: %s, use `new BeanCopierImpl(f -> f.lookup(LOOKUP_CAN_VISIT_THE_CLASS)` instead",
           c,
           c.getClassLoader(),
           lookup.lookupClass().getClassLoader()
       );
       throw new VerifyException(message, e);
     }
+  }
+
+  private static Set<String> getReservedClassNames(ClassLoader cl) {
+    var names = classLoaderReservedClassNames.get(cl);
+    if (names == null) {
+      synchronized (classLoaderReservedClassNames) {
+        names = new HashSet<>(32);
+        classLoaderReservedClassNames.put(cl, names);
+      }
+    }
+    return names;
   }
 
 }

@@ -21,13 +21,13 @@ public class AliasTest extends Assertions {
     assertEquals("name", fromPOPJO3.getName());
   }
 
-  @Test
-  public void testAliasForRecord() {
-    var fromPOPJO2 = BeanCopier.copy(new AliasPOJO2().setName2("name"), AliasRecord.class);
-    assertEquals("name", fromPOPJO2.name());
-
-    var fromPOPJO3 = BeanCopier.copy(new AliasPOJO3().setName3("name"), AliasRecord.class);
-    assertEquals("name", fromPOPJO3.name());
-  }
+//  @Test
+//  public void testAliasForRecord() {
+//    var fromPOPJO2 = BeanCopier.copy(new AliasPOJO2().setName2("name"), AliasRecord.class);
+//    assertEquals("name", fromPOPJO2.name());
+//
+//    var fromPOPJO3 = BeanCopier.copy(new AliasPOJO3().setName3("name"), AliasRecord.class);
+//    assertEquals("name", fromPOPJO3.name());
+//  }
 
 }

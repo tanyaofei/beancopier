@@ -4,10 +4,10 @@ import io.github.tanyaofei.beancopier.constants.TypedOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
 import io.github.tanyaofei.beancopier.core.invoker.ExecutableInvoker;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import javax.annotation.Nonnull;
 
 /**
  * This instanter will instantiate the target using the all-args-constructor,
@@ -17,24 +17,24 @@ import javax.annotation.Nonnull;
  */
 public class AllArgsConstructorInstanter implements TargetInstanter {
 
-  @Nonnull
+  @NotNull
   private final MethodVisitor mv;
 
-  @Nonnull
+  @NotNull
   private final ConverterDefinition definition;
 
   private final int targetStore;
 
-  @Nonnull
+  @NotNull
   private final Iterable<? extends BeanMember> consumers;
 
   private final int firstLocalStore;
 
   public AllArgsConstructorInstanter(
-      @Nonnull MethodVisitor mv,
-      @Nonnull ConverterDefinition definition,
+      @NotNull MethodVisitor mv,
+      @NotNull ConverterDefinition definition,
       int targetStore,
-      @Nonnull Iterable<? extends BeanMember> consumers,
+      @NotNull Iterable<? extends BeanMember> consumers,
       int firstLocalStore
   ) {
     this.mv = mv;

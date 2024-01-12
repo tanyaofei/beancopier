@@ -2,11 +2,11 @@ package io.github.tanyaofei.beancopier.core.local;
 
 import io.github.tanyaofei.beancopier.constants.TypedOpcode;
 import io.github.tanyaofei.beancopier.core.ConverterDefinition;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * A tool for generating bytecode to define a local variable
@@ -25,7 +25,7 @@ public abstract class LocalDefiner implements Opcodes {
    *
    * @param v method writer
    */
-  protected static void loadSource(@Nonnull MethodVisitor v) {
+  protected static void loadSource(@NotNull MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 1);
   }
 
@@ -37,9 +37,9 @@ public abstract class LocalDefiner implements Opcodes {
    * @param context the context of the definition
    */
   protected static void storeLocal(
-      @Nonnull MethodVisitor v,
-      @Nonnull Class<?> type,
-      @Nonnull LocalsDefinitionContext context
+      @NotNull MethodVisitor v,
+      @NotNull Class<?> type,
+      @NotNull LocalsDefinitionContext context
   ) {
     var store = context.getNextStore();
     var op = TypedOpcode.ofType(type);
@@ -55,9 +55,9 @@ public abstract class LocalDefiner implements Opcodes {
    * @since 0.2.0
    */
   protected static void storeLocal(
-      @Nonnull MethodVisitor v,
-      @Nonnull LocalDefinition definition,
-      @Nonnull LocalsDefinitionContext context
+      @NotNull MethodVisitor v,
+      @NotNull LocalDefinition definition,
+      @NotNull LocalsDefinitionContext context
   ) {
     var store = context.getNextStore();
     var op = TypedOpcode.ofType(definition.getType().getRawType());
@@ -72,7 +72,7 @@ public abstract class LocalDefiner implements Opcodes {
    * @param type  the type of variable
    * @param store the index in local variable table
    */
-  protected static void loadStack(@Nonnull MethodVisitor v, @Nonnull Class<?> type, int store) {
+  protected static void loadStack(@NotNull MethodVisitor v, @NotNull Class<?> type, int store) {
     v.visitVarInsn(TypedOpcode.ofType(type).load, store);
   }
 
@@ -81,7 +81,7 @@ public abstract class LocalDefiner implements Opcodes {
    *
    * @param v method writer
    */
-  protected static void loadThis(@Nonnull MethodVisitor v) {
+  protected static void loadThis(@NotNull MethodVisitor v) {
     v.visitVarInsn(Opcodes.ALOAD, 0);
   }
 
@@ -98,10 +98,10 @@ public abstract class LocalDefiner implements Opcodes {
    * @since 0.2.0
    */
   protected abstract boolean defineInternal(
-      @Nonnull MethodVisitor v,
-      @Nonnull ConverterDefinition converter,
-      @Nonnull LocalDefinition local,
-      @Nonnull LocalsDefinitionContext context
+      @NotNull MethodVisitor v,
+      @NotNull ConverterDefinition converter,
+      @NotNull LocalDefinition local,
+      @NotNull LocalsDefinitionContext context
   );
 
   /**
@@ -110,8 +110,8 @@ public abstract class LocalDefiner implements Opcodes {
    * @param definer fallback definer
    * @return fallback definer, for chain set
    */
-  @Nonnull
-  public LocalDefiner fallbackTo(@Nonnull LocalDefiner definer) {
+  @NotNull
+  public LocalDefiner fallbackTo(@NotNull LocalDefiner definer) {
     this.fallback = definer;
     return definer;
   }
@@ -127,10 +127,10 @@ public abstract class LocalDefiner implements Opcodes {
    * @since 0.2.0
    */
   public final void define(
-      @Nonnull MethodVisitor v,
-      @Nonnull ConverterDefinition converterDefinition,
-      @Nonnull LocalDefinition localDefinition,
-      @Nonnull LocalsDefinitionContext context
+      @NotNull MethodVisitor v,
+      @NotNull ConverterDefinition converterDefinition,
+      @NotNull LocalDefinition localDefinition,
+      @NotNull LocalsDefinitionContext context
   ) {
     var definer = this;
     while (definer != null) {
@@ -149,10 +149,10 @@ public abstract class LocalDefiner implements Opcodes {
 
     @Override
     protected boolean defineInternal(
-        @Nonnull MethodVisitor v,
-        @Nonnull ConverterDefinition converter,
-        @Nonnull LocalDefinition local,
-        @Nonnull LocalsDefinitionContext context
+        @NotNull MethodVisitor v,
+        @NotNull ConverterDefinition converter,
+        @NotNull LocalDefinition local,
+        @NotNull LocalsDefinitionContext context
     ) {
       return false;
     }

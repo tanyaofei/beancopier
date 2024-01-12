@@ -2,8 +2,8 @@ package io.github.tanyaofei.beancopier.core.local;
 
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner.RootLocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.impl.*;
+import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 
 /**
  * A tool for obtaining an ordered list of {@link LocalDefiner} instances.
@@ -27,7 +27,7 @@ public abstract class LocalDefiners {
    *
    * @return LocalDefiner instance
    */
-  @Nonnull
+  @NotNull
   public static LocalDefiner getDefiner() {
     return theDefiner;
   }

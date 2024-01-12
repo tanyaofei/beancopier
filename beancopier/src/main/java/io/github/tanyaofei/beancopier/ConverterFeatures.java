@@ -6,9 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.invoke.MethodHandles;
 
 /**
@@ -110,49 +109,49 @@ public final class ConverterFeatures {
       );
     }
 
-    @Nonnull
+    @NotNull
     public Builder fullTypeMatching(boolean fullTypeMatching) {
       this.fullTypeMatching = fullTypeMatching;
       return this;
     }
 
-    @Nonnull
+    @NotNull
     public Builder skipNull(boolean skipNull) {
       this.skipNull = skipNull;
       return this;
     }
 
-    @Nonnull
+    @NotNull
     public Builder preferNested(boolean preferNested) {
       this.preferNested = preferNested;
       return this;
     }
 
-    @Nonnull
+    @NotNull
     public Builder includingSuper(boolean includingSuper) {
       this.includingSuper = includingSuper;
       return this;
     }
 
-    @Nonnull
+    @NotNull
     public Builder propertySupported(boolean propertySupported) {
       this.propertySupported = propertySupported;
       return this;
     }
 
-    @Nonnull
+    @NotNull
     public Builder lookup(@Nullable MethodHandles.Lookup lookup) {
       this.lookup = lookup;
       return this;
     }
 
-    @Nonnull
+    @NotNull
     public Builder namingPolicy(@NotNull NamingPolicy namingPolicy) {
       this.namingPolicy = namingPolicy;
       return this;
     }
 
-    @Nonnull
+    @NotNull
     public Builder debugLocation(@Nullable String classDumpPath) {
       this.debugLocation = classDumpPath;
       return this;

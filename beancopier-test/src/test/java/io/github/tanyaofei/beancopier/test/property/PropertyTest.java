@@ -27,14 +27,14 @@ public class PropertyTest extends Assertions {
     assertEquals(source.getSex(), target.getSex());
   }
 
-  @Test
-  public void testPropertyRecord() {
-    var source = new PropertyRecord("id", "name", 18, "male");
-    var target = BeanCopier.clone(source);
-    assertEquals(source.id(), target.id());
-    assertEquals(source.name(), target.name());
-    assertEquals(0, target.age());
-    assertEquals(source.sex(), target.sex());
-  }
-
+//  @Test
+//  public void testPropertyRecord() {
+//    var source = new PropertyRecord("id", "name", 18, "male");
+//    var target = BeanCopier.clone(source);
+//    assertEquals(source.id(), target.id());
+//    assertEquals(source.name(), target.name());
+//    assertEquals(0, target.age());
+//    assertEquals(source.sex(), target.sex());
+//  }
+//
 }

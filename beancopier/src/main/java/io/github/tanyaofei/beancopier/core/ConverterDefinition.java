@@ -6,9 +6,9 @@ import io.github.tanyaofei.beancopier.constants.InstantiateMode;
 import io.github.tanyaofei.beancopier.converter.Converter;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Type;
 
-import javax.annotation.Nonnull;
 
 @Data
 @Accessors(chain = true)
@@ -17,31 +17,31 @@ public class ConverterDefinition {
   /**
    * The internal of converter class
    */
-  @Nonnull
+  @NotNull
   private final String internalName;
 
   /**
    * The class of source
    */
-  @Nonnull
+  @NotNull
   private final Class<?> sourceType;
 
   /**
    * The class of target
    */
-  @Nonnull
+  @NotNull
   private final Class<?> targetType;
 
   /**
    * The method descriptor of {@link Converter#convert(Object)} implementation
    */
-  @Nonnull
+  @NotNull
   private final String convertMethodDescriptor;
 
   /**
    * The features of the converter that is about to be generated
    */
-  @Nonnull
+  @NotNull
   private final ConverterFeatures features;
 
   /**
@@ -49,7 +49,7 @@ public class ConverterDefinition {
    *
    * @see Property#value()
    */
-  @Nonnull
+  @NotNull
   private final boolean clone;
 
   /**
@@ -58,11 +58,11 @@ public class ConverterDefinition {
   private final InstantiateMode instantiateMode;
 
   public ConverterDefinition(
-      @Nonnull String internalName,
-      @Nonnull Class<?> sourceType,
-      @Nonnull Class<?> targetType,
-      @Nonnull ConverterFeatures features,
-      @Nonnull InstantiateMode instantiateMode
+      @NotNull String internalName,
+      @NotNull Class<?> sourceType,
+      @NotNull Class<?> targetType,
+      @NotNull ConverterFeatures features,
+      @NotNull InstantiateMode instantiateMode
   ) {
     this.internalName = internalName;
     this.sourceType = sourceType;

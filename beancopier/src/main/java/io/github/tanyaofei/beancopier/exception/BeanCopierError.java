@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
  * @author tanyaofei
  * @since 0.2.0
  */
-public sealed class BeanCopierError extends Error permits CodeError {
+public class BeanCopierError extends Error {
 
   @Internal
   public BeanCopierError() {

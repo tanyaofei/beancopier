@@ -3,9 +3,9 @@ package io.github.tanyaofei.beancopier.utils.reflection.member;
 import io.github.tanyaofei.beancopier.utils.GenericType;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -17,48 +17,48 @@ import java.lang.reflect.Method;
 @EqualsAndHashCode
 public class PojoMember implements BeanMember {
 
-  @Nonnull
+  @NotNull
   private final Field field;
 
-  @Nonnull
+  @NotNull
   private final Method method;
 
-  @Nonnull
+  @NotNull
   private final GenericType<?> genericType;
 
-  public PojoMember(@Nonnull Field field, @Nonnull Method method) {
+  public PojoMember(@NotNull Field field, @NotNull Method method) {
     this.field = field;
     this.method = method;
     this.genericType = GenericType.of(field);
   }
 
   @Override
-  @Nonnull
+  @NotNull
   public Object getIdentify() {
     return field;
   }
 
   @Override
-  @Nonnull
+  @NotNull
   public String getName() {
     return field.getName();
   }
 
   @Override
-  @Nonnull
+  @NotNull
   public GenericType<?> getType() {
     return this.genericType;
   }
 
   @Override
-  @Nonnull
+  @NotNull
   public Method getMethod() {
     return method;
   }
 
   @Override
   @Nullable
-  public <T extends Annotation> T getAnnotation(@Nonnull Class<T> annotationClass) {
+  public <T extends Annotation> T getAnnotation(@NotNull Class<T> annotationClass) {
     return field.getAnnotation(annotationClass);
   }
 }

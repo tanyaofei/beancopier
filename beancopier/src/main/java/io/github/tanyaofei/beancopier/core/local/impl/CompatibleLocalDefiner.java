@@ -7,9 +7,9 @@ import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
 import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.GenericType;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.MethodVisitor;
 
-import javax.annotation.Nonnull;
 
 /**
  * A definer for defining a local variable which is compatible.
@@ -24,10 +24,10 @@ public class CompatibleLocalDefiner extends LocalDefiner {
 
   @Override
   protected boolean defineInternal(
-      @Nonnull MethodVisitor v,
-      @Nonnull ConverterDefinition converter,
-      @Nonnull LocalDefinition local,
-      @Nonnull LocalsDefinitionContext context
+      @NotNull MethodVisitor v,
+      @NotNull ConverterDefinition converter,
+      @NotNull LocalDefinition local,
+      @NotNull LocalsDefinitionContext context
   ) {
     var provider = context.getProviders().get(local.getName());
     if (provider == null) {
@@ -56,7 +56,7 @@ public class CompatibleLocalDefiner extends LocalDefiner {
    * @param type2 type 2
    * @return true if two types are equals
    */
-  protected boolean isFullTypeMatched(@Nonnull GenericType<?> type1, @Nonnull GenericType<?> type2) {
+  protected boolean isFullTypeMatched(@NotNull GenericType<?> type1, @NotNull GenericType<?> type2) {
     return type1.equals(type2);
   }
 
@@ -65,7 +65,7 @@ public class CompatibleLocalDefiner extends LocalDefiner {
    * @param consumerType type of field from target
    * @return true if `consumerType` is a subtype of source type
    */
-  protected boolean isTypeCompatible(@Nonnull GenericType<?> providerType, @Nonnull GenericType<?> consumerType) {
+  protected boolean isTypeCompatible(@NotNull GenericType<?> providerType, @NotNull GenericType<?> consumerType) {
     return TypeToken.of(providerType.getGenericType()).isSubtypeOf(consumerType.getGenericType());
   }
 

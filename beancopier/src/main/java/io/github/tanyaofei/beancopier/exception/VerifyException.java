@@ -11,7 +11,7 @@ import static org.jetbrains.annotations.ApiStatus.Internal;
  * @author tanyaofei
  * @since 0.1.2
  */
-public non-sealed class VerifyException extends BeanCopierException {
+public class VerifyException extends BeanCopierException {
 
 
   @Internal

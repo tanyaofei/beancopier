@@ -2,14 +2,12 @@ package io.github.tanyaofei.beancopier;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
-import java.lang.invoke.MethodHandles;
+import java.util.function.Predicate;
 
 /**
  * Converter classes naming policy
  *
  * @author tanyaofei
- * @see ConverterFeatures.Builder#namingPolicy(NamingPolicy)
  * @since 0.1.2
  */
 public abstract class NamingPolicy {
@@ -18,21 +16,19 @@ public abstract class NamingPolicy {
     return Default.INSTANCE;
   }
 
+
   /**
-   * Return a simple name of the converter class is about to be generated.
-   * <br>
-   * Not considering uniqueness because defining a hidden class will automatically rename the class names so that they won't conflict.
-   *
    * @param sourceType The type of Source
    * @param targetType The type of Target
+   * @param predicate  To predicate the name is used or not
    * @return A class name for generator is about to be generated
-   * @see java.lang.invoke.MethodHandles.Lookup#defineHiddenClass(byte[], boolean, MethodHandles.Lookup.ClassOption...) `
-   * @throws NullPointerException if the return value is {@code null}
    */
   @NotNull
-  public abstract String getSimpleClassName(
-      @Nonnull Class<?> sourceType,
-      @Nonnull Class<?> targetType
+  public abstract String getClassName(
+      @NotNull String packageName,
+      @NotNull Class<?> sourceType,
+      @NotNull Class<?> targetType,
+      @NotNull Predicate<String> predicate
   );
 
   public static class Default extends NamingPolicy {
@@ -41,17 +37,24 @@ public abstract class NamingPolicy {
 
     @Override
     @NotNull
-    public String getSimpleClassName(@Nonnull Class<?> sourceType, @Nonnull Class<?> targetType) {
-      if (sourceType == targetType) {
-        return sourceType.getSimpleName()
-            + "Copier";
-      } else {
-        return sourceType.getSimpleName()
-            + "To"
-            + targetType.getSimpleName()
-            + "Converter";
-      }
+    @SuppressWarnings("StatementWithEmptyBody")
+    public String getClassName(
+        @NotNull String packageName,
+        @NotNull Class<?> sourceType,
+        @NotNull Class<?> targetType,
+        @NotNull Predicate<String> predicate
+    ) {
+      var base = packageName + "." + sourceType.getSimpleName()
+          + "To"
+          + targetType.getSimpleName()
+          + "Converter$$"
+          + Integer.toHexString((sourceType.getName() + targetType.getName()).hashCode());
 
+      String attempt = base;
+      for (int i = 2; predicate.test(attempt); attempt = base + "_" + i++) {
+
+      }
+      return attempt;
     }
   }
 

@@ -44,36 +44,36 @@ public class NestedTest extends Assertions {
     assertEquals(source.getChildren2().length, target.getChildren28().length);
   }
 
-  @Test
-  public void testRecord() {
-    var source = new NestedSourceRecord(
-        1,
-        new NestedSourceRecord(2, null, null),
-        List.of(new NestedSourceRecord(3, null, null), new NestedSourceRecord(4, null, null))
-    );
+//  @Test
+//  public void testRecord() {
+//    var source = new NestedSourceRecord(
+//        1,
+//        new NestedSourceRecord(2, null, null),
+//        List.of(new NestedSourceRecord(3, null, null), new NestedSourceRecord(4, null, null))
+//    );
+//
+//    var target = BeanCopier.copy(source, NestedTargetRecord.class);
+//    assertEquals(source.id(), target.id());
+//    assertEquals(source.child().id(), target.child().id());
+//    assertEquals(source.children().size(), target.children().size());
+//  }
 
-    var target = BeanCopier.copy(source, NestedTargetRecord.class);
-    assertEquals(source.id(), target.id());
-    assertEquals(source.child().id(), target.child().id());
-    assertEquals(source.children().size(), target.children().size());
-  }
-
-  @Test
-  public void testPojoAndRecord() {
-    var source = new NestedSourcePojo()
-        .setId(1)
-        .setChild(new NestedSourcePojo().setId(2))
-        .setChildren(List.of(new NestedSourcePojo().setId(3), new NestedSourcePojo().setId(4)));
-
-    var target = BeanCopier.copy(source, NestedSourceRecord.class);
-    assertEquals(source.getId(), target.id());
-    assertEquals(source.getChild().getId(), target.child().id());
-    assertEquals(source.getChildren().size(), target.children().size());
-
-    var target2 = BeanCopier.copy(target, NestedSourcePojo.class);
-    assertEquals(target.id(), target2.getId());
-    assertEquals(target.child().id(), target2.getChild().getId());
-    assertEquals(target.children().size(), target2.getChildren().size());
-  }
+//  @Test
+//  public void testPojoAndRecord() {
+//    var source = new NestedSourcePojo()
+//        .setId(1)
+//        .setChild(new NestedSourcePojo().setId(2))
+//        .setChildren(List.of(new NestedSourcePojo().setId(3), new NestedSourcePojo().setId(4)));
+//
+//    var target = BeanCopier.copy(source, NestedSourceRecord.class);
+//    assertEquals(source.getId(), target.id());
+//    assertEquals(source.getChild().getId(), target.child().id());
+//    assertEquals(source.getChildren().size(), target.children().size());
+//
+//    var target2 = BeanCopier.copy(target, NestedSourcePojo.class);
+//    assertEquals(target.id(), target2.getId());
+//    assertEquals(target.child().id(), target2.getChild().getId());
+//    assertEquals(target.children().size(), target2.getChildren().size());
+//  }
 
 }

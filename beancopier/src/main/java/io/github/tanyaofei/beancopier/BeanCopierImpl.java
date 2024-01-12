@@ -8,8 +8,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnegative;
-import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -80,7 +78,7 @@ public final class BeanCopierImpl {
    */
   @Contract(pure = true)
   public BeanCopierImpl(
-      @Nonnegative int cacheInitialCapacity,
+      int cacheInitialCapacity,
       @NotNull Consumer<ConverterFeatures.Builder> features
   ) {
     this(cacheInitialCapacity, new ConverterFactory(features));
@@ -110,7 +108,7 @@ public final class BeanCopierImpl {
    * @param converterFactory     converter factory
    */
   @Contract(pure = true)
-  private BeanCopierImpl(@Nonnegative int cacheInitialCapacity, @NotNull ConverterFactory converterFactory) {
+  private BeanCopierImpl(int cacheInitialCapacity, @NotNull ConverterFactory converterFactory) {
     this.cache = new ConcurrentHashMap<>(cacheInitialCapacity);
     this.converterFactory = converterFactory;
   }
@@ -172,7 +170,7 @@ public final class BeanCopierImpl {
    * @param sources array to be cloned
    * @return clone result
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   public <T> List<T> cloneList(@NotNull T[] sources) {
     return cloneList(sources, null);
@@ -186,7 +184,7 @@ public final class BeanCopierImpl {
    * @param afterEachCloned executed after each element was cloned
    * @return clone result
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   @SuppressWarnings("unchecked")
   public <T> List<T> cloneList(@NotNull T[] sources, @Nullable BiConsumer<T, T> afterEachCloned) {
@@ -201,7 +199,7 @@ public final class BeanCopierImpl {
    * @return clone result
    * @throws NullPointerException if the {@code sources} is null
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   public <T> List<T> cloneList(@NotNull Collection<@Nullable T> sources) {
     return cloneList(sources, null);
@@ -218,7 +216,7 @@ public final class BeanCopierImpl {
    * @return new collection contains cloned objects
    * @throws NullPointerException if {@code sources} is {@code null}
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   @SuppressWarnings("unchecked")
   public <T> List<T> cloneList(
@@ -318,7 +316,7 @@ public final class BeanCopierImpl {
    * @return copy result
    * @throws NullPointerException if {@code sources} or {@code target} is {@code null}
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   public <S, T> List<T> copyList(S[] sources, @NotNull Class<T> target) {
     return copyList(sources, target, null);
@@ -335,7 +333,7 @@ public final class BeanCopierImpl {
    * @return copy result
    * @throws NullPointerException if {@code sources} or {@code target} is {@code null}
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   public <S, T> List<T> copyList(S[] sources, @NotNull Class<T> target, @Nullable BiConsumer<S, T> afterEachCopied) {
     return copyList(RefArrayList.of(sources), target, afterEachCopied);
@@ -350,7 +348,7 @@ public final class BeanCopierImpl {
    * @return copy result
    * @throws NullPointerException if {@code sources} or {@code target} is {@code null}
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> sources,
@@ -370,7 +368,7 @@ public final class BeanCopierImpl {
    * @return copy result
    * @throws NullPointerException if {@code sources} or {@code target} is {@code null}
    */
-  @Nonnull
+  @NotNull
   @Contract(pure = true)
   public <S, T> List<T> copyList(
       @NotNull Collection<@Nullable S> sources,
@@ -391,10 +389,10 @@ public final class BeanCopierImpl {
    * @param targetType type to copy to
    * @return converter
    */
-  @Nonnull
+  @NotNull
   @SuppressWarnings("unchecked")
   private <S, T> Converter<S, T> getConverter(
-      @Nonnull CacheKey cacheKey, @Nonnull Class<S> sourceType, Class<T> targetType
+      @NotNull CacheKey cacheKey, @NotNull Class<S> sourceType, Class<T> targetType
   ) {
     return (Converter<S, T>) cache.computeIfAbsent(
         cacheKey,
@@ -415,7 +413,7 @@ public final class BeanCopierImpl {
   @Contract
   @SuppressWarnings("unchecked")
   private <S, T> List<T> copyList(
-      @Nonnull Iterator<S> sources, @Nonnull Class<T> targetType, @Nullable BiConsumer<S, T> afterEachCopied, int size
+      @NotNull Iterator<S> sources, @NotNull Class<T> targetType, @Nullable BiConsumer<S, T> afterEachCopied, int size
   ) {
     if (!sources.hasNext()) {
       return new ArrayList<>();
@@ -457,20 +455,32 @@ public final class BeanCopierImpl {
 
   /**
    * Cache key for {@link #cache}
-   *
-   * @param sourceClassLoader classloader of source
-   * @param sourceType        source class
-   * @param targetClassLoader classloader of target
-   * @param targetType        target class
    */
-  private record CacheKey(
-      String sourceClassLoader,
-      String sourceType,
-      String targetClassLoader,
-      String targetType
-  ) {
+  private final static class CacheKey {
+    private final String sourceClassLoader;
+    private final String sourceType;
+    private final String targetClassLoader;
+    private final String targetType;
 
-    public CacheKey(@Nonnull Class<?> sourceType, @Nonnull Class<?> targetType) {
+    /**
+     * @param sourceClassLoader classloader of source
+     * @param sourceType        source class
+     * @param targetClassLoader classloader of target
+     * @param targetType        target class
+     */
+    private CacheKey(
+        String sourceClassLoader,
+        String sourceType,
+        String targetClassLoader,
+        String targetType
+    ) {
+      this.sourceClassLoader = sourceClassLoader;
+      this.sourceType = sourceType;
+      this.targetClassLoader = targetClassLoader;
+      this.targetType = targetType;
+    }
+
+    public CacheKey(@NotNull Class<?> sourceType, @NotNull Class<?> targetType) {
       this(
           Optional.ofNullable(sourceType.getClassLoader()).map(ClassLoader::getName).orElse(null),
           sourceType.getName(),
@@ -478,6 +488,52 @@ public final class BeanCopierImpl {
           targetType.getName()
       );
     }
+
+    public String sourceClassLoader() {
+      return sourceClassLoader;
+    }
+
+    public String sourceType() {
+      return sourceType;
+    }
+
+    public String targetClassLoader() {
+      return targetClassLoader;
+    }
+
+    public String targetType() {
+      return targetType;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) {
+        return true;
+      }
+      if (obj == null || obj.getClass() != this.getClass()) {
+        return false;
+      }
+      var that = (CacheKey) obj;
+      return Objects.equals(this.sourceClassLoader, that.sourceClassLoader) &&
+          Objects.equals(this.sourceType, that.sourceType) &&
+          Objects.equals(this.targetClassLoader, that.targetClassLoader) &&
+          Objects.equals(this.targetType, that.targetType);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(sourceClassLoader, sourceType, targetClassLoader, targetType);
+    }
+
+    @Override
+    public String toString() {
+      return "CacheKey[" +
+          "sourceClassLoader=" + sourceClassLoader + ", " +
+          "sourceType=" + sourceType + ", " +
+          "targetClassLoader=" + targetClassLoader + ", " +
+          "targetType=" + targetType + ']';
+    }
+
   }
 
 }

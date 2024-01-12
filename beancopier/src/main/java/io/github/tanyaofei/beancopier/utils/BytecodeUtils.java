@@ -1,13 +1,13 @@
 package io.github.tanyaofei.beancopier.utils;
 
 import lombok.SneakyThrows;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.SimpleRemapper;
 
-import javax.annotation.Nonnull;
 
 /**
  * @author tanyaofei
@@ -15,14 +15,12 @@ import javax.annotation.Nonnull;
 public class BytecodeUtils implements Opcodes {
 
   @SneakyThrows
-  @Nonnull
-  public static byte[] rename(@Nonnull Class<?> c, @Nonnull String className) {
+  public static byte @NotNull [] rename(@NotNull Class<?> c, @NotNull String className) {
     return rename(new ClassReader(c.getName()), className);
   }
 
   @SneakyThrows
-  @Nonnull
-  public static byte[] toBytecode(@Nonnull Class<?> c) {
+  public static byte @NotNull [] toBytecode(@NotNull Class<?> c) {
     var cw = new ClassWriter(0);
     var cr = new ClassReader(c.getName());
     cr.accept(cw, 0);
@@ -30,8 +28,7 @@ public class BytecodeUtils implements Opcodes {
   }
 
   @SneakyThrows
-  @Nonnull
-  private static byte[] rename(@Nonnull ClassReader cr, @Nonnull String className) {
+  private static byte @NotNull [] rename(@NotNull ClassReader cr, @NotNull String className) {
     var cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
     var cv = new ClassRemapper(
         cw,
@@ -43,14 +40,12 @@ public class BytecodeUtils implements Opcodes {
   }
 
   @SneakyThrows
-  @Nonnull
-  public static byte[] rename(@Nonnull byte[] code, @Nonnull String className) {
+  public static byte @NotNull [] rename(@NotNull byte[] code, @NotNull String className) {
     return rename(new ClassReader(code), className);
   }
 
   @SneakyThrows
-  @Nonnull
-  public static byte[] repackage(@Nonnull Class<?> c, @Nonnull String packageName) {
+  public static byte @NotNull [] repackage(@NotNull Class<?> c, @NotNull String packageName) {
     return rename(c, packageName + "." + c.getSimpleName());
   }
 

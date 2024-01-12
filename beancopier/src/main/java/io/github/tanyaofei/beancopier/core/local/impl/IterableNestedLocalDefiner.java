@@ -9,10 +9,10 @@ import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.GenericType;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
 import io.github.tanyaofei.guava.common.reflect.TypeToken;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.MethodVisitor;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -39,10 +39,10 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
 
   @Override
   protected boolean defineInternal(
-      @Nonnull MethodVisitor v,
-      @Nonnull ConverterDefinition converter,
-      @Nonnull LocalDefinition local,
-      @Nonnull LocalsDefinitionContext context
+      @NotNull MethodVisitor v,
+      @NotNull ConverterDefinition converter,
+      @NotNull LocalDefinition local,
+      @NotNull LocalsDefinitionContext context
   ) {
     var config = converter.getFeatures();
     if (!config.isPreferNested()) {
@@ -85,7 +85,7 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
   }
 
   @Nullable
-  protected MethodInvoker getConvertAllMethodInvoker(@Nonnull Class<?> providedType) {
+  protected MethodInvoker getConvertAllMethodInvoker(@NotNull Class<?> providedType) {
     if (Iterable.class.isAssignableFrom(providedType)) {
       return AbstractConverter$convertIterableToStream;
     } else if (providedType.isArray()) {
@@ -96,7 +96,7 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
   }
 
   @Nullable
-  protected MethodInvoker getCollectMethodInvoker(@Nonnull Class<?> consumerType) {
+  protected MethodInvoker getCollectMethodInvoker(@NotNull Class<?> consumerType) {
     if (consumerType.isAssignableFrom(List.class)) {
       return AbstractConverter$collectToList;
     } else if (consumerType.isAssignableFrom(ArrayList.class)) {
@@ -118,9 +118,9 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
 
 
   private boolean isIterableNested(
-      @Nonnull ConverterDefinition converterDefinition,
-      @Nonnull BeanMember provided,
-      @Nonnull GenericType<?> consumerType
+      @NotNull ConverterDefinition converterDefinition,
+      @NotNull BeanMember provided,
+      @NotNull GenericType<?> consumerType
   ) {
     var sc = converterDefinition.getSourceType();
     var tc = converterDefinition.getTargetType();
@@ -155,7 +155,7 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
    * @return the element type of specified type
    */
   @Nullable
-  private Class<?> getElementType(@Nonnull GenericType<?> type) {
+  private Class<?> getElementType(@NotNull GenericType<?> type) {
     var rawType = type.getRawType();
     if (Iterable.class.isAssignableFrom(rawType)) {
       return getIterableElementType(type.getGenericType());
@@ -174,7 +174,7 @@ public class IterableNestedLocalDefiner extends LocalDefiner {
    * @return the element type of {@link Iterable}
    */
   @SuppressWarnings("unchecked")
-  private Class<?> getIterableElementType(@Nonnull Type type) {
+  private Class<?> getIterableElementType(@NotNull Type type) {
     return ((TypeToken<? extends Iterable<?>>) TypeToken.of(type))
         .getSupertype(Iterable.class)
         .resolveType(Iterable.class.getTypeParameters()[0])

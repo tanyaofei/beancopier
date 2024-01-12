@@ -10,6 +10,7 @@ import io.github.tanyaofei.beancopier.converter.Converter;
 import io.github.tanyaofei.beancopier.core.annotation.Feature;
 import io.github.tanyaofei.beancopier.core.instanter.AllArgsConstructorInstanter;
 import io.github.tanyaofei.beancopier.core.instanter.NoArgsConstructorInstanter;
+import io.github.tanyaofei.beancopier.core.instanter.TargetInstanter;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiner;
 import io.github.tanyaofei.beancopier.core.local.LocalDefiners;
 import io.github.tanyaofei.beancopier.core.local.LocalDefinition;
@@ -17,9 +18,9 @@ import io.github.tanyaofei.beancopier.core.local.LocalsDefinitionContext;
 import io.github.tanyaofei.beancopier.utils.ClassSignature;
 import io.github.tanyaofei.beancopier.utils.reflection.Reflections;
 import io.github.tanyaofei.beancopier.utils.reflection.member.BeanMember;
+import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.*;
 
-import javax.annotation.Nonnull;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -31,10 +32,10 @@ public class ConverterCodeWriter implements Opcodes {
   private static final LocalDefiner definer = LocalDefiners.getDefiner();
   private static final String SOURCE_FILE = "<generated>";
 
-  @Nonnull
+  @NotNull
   private final ConverterDefinition definition;
 
-  public ConverterCodeWriter(@Nonnull ConverterDefinition definition) {
+  public ConverterCodeWriter(@NotNull ConverterDefinition definition) {
     this.definition = definition;
   }
 
@@ -43,7 +44,7 @@ public class ConverterCodeWriter implements Opcodes {
    *
    * @param cw ClassWriter
    */
-  private void genConstructor(@Nonnull ClassWriter cw) {
+  private void genConstructor(@NotNull ClassWriter cw) {
     var v = cw.visitMethod(ACC_PUBLIC | ACC_SYNTHETIC, MethodNames.Object$init, MethodDescriptors.Object$init, null, null);
     v.visitCode();
     v.visitVarInsn(ALOAD, 0);
@@ -63,7 +64,7 @@ public class ConverterCodeWriter implements Opcodes {
     var tc = definition.getTargetType();
     var cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
     cw.visit(
-        V17,
+        V11,
         ACC_PUBLIC,
         definition.getInternalName(),
         ClassSignature.getClassSignature(
@@ -92,7 +93,7 @@ public class ConverterCodeWriter implements Opcodes {
    *
    * @param v method writer
    */
-  private void returnNullIfNull(@Nonnull MethodVisitor v) {
+  private void returnNullIfNull(@NotNull MethodVisitor v) {
     var ifNonNull = new Label();
     v.visitVarInsn(ALOAD, 1);
     v.visitJumpInsn(IFNONNULL, ifNonNull);
@@ -129,7 +130,7 @@ public class ConverterCodeWriter implements Opcodes {
    *
    * @param cw ClassWriter
    */
-  private void genConvertMethod(@Nonnull ClassWriter cw) {
+  private void genConvertMethod(@NotNull ClassWriter cw) {
     var configuration = definition.getFeatures();
     var mv = cw.visitMethod(
         ACC_PUBLIC,
@@ -166,28 +167,35 @@ public class ConverterCodeWriter implements Opcodes {
     }
 
     int targetStore = context.getNextStore();
-    var instancer = switch (definition.getInstantiateMode()) {
-      case ALL_ARGS_CONSTRUCTOR -> new AllArgsConstructorInstanter(
-          mv,
-          definition,
-          targetStore,
-          consumers,
-          firstLocalStore
-      );
-      case NO_ARGS_CONSTRUCTOR -> new NoArgsConstructorInstanter(
-          mv,
-          definition,
-          targetStore,
-          consumers,
-          StreamSupport
-              .stream(consumers.spliterator(), true)
-              .filter(m -> (configuration.isPropertySupported()
-                  ? Properties.getOrDefault(m)
-                  : Properties.defaultProperty).skip())
-              .collect(Collectors.toSet()),
-          firstLocalStore
-      );
-    };
+    TargetInstanter instancer;
+    switch (definition.getInstantiateMode()) {
+      case ALL_ARGS_CONSTRUCTOR:
+        instancer = new AllArgsConstructorInstanter(
+            mv,
+            definition,
+            targetStore,
+            consumers,
+            firstLocalStore
+        );
+        break;
+      case NO_ARGS_CONSTRUCTOR:
+        instancer = new NoArgsConstructorInstanter(
+            mv,
+            definition,
+            targetStore,
+            consumers,
+            StreamSupport
+                .stream(consumers.spliterator(), true)
+                .filter(m -> (configuration.isPropertySupported()
+                    ? Properties.getOrDefault(m)
+                    : Properties.defaultProperty).skip())
+                .collect(Collectors.toSet()),
+            firstLocalStore
+        );
+        break;
+      default:
+        throw new UnsupportedOperationException();
+    }
     instancer.instantiate();
 
     mv.visitVarInsn(ALOAD, targetStore);
@@ -203,8 +211,8 @@ public class ConverterCodeWriter implements Opcodes {
    * @param defaultName Default name when {@link Property} hasn't alias
    * @return local definition name
    */
-  @Nonnull
-  private String getLocalDefinitionName(@Nonnull Property property, @Nonnull String defaultName) {
+  @NotNull
+  private String getLocalDefinitionName(@NotNull Property property, @NotNull String defaultName) {
     if (definition.isClone()) {
       return defaultName;
     }
@@ -217,7 +225,7 @@ public class ConverterCodeWriter implements Opcodes {
       }
     }
 
-    if (property.value().length() > 0) {
+    if (!property.value().isEmpty()) {
       return property.value();
     }
 
@@ -235,7 +243,7 @@ public class ConverterCodeWriter implements Opcodes {
    * @param cw class writer
    */
   private void genConvertBridgeMethod(
-      @Nonnull ClassWriter cw
+      @NotNull ClassWriter cw
   ) {
     var mv = cw.visitMethod(
         ACC_PUBLIC | ACC_BRIDGE | ACC_SYNTHETIC,
@@ -265,7 +273,7 @@ public class ConverterCodeWriter implements Opcodes {
    *
    * @param cw class writer
    */
-  private void genConfigurationAnnotation(@Nonnull ClassWriter cw) {
+  private void genConfigurationAnnotation(@NotNull ClassWriter cw) {
     var av = cw.visitAnnotation(Type.getDescriptor(Feature.class), false);
     var configuration = definition.getFeatures();
     av.visit(Feature.SKIP_NULL, configuration.isSkipNull());
