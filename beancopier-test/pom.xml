@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.tanyaofei</groupId>
         <artifactId>beancopier-parent</artifactId>
-        <version>0.1.7-SNAPSHOT</version>
+        <version>0.1.7</version>
     </parent>
 
     <artifactId>beancopier-test</artifactId>
